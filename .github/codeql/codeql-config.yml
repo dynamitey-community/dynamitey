@@ -1,0 +1,27 @@
+name: Dynamitey CodeQL configuration
+
+# CodeQL analyses the shipped code only.
+#
+# Tests/ and Benchmarks/ are excluded deliberately, not to hide problems. This
+# library's entire purpose is runtime dispatch through the DLR, so its tests do
+# things static analysis is obliged to flag and cannot model:
+#
+#   cs/invalid-dynamic-call   — a dynamic call the analyser believes cannot
+#                               succeed. Proving that it does succeed is what
+#                               most of these tests are for.
+#   cs/useless-upcast,        — casts like `(object)tOut` where tOut is dynamic.
+#   cs/useless-cast-to-self     The cast is load-bearing: it moves the call from
+#                               dynamic dispatch to the runtime type, and the
+#                               source says so at the call site. Removing it
+#                               changes what the test asserts.
+#
+# Neither project ships to consumers, so an alert in either cannot reach anyone
+# who installs the package. Excluding them keeps the alert list meaningful for
+# the code that does ship — which is the only way the check stays worth reading.
+# Note: for a compiled language this file alone is not enough. CodeQL analyses
+# whatever the build extracts, so the workflow also builds only
+# Dynamitey/Dynamitey.csproj rather than the whole solution. This stays as the
+# declared intent, and as a backstop if the build step ever widens again.
+paths-ignore:
+  - Tests/**
+  - Benchmarks/**

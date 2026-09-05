@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using IronPython.Hosting;
 using Microsoft.Scripting;
 
@@ -23,7 +24,7 @@ namespace Dynamitey.Tests
             var expected = Enumerable.Range(1, 10).Where(i => i > 5).Skip(1).Take(2).Max();
             var actual = Dynamic.Linq(Enumerable.Range(1, 10)).Where(new Func<int, bool>(i => i > 5)).Skip(1).Take(2).Max();
 
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
         }
         [Test]
         public void MoreGenericsDynamicLinq()
@@ -33,7 +34,7 @@ namespace Dynamitey.Tests
                 .Select(new Func<int, Tuple<int, int>>(i => Tuple.Create(1, i)))
                 .Aggregate(0, new Func<int, Tuple<int, int>, int>((accum, each) => each.Item2));
 
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
 
         }
 
@@ -66,7 +67,7 @@ import System
 result = linq.OfType[System.Int32]().Skip(1).First()
 
 ");
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
         }
 
 
@@ -76,14 +77,19 @@ result = linq.OfType[System.Int32]().Skip(1).First()
             var expected = Enumerable.Range(1, 10).Where(x => x < 5).OrderBy(x => 10 - x).First();
 
 
+            // System.Int32 and System.Boolean rather than Python's int and bool.
+            // IronPython 3 maps Python int to System.Numerics.BigInteger, because
+            // Python 3 integers are arbitrary precision, so Func[int, bool] no
+            // longer names Func<int, bool>. Without this the overload selector
+            // misses and falls through to Where(IEnumerable<int>, Func<int,int,bool>).
             var actual = RunPythonHelper(Dynamic.Linq(Enumerable.Range(1, 10)),
                                          @"
 import System
-result = linq.Where.Overloads[System.Func[int, bool]](lambda x: x < 5).OrderBy(lambda x: 10-x).First()
+result = linq.Where.Overloads[System.Func[System.Int32, System.Boolean]](lambda x: x < 5).OrderBy(lambda x: 10-x).First()
 
 ");
 
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
         }
 
 
