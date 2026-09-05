@@ -74,6 +74,32 @@ this fork carries, and there is no equivalent here yet.
 - `DynamicObject` base types for many things — [Dynamic](https://github.com/ekonbenefits/dynamitey/wiki/UsageDynamic)
 - Extension-to-instance method conversion — [`Tests/Linq.cs`](Tests/Linq.cs)
 
+### Awaiting a result whose type you cannot see
+
+If you invoke an async method whose `Task<T>` has a `T` that is internal to
+another assembly — the exact situation this library exists to reach into —
+**do not `await` the result of `Dynamic.InvokeMember` directly.** Use
+`Dynamic.InvokeMemberAsync`:
+
+```csharp
+// Throws: RuntimeBinderException, "Cannot implicitly convert type 'void' to 'object'"
+var result = await Dynamic.InvokeMember(target, "SomeInternalAsyncMethod", args);
+
+// Works
+object result = await Dynamic.InvokeMemberAsync(target, "SomeInternalAsyncMethod", args);
+```
+
+`await` on a `dynamic` compiles to dynamic calls to `GetAwaiter`, `IsCompleted`
+and `GetResult`, which the C# runtime binder resolves in *your* assembly's
+accessibility context. It cannot hand you a value of a type you cannot see, so
+`GetResult` binds to a void-returning form and the conversion fails.
+
+That exception is thrown by your own compiled `await`, not by this library, so
+Dynamitey cannot catch it or improve the message — hence this note.
+
+`Dynamic.AwaitResult(task)` does the same job for a `Task` you already hold.
+Both return `Task<object>`, and `object` is always accessible.
+
 ### A note on trimming and AOT
 
 This library is built on the DLR. It resolves calls at runtime that cannot be
