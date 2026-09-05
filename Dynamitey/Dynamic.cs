@@ -20,6 +20,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 using Dynamitey.Internal;
 using Dynamitey.Internal.Optimization;
@@ -203,6 +204,76 @@ namespace Dynamitey
 
             return InvokeHelper.InvokeMemberCallSite(target, (InvokeMemberName)name, args, argNames, context, staticContext,
                                                      ref callSite);
+        }
+
+        /// <summary>
+        /// Dynamically invokes a member method using the DLR, the same as <see cref="InvokeMember"/>, then
+        /// awaits its result without going through dynamic binding. Use this when the invoked method returns
+        /// a <c>Task&lt;TResult&gt;</c> whose <c>TResult</c> is not accessible to the calling assembly - an
+        /// internal or nested-private type declared elsewhere - which is the case that makes
+        /// <c>await Dynamic.InvokeMember(...)</c> throw.
+        /// </summary>
+        /// <param name="target">The target.</param>
+        /// <param name="name">The name. Can be a string; it will be implicitly converted.</param>
+        /// <param name="args">The args.</param>
+        /// <returns>
+        /// A task that completes with the invoked member's result, boxed to <see cref="object"/>
+        /// (<see langword="null"/> if the invoked member returns a non-generic <see cref="Task"/>).
+        /// </returns>
+        /// <exception cref="InvalidOperationException">The invoked member did not return a <see cref="Task"/>.</exception>
+        /// <remarks>
+        /// <para>
+        /// <c>await Dynamic.InvokeMember(...)</c> compiles to dynamic invocations of <c>GetAwaiter</c>,
+        /// <c>IsCompleted</c> and <c>GetResult</c>, which the C# runtime binder resolves in the calling
+        /// assembly's accessibility context. When the invoked method's result is a <c>Task&lt;T&gt;</c> whose
+        /// <c>T</c> is internal to another assembly - exactly the kind of type this library exists to reach
+        /// into - the binder cannot produce a value of that inaccessible type, so <c>GetResult</c> binds to a
+        /// void-returning overload and the compiler-generated conversion to <see cref="object"/> throws
+        /// <see cref="RuntimeBinderException"/> ("Cannot implicitly convert type 'void' to 'object'").
+        /// </para>
+        /// <para>
+        /// This method avoids the binder: it invokes the member exactly as <see cref="InvokeMember"/> does,
+        /// then hands the resulting <see cref="Task"/> to <see cref="AwaitResult"/>, which awaits it with a
+        /// plain, statically-typed <c>await</c> and reads its result through reflection instead of the DLR.
+        /// </para>
+        /// </remarks>
+        public static async Task<object> InvokeMemberAsync(object target, String_OR_InvokeMemberName name, params object[] args)
+        {
+            object result = InvokeMember(target, name, args);
+            return await AwaitResult(result).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Awaits a <see cref="Task"/> (or <see cref="Task{TResult}"/>) obtained dynamically - typically the
+        /// un-awaited result of <see cref="InvokeMember"/> - reading its result through reflection instead of
+        /// dynamic binding, so an inaccessible <c>TResult</c> does not trip the C# runtime binder. See
+        /// <see cref="InvokeMemberAsync"/> for the failure this works around.
+        /// </summary>
+        /// <param name="task">The task to await.</param>
+        /// <returns>
+        /// The task's result, boxed to <see cref="object"/> (<see langword="null"/> for a non-generic
+        /// <see cref="Task"/>, or if <paramref name="task"/> itself is <see langword="null"/>).
+        /// </returns>
+        /// <exception cref="InvalidOperationException"><paramref name="task"/> is not a <see cref="Task"/>.</exception>
+        public static async Task<object> AwaitResult(object task)
+        {
+            if (task is null)
+                return null;
+
+            if (!(task is Task actualTask))
+                throw new InvalidOperationException(
+                    $"{nameof(AwaitResult)} requires a {nameof(Task)} or {nameof(Task)}<T>, but got {task.GetType()}.");
+
+            // Statically typed await against the base Task class: the compiler binds GetAwaiter/GetResult
+            // at compile time from Task itself, never from the object's actual runtime type, so an internal
+            // TResult on the real Task<TResult> instance never enters into it. This only waits for
+            // completion (and rethrows on fault/cancellation, exactly like a normal await); it does not,
+            // and cannot, produce the result value - TaskAwaiter.GetResult() is void.
+            await actualTask.ConfigureAwait(false);
+
+            // The result, if any, is read via reflection, which is not subject to the caller's accessibility
+            // context - PropertyInfo.GetValue can read a public property whose declared type is internal.
+            return actualTask.GetType().GetProperty("Result")?.GetValue(actualTask);
         }
 
 
