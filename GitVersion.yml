@@ -1,0 +1,34 @@
+# GitVersion 6.x — https://gitversion.net
+#
+# Versions come from git history and tags, not from a checked-in constant.
+# Version.props previously hardcoded VersionPrefix, which meant the version in a
+# built package depended on someone remembering to edit a file.
+#
+# GitHubFlow: one long-lived branch (main), short-lived branches merged by pull
+# request. That is how this repository actually works, and it is what upstream's
+# history looks like too.
+workflow: GitHubFlow/v1
+
+# The floor until the first release tag exists.
+#
+# 4.0.0 rather than a 3.0.x continuation: upstream stopped at 3.0.3, and this
+# tree drops net40, which removes support for any consumer on .NET Framework
+# 4.0. That is breaking, so the major version moves. See issue #6.
+#
+# Until a 4.0.0 tag is pushed, builds are pre-release versions below it. The
+# release is made by tagging, not by editing this file.
+next-version: 4.0.0
+
+# Matches both tag styles already in this repository's history: v3.0.3 and
+# 3.0.2. Non-version tags such as upstream-baseline are ignored.
+tag-prefix: "[vV]?"
+
+# ContinuousDelivery: main builds are pre-release until explicitly tagged, so a
+# merge to main cannot accidentally look like a release.
+mode: ContinuousDelivery
+
+branches:
+  main:
+    label: preview
+  pull-request:
+    label: pr
