@@ -80,6 +80,89 @@ namespace Dynamitey.Tests
             Assert.That((string)tResult, Is.EqualTo("tableName-10---opts"));
         }
 
+        // Issue #16, the shape that actually fails: unlike the investigation
+        // above, the target and method here (PublicType.AsyncInternalResultInstance
+        // and its GetInternalResultAsync) are not what's internal - it's the
+        // awaited RESULT type, InternalResult, that's internal to SupportLibrary
+        // and invisible from this (Tests) assembly. This is exactly
+        // Azure.Data.Tables' TableRestClient.QueryEntitiesAsync shape: an
+        // internal REST-client type off a public TableClient, whose method
+        // returns Task<ResponseWithHeaders<...>> where the generic closure is
+        // internal. The investigation above missed this case entirely by
+        // making the target internal with a PUBLIC result type instead - the
+        // C# runtime binder cares about the accessibility of the value
+        // GetResult() must produce, not of the type that owns the invoked
+        // method.
+        //
+        // "await Dynamic.InvokeMember(...)" compiles to dynamic invocations of
+        // GetAwaiter/IsCompleted/GetResult resolved in the CALLER's (this test
+        // assembly's) accessibility context. Since Tests cannot see
+        // InternalResult, the binder cannot produce a value of that type for
+        // GetResult() and falls back to a void-returning form, so the
+        // compiler-generated conversion to object throws RuntimeBinderException.
+        [Test]
+        public void TestInvokeMemberAwaitDirectlyThrowsWhenResultTypeIsInternal()
+        {
+            var tTarget = PublicType.AsyncInternalResultInstance;
+
+            Assert.That(
+                async () => await Dynamic.InvokeMember(tTarget, "GetInternalResultAsync", "value"),
+                Throws.InstanceOf<RuntimeBinderException>()
+                      .With.Message.Contains("Cannot implicitly convert type 'void' to 'object'"));
+        }
+
+        // Dynamic.InvokeMemberAsync sidesteps the binder entirely: it awaits the
+        // returned Task through its static, non-generic Task type (a plain,
+        // non-dynamic await, so no accessibility check on InternalResult ever
+        // happens) and reads the Result property via reflection, which is not
+        // subject to the caller's accessibility context.
+        [Test]
+        public async Task TestInvokeMemberAsyncSucceedsWhenResultTypeIsInternal()
+        {
+            var tTarget = PublicType.AsyncInternalResultInstance;
+
+            object tResult = await Dynamic.InvokeMemberAsync(tTarget, "GetInternalResultAsync", "value");
+
+            Assert.That(tResult, Is.Not.Null);
+            Assert.That(tResult.GetType().GetProperty("Value")?.GetValue(tResult), Is.EqualTo("value"));
+        }
+
+        // Dynamic.AwaitResult is the piece InvokeMemberAsync delegates to; exercise
+        // it directly against the un-awaited Task that Dynamic.InvokeMember hands
+        // back, confirming it is independently usable and reads the same result.
+        [Test]
+        public async Task TestAwaitResultReadsInternalResultTypeDirectly()
+        {
+            var tTarget = PublicType.AsyncInternalResultInstance;
+
+            object tTask = Dynamic.InvokeMember(tTarget, "GetInternalResultAsync", "other");
+            object tResult = await Dynamic.AwaitResult(tTask);
+
+            Assert.That(tResult, Is.Not.Null);
+            Assert.That(tResult.GetType().GetProperty("Value")?.GetValue(tResult), Is.EqualTo("other"));
+        }
+
+        // AwaitResult on a non-generic Task returns null - there is no Result
+        // property to read - rather than throwing.
+        [Test]
+        public async Task TestAwaitResultReturnsNullForNonGenericTask()
+        {
+            Task tTask = Task.Delay(1);
+
+            object tResult = await Dynamic.AwaitResult(tTask);
+
+            Assert.That(tResult, Is.Null);
+        }
+
+        // AwaitResult rejects anything that isn't a Task with a clear exception,
+        // rather than an obscure cast failure.
+        [Test]
+        public void TestAwaitResultThrowsForNonTaskInput()
+        {
+            Assert.That(async () => await Dynamic.AwaitResult("not a task"),
+                        Throws.InstanceOf<InvalidOperationException>());
+        }
+
         [Test]
         public void TestInvokeDoNotExposePrivateMethod()
         {

@@ -33,6 +33,8 @@ namespace Dynamitey.SupportLibrary
     {
         public static object InternalInstance => new InternalType();
 
+        public static object AsyncInternalResultInstance => new InternalAsyncResultPoco();
+
         public bool PrivateMethod(object param)
         {
             return param != null;
@@ -65,7 +67,34 @@ namespace Dynamitey.SupportLibrary
         }
     }
 
+    // For issue #16, the shape that actually fails: the awaited RESULT type
+    // is internal to this assembly - exactly like Azure.Data.Tables'
+    // TableRestClient.QueryEntitiesAsync, an internal REST-client type
+    // reached off a public TableClient, whose method returns
+    // Task<ResponseWithHeaders<...>> where the generic closure is internal.
+    // A member's declared accessibility is capped by its containing type's,
+    // so a public method on this internal class can still return
+    // Task<InternalResult> without a CS0050 "inconsistent accessibility"
+    // error - same as the real TableRestClient shape.
+    //
+    // The prior, unreproduced #16 investigation instead made the target
+    // internal with a PUBLIC result type - a different shape that does not
+    // fail, because the C# runtime binder cares about the accessibility of
+    // the value GetResult() must produce, not of the type that owns the
+    // invoked method.
+    internal class InternalResult
+    {
+        public string Value { get; set; }
+    }
 
+    internal class InternalAsyncResultPoco
+    {
+        public async Task<InternalResult> GetInternalResultAsync(string value)
+        {
+            await Task.Delay(1);
+            return new InternalResult { Value = value };
+        }
+    }
 
     public interface IDynamicArg
     {
