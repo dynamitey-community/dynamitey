@@ -94,21 +94,28 @@ namespace Dynamitey.Tests
         // GetResult() must produce, not of the type that owns the invoked
         // method.
         //
-        // "await Dynamic.InvokeMember(...)" compiles to dynamic invocations of
+        // "await Dynamic.InvokeMember(...)" used to compile to dynamic invocations of
         // GetAwaiter/IsCompleted/GetResult resolved in the CALLER's (this test
-        // assembly's) accessibility context. Since Tests cannot see
-        // InternalResult, the binder cannot produce a value of that type for
-        // GetResult() and falls back to a void-returning form, so the
-        // compiler-generated conversion to object throws RuntimeBinderException.
+        // assembly's) accessibility context. Since Tests cannot see InternalResult,
+        // the binder used to be unable to produce a value of that type for
+        // GetResult(), falling back to a void-returning form whose compiler-generated
+        // conversion to object threw RuntimeBinderException. Dynamic.InvokeMember now
+        // detects that the result is a Task<T> with an inaccessible T (via
+        // Type.IsVisible) and returns an AwaitableResult wrapper instead of the raw
+        // task - every member the dynamic await pattern needs (GetAwaiter,
+        // IsCompleted, GetResult) is declared publicly on the wrapper, with
+        // GetResult() returning object rather than T, so the binder never needs to
+        // know about InternalResult. The direct await now succeeds and returns the
+        // same value InternalAsyncResultPoco.GetInternalResultAsync produced.
         [Test]
-        public void TestInvokeMemberAwaitDirectlyThrowsWhenResultTypeIsInternal()
+        public async Task TestInvokeMemberAwaitDirectlySucceedsWhenResultTypeIsInternal()
         {
             var tTarget = PublicType.AsyncInternalResultInstance;
 
-            Assert.That(
-                async () => await Dynamic.InvokeMember(tTarget, "GetInternalResultAsync", "value"),
-                Throws.InstanceOf<RuntimeBinderException>()
-                      .With.Message.Contains("Cannot implicitly convert type 'void' to 'object'"));
+            var tResult = await Dynamic.InvokeMember(tTarget, "GetInternalResultAsync", "value");
+
+            Assert.That((object)tResult, Is.Not.Null);
+            Assert.That(((object)tResult).GetType().GetProperty("Value")?.GetValue((object)tResult), Is.EqualTo("value"));
         }
 
         // Dynamic.InvokeMemberAsync sidesteps the binder entirely: it awaits the
@@ -161,6 +168,124 @@ namespace Dynamitey.Tests
         {
             Assert.That(async () => await Dynamic.AwaitResult("not a task"),
                         Throws.InstanceOf<InvalidOperationException>());
+        }
+
+        // Regression guard for the issue #16 fix's scoping: a Task<T> whose T IS
+        // public (string) must come back from Dynamic.InvokeMember exactly as
+        // before - the raw Task<string>, not an AwaitableResult - and await it must
+        // behave identically to a plain, non-dynamic await. This is the most
+        // important new test: every other new test below exercises the
+        // inaccessible-T wrapper path and would keep passing even if the fix wrapped
+        // every Task<T> indiscriminately (e.g. a broken or inverted Type.IsVisible
+        // check); only this test would catch that regression.
+        [Test]
+        public async Task TestInvokeMemberDoesNotWrapTaskWithPublicResultType()
+        {
+            var tTarget = PublicType.PublicAsyncResultInstance;
+
+            object tRaw = Dynamic.InvokeMember(tTarget, "GetPublicResultAsync", "value");
+            Assert.That(tRaw, Is.InstanceOf<Task<string>>());
+            Assert.That(tRaw, Is.Not.InstanceOf<AwaitableResult>());
+
+            var tAwaited = await Dynamic.InvokeMember(tTarget, "GetPublicResultAsync", "value2");
+            Assert.That((string)tAwaited, Is.EqualTo("value2"));
+        }
+
+        // Issue #16 scoping detail: Type.IsPublic is false for ANY nested type, even
+        // one declared public, so checking IsPublic instead of IsVisible would wrap
+        // this case too - even though PublicType.NestedPublicResult is genuinely
+        // reachable by any caller (both it and its containing PublicType are
+        // public). Proves the fix does not over-wrap nested-public results.
+        [Test]
+        public async Task TestInvokeMemberDoesNotWrapTaskWithNestedPublicResultType()
+        {
+            var tTarget = new PublicType();
+
+            object tRaw = Dynamic.InvokeMember(tTarget, "GetNestedPublicResultAsync", "value");
+            Assert.That(tRaw, Is.InstanceOf<Task<PublicType.NestedPublicResult>>());
+            Assert.That(tRaw, Is.Not.InstanceOf<AwaitableResult>());
+
+            var tAwaited = await Dynamic.InvokeMember(tTarget, "GetNestedPublicResultAsync", "value2");
+            Assert.That(((PublicType.NestedPublicResult)tAwaited).Value, Is.EqualTo("value2"));
+        }
+
+        // The reporter's original line (issue #16): a direct await on
+        // Dynamic.InvokeMember's result, where the awaited Task<T>'s T
+        // (InternalResult) is internal to another assembly. Before this fix this
+        // threw RuntimeBinderException; see
+        // TestInvokeMemberAwaitDirectlySucceedsWhenResultTypeIsInternal above for the
+        // primary coverage of this shape. This test additionally confirms the
+        // AwaitableResult wrapper is what Dynamic.InvokeMember actually handed back,
+        // rather than the assertion accidentally passing some other way.
+        [Test]
+        public void TestInvokeMemberWrapsTaskWithInaccessibleResultType()
+        {
+            var tTarget = PublicType.AsyncInternalResultInstance;
+
+            object tRaw = Dynamic.InvokeMember(tTarget, "GetInternalResultAsync", "value");
+
+            Assert.That(tRaw, Is.InstanceOf<AwaitableResult>());
+        }
+
+        // A faulted Task<InternalResult> - T internal, so the AwaitableResult
+        // wrapper path is exercised - must propagate the original exception, not an
+        // AggregateException. This is load-bearing against an implementation that
+        // reads _task.Result directly (which throws AggregateException) instead of
+        // _task.GetAwaiter().GetResult() (which unwraps to the original exception).
+        [Test]
+        public void TestInvokeMemberAwaitPropagatesOriginalExceptionWhenResultTypeIsInternal()
+        {
+            var tTarget = PublicType.FaultingAsyncResultInstance;
+
+            Assert.That(
+                async () => await Dynamic.InvokeMember(tTarget, "GetFaultingResultAsync"),
+                Throws.InstanceOf<InvalidTimeZoneException>()
+                      .With.Message.EqualTo("boom"));
+        }
+
+        // A cancelled Task<InternalResult> - T internal, so the AwaitableResult
+        // wrapper path is exercised - must propagate OperationCanceledException
+        // rather than some other failure shape.
+        [Test]
+        public void TestInvokeMemberAwaitPropagatesCancellationWhenResultTypeIsInternal()
+        {
+            var tTarget = PublicType.CancelingAsyncResultInstance;
+
+            Assert.That(
+                async () => await Dynamic.InvokeMember(tTarget, "GetCancelingResultAsync"),
+                Throws.InstanceOf<OperationCanceledException>());
+        }
+
+        // A plain, non-generic Task result must never be wrapped - it has no Result
+        // property to protect, and Dynamic.InvokeMember already worked correctly for
+        // it before this fix.
+        [Test]
+        public async Task TestInvokeMemberDoesNotWrapNonGenericTask()
+        {
+            var tTarget = PublicType.PlainTaskAsyncInstance;
+
+            object tRaw = Dynamic.InvokeMember(tTarget, "GetPlainTaskAsync");
+            Assert.That(tRaw, Is.InstanceOf<Task>());
+            Assert.That(tRaw, Is.Not.InstanceOf<AwaitableResult>());
+
+            await Dynamic.InvokeMember(tTarget, "GetPlainTaskAsync");
+        }
+
+        // Dynamic.AwaitResult must accept the AwaitableResult wrapper directly -
+        // e.g. a caller who captured Dynamic.InvokeMember's result without awaiting
+        // it, then wants to await it via AwaitResult instead of a dynamic await.
+        [Test]
+        public async Task TestAwaitResultAcceptsAwaitableResultWrapper()
+        {
+            var tTarget = PublicType.AsyncInternalResultInstance;
+
+            object tWrapped = Dynamic.InvokeMember(tTarget, "GetInternalResultAsync", "wrapped");
+            Assert.That(tWrapped, Is.InstanceOf<AwaitableResult>());
+
+            object tResult = await Dynamic.AwaitResult(tWrapped);
+
+            Assert.That(tResult, Is.Not.Null);
+            Assert.That(tResult.GetType().GetProperty("Value")?.GetValue(tResult), Is.EqualTo("wrapped"));
         }
 
         [Test]
