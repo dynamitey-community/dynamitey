@@ -35,9 +35,41 @@ namespace Dynamitey.SupportLibrary
 
         public static object AsyncInternalResultInstance => new InternalAsyncResultPoco();
 
+        // For issue #16's scoped-wrapper fix: a Task<T> whose T IS public (string)
+        // must be returned by Dynamic.InvokeMember exactly as before - unwrapped.
+        public static object PublicAsyncResultInstance => new PublicAsyncResultPoco();
+
+        // For issue #16's scoped-wrapper fix: a Task<T> that faults or is cancelled,
+        // where T is internal (so the wrapper path is actually exercised), must still
+        // propagate the original exception/OperationCanceledException, not an
+        // AggregateException.
+        public static object FaultingAsyncResultInstance => new FaultingAsyncResultPoco();
+        public static object CancelingAsyncResultInstance => new CancelingAsyncResultPoco();
+
+        // For issue #16's scoped-wrapper fix: a plain, non-generic Task result must
+        // never be wrapped - it has no Result to protect.
+        public static object PlainTaskAsyncInstance => new PlainTaskAsyncPoco();
+
         public bool PrivateMethod(object param)
         {
             return param != null;
+        }
+
+        // For issue #16's scoped-wrapper fix: NestedPublicResult below is a public
+        // type nested inside this public type. Type.IsPublic is false for it (nested
+        // types are never IsPublic even when declared public), but Type.IsVisible is
+        // true, because every enclosing type - just PublicType, here - is also
+        // public, so the type is genuinely reachable by any caller. Proves the fix
+        // must use IsVisible, not IsPublic, to decide what counts as inaccessible.
+        public async Task<NestedPublicResult> GetNestedPublicResultAsync(string value)
+        {
+            await Task.Delay(1);
+            return new NestedPublicResult { Value = value };
+        }
+
+        public class NestedPublicResult
+        {
+            public string Value { get; set; }
         }
     }
 
@@ -93,6 +125,52 @@ namespace Dynamitey.SupportLibrary
         {
             await Task.Delay(1);
             return new InternalResult { Value = value };
+        }
+    }
+
+    // For issue #16's scoped-wrapper fix: T (string) is public here, so this is the
+    // regression-guard shape - Dynamic.InvokeMember must return this method's
+    // Task<string> unwrapped, exactly as it did before the fix.
+    internal class PublicAsyncResultPoco
+    {
+        public async Task<string> GetPublicResultAsync(string value)
+        {
+            await Task.Delay(1);
+            return value;
+        }
+    }
+
+    // For issue #16's scoped-wrapper fix: an already-faulted Task<InternalResult> -
+    // T internal, so Dynamic.InvokeMember wraps it - used to prove the wrapper's
+    // GetResult() rethrows the original exception rather than an
+    // AggregateException.
+    internal class FaultingAsyncResultPoco
+    {
+        public Task<InternalResult> GetFaultingResultAsync()
+        {
+            return Task.FromException<InternalResult>(new InvalidTimeZoneException("boom"));
+        }
+    }
+
+    // For issue #16's scoped-wrapper fix: an already-cancelled Task<InternalResult> -
+    // T internal, so Dynamic.InvokeMember wraps it - used to prove the wrapper
+    // propagates OperationCanceledException rather than swallowing or misreporting
+    // cancellation.
+    internal class CancelingAsyncResultPoco
+    {
+        public Task<InternalResult> GetCancelingResultAsync()
+        {
+            return Task.FromCanceled<InternalResult>(new CancellationToken(true));
+        }
+    }
+
+    // For issue #16's scoped-wrapper fix: a plain, non-generic Task - never wrapped,
+    // since it has no Result to protect.
+    internal class PlainTaskAsyncPoco
+    {
+        public Task GetPlainTaskAsync()
+        {
+            return Task.Delay(1);
         }
     }
 

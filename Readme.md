@@ -78,27 +78,37 @@ this fork carries, and there is no equivalent here yet.
 
 If you invoke an async method whose `Task<T>` has a `T` that is internal to
 another assembly — the exact situation this library exists to reach into —
-**do not `await` the result of `Dynamic.InvokeMember` directly.** Use
-`Dynamic.InvokeMemberAsync`:
+`await Dynamic.InvokeMember(...)` just works:
 
 ```csharp
-// Throws: RuntimeBinderException, "Cannot implicitly convert type 'void' to 'object'"
-var result = await Dynamic.InvokeMember(target, "SomeInternalAsyncMethod", args);
-
 // Works
-object result = await Dynamic.InvokeMemberAsync(target, "SomeInternalAsyncMethod", args);
+var result = await Dynamic.InvokeMember(target, "SomeInternalAsyncMethod", args);
 ```
 
 `await` on a `dynamic` compiles to dynamic calls to `GetAwaiter`, `IsCompleted`
 and `GetResult`, which the C# runtime binder resolves in *your* assembly's
-accessibility context. It cannot hand you a value of a type you cannot see, so
-`GetResult` binds to a void-returning form and the conversion fails.
+accessibility context — it cannot hand you a value of a type you cannot see.
+`Dynamic.InvokeMember` detects this case (a `Task<T>` whose `T` is not visible
+outside its declaring assembly) and returns the result wrapped in an
+`AwaitableResult` instead of the raw task. Every member the dynamic `await`
+pattern needs on that wrapper is declared publicly, with `GetResult` returning
+`object` rather than `T`, so the binder never needs to see the inaccessible
+type. Faults and cancellation still propagate normally — the original
+exception, never wrapped in an `AggregateException`. A `Task<T>` whose `T` is
+public (or a nested public type, or a plain non-generic `Task`) is returned
+completely unchanged.
 
-That exception is thrown by your own compiled `await`, not by this library, so
-Dynamitey cannot catch it or improve the message — hence this note.
+`Dynamic.InvokeMemberAsync` is still supported for callers who prefer a single
+non-dynamic `Task<object>`-returning call, without an intermediate `dynamic`
+await expression:
 
-`Dynamic.AwaitResult(task)` does the same job for a `Task` you already hold.
-Both return `Task<object>`, and `object` is always accessible.
+```csharp
+object result = await Dynamic.InvokeMemberAsync(target, "SomeInternalAsyncMethod", args);
+```
+
+`Dynamic.AwaitResult(task)` does the same job for a `Task` — or an
+`AwaitableResult` — you already hold. Both return `Task<object>`, and `object`
+is always accessible.
 
 ### A note on trimming and AOT
 
