@@ -97,20 +97,27 @@ dotnet run -c Release --project Benchmarks -- --filter '*Tuple*'
 
 ### The test count, because it looks wrong and is not
 
-There are **219** `[Test]`/`[TestCase]` attributes in `Tests/*.cs`, and **186**
-tests execute. The difference is not lost coverage:
+`Tests/*.cs` carries **187** `[Test]` attributes and there are no `[TestCase]`
+attributes. **186** tests execute.
 
-| | |
-| --- | --- |
-| Attributes in source | 219 |
-| Inside `#if NETFRAMEWORK` (`TestCodeDomLateTypeBind`, CodeDom) | −1 |
-| Retired with the `SpeedTest` fixture, now `Benchmarks/` | −32 |
-| **Execute** | **186** |
+The one that does not is `TestCodeDomLateTypeBind` in `Tests/DynamicObjects.cs`,
+inside `#if NETFRAMEWORK`. It compiles an assembly at runtime with
+`CSharpCodeProvider`, so it only ever ran on .NET Framework and has been
+unreachable since `net48` was dropped. Tracked in #23.
+
+```bash
+grep -rhcE '^\s*\[Test\]' Tests/*.cs | paste -sd+ | bc   # 187
+```
 
 CI runs the full suite with **no category filter** and requires 186 passed, 0
 failed, 0 skipped. If a filter ever reappears in a test command, something has
-gone backwards — the wall-clock benchmarks that used to require one no longer
-live in the test project. See #9 and #23.
+gone backwards.
+
+**Where older numbers came from.** Before the `SpeedTest` fixture moved to
+`Benchmarks/` in #9, the source carried 219 `[Test]` attributes and CI needed
+`--filter TestCategory!=Performance` to stay green — that filter is what
+produced the same 186. The 32 that left are the benchmarks. So 219 and "186
+under a filter" both refer to the tree before #9, and neither describes it now.
 
 ## Continuous integration
 

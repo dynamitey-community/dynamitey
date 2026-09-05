@@ -1,5 +1,30 @@
 # Handover: Migrate Dynamitey to dynamitey-community
 
+> **Status: completed on 2026-09-05. This is an archival record, not a runbook.**
+>
+> Every step below has been carried out. **Do not re-run any of it** — the
+> repository exists, the history is pushed, and the `upstream-baseline` tag is
+> in place at `c44f5c5`. Re-running Step 1 would fail, and Step 4 would attempt
+> to push over a repository that is no longer empty.
+>
+> It is kept because it records *why* this is a detached fork rather than a
+> GitHub network fork, and because the hard constraints in it still apply —
+> in particular that nothing may ever be pushed to `ekonbenefits`.
+>
+> Three things did not go exactly as written, and the deviations are recorded
+> in the pull request that established the baseline:
+>
+> - Step 4 needed the documented fallback push; 22 hidden `refs/pull/` refs made
+>   a mirror push impossible.
+> - Step 6 failed on first attempt. GitHub made a stray feature branch the
+>   default of the empty repository, so the clone checked out the wrong branch
+>   and reported 225 commits instead of 229.
+> - Step 9's command order is wrong as written: `main` has to exist on the
+>   remote before it can be set as the default branch.
+>
+> Current state of the build has moved on from Step 7 and Step 8 — see
+> `CLAUDE.md` for what the targets and test counts are now.
+
 **For:** Claude Code, running in WSL
 **Scope:** Move `ekonbenefits/dynamitey` into `dynamitey-community/dynamitey` with full history and no fork-network relationship, then establish a build baseline. Nothing else.
 
