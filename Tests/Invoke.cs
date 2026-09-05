@@ -181,6 +181,107 @@ namespace Dynamitey.Tests
             ClassicAssert.AreEqual(string.Join(",", Enumerable.Range(0, count)), tOut);
         }
 
+        // Issue #27. InvokeMemberActionCallSite falls to the same >14-argument
+        // default branch as InvokeMemberCallSite above, but through
+        // InvokeMemberAction's void-returning delegate shape rather than a
+        // Func-shaped one - EmitCallSiteFuncType(argTypes, typeof(void)) instead
+        // of EmitCallSiteFuncType(argTypes, typeof(TReturn)). Both must build a
+        // delegate type without reaching into ImpromptuInterface.
+        [TestCase(14)]
+        [TestCase(15)]
+        [TestCase(20)]
+        public void TestInvokeMemberActionManyParamsArgs(int count)
+        {
+            var tTarget = new ParamsActionMethodPoco();
+            var tParams = Enumerable.Range(0, count).Select(it => it.ToString() as object).ToArray();
+
+            Dynamic.InvokeMemberAction(tTarget, "Join", tParams);
+
+            ClassicAssert.AreEqual(string.Join(",", Enumerable.Range(0, count)), tTarget.Joined);
+        }
+
+        // Issue #27 guard. Tests.csproj references ImpromptuInterface for the
+        // legitimate ActLike interop coverage in Impromptu.cs, so the
+        // >14-argument tests above would keep passing even if
+        // EmitCallSiteFuncType silently fell back to ImpromptuInterface's own
+        // proxy maker instead of using Dynamitey's fix - that dependency being
+        // present is exactly the bug (#27): without it installed those tests
+        // would throw TypeLoadException, which is the whole point of this fix.
+        //
+        // EmitCallSiteFuncType itself is internal, and Tests.csproj has no
+        // InternalsVisibleTo grant to it (adding one would widen accessibility,
+        // which the fix must not do), so this observes the delegate type from
+        // the outside instead: Dynamitey.Internal.Optimization.
+        // InvokeHelper-Regular.cs emits every >14-argument call site delegate
+        // into a dynamic, run-only assembly literally named
+        // "Dynamitey.CallSiteDelegates" (AssemblyBuilder.DefineDynamicAssembly,
+        // AssemblyBuilderAccess.Run). That assembly appears in
+        // AppDomain.CurrentDomain.GetAssemblies() once created and holds one
+        // baked "CallSiteFuncN" type per distinct (argument count, return type)
+        // signature - nothing ImpromptuInterface does can produce a type in an
+        // assembly with that name, so finding one there is direct evidence that
+        // Dynamitey's own emit path ran, not ImpromptuInterface's.
+        //
+        // Counting the module's baked types before/after each call, rather than
+        // just asserting the assembly exists, is what proves caching: a second
+        // call with the same signature must add zero types, and a call with a
+        // new signature must add exactly one. Argument counts here (57/58 for
+        // the value-returning path, 59/60 for the void path) are never used by
+        // any other test in this project, so the type count is only ever
+        // changed by this test's own calls, regardless of what other tests ran
+        // earlier in the process or what order NUnit chooses to run them in.
+        [Test]
+        public void TestManyParamsArgsEmitOwnDelegateTypeAndCacheIt()
+        {
+            const string tEmittedAssemblyName = "Dynamitey.CallSiteDelegates";
+
+            int CountEmittedTypes()
+            {
+                System.Reflection.Assembly tAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                    .SingleOrDefault(a => a.GetName().Name == tEmittedAssemblyName);
+                return tAssembly?.GetTypes().Length ?? 0;
+            }
+
+            var tMethodTarget = new ParamsMethodPoco();
+            var tActionTarget = new ParamsActionMethodPoco();
+
+            object[] Args(int count) => Enumerable.Range(0, count).Select(it => it.ToString() as object).ToArray();
+
+            // First call with a never-before-used (argCount, returnType) signature:
+            // must emit exactly one new delegate type.
+            var tBeforeFirst = CountEmittedTypes();
+            Dynamic.InvokeMember(tMethodTarget, "Join", Args(57));
+            var tAfterFirst = CountEmittedTypes();
+
+            ClassicAssert.IsTrue(tAfterFirst > tBeforeFirst,
+                $"Expected a delegate type to be emitted into the '{tEmittedAssemblyName}' assembly - " +
+                "proof Dynamitey's own emit path ran rather than ImpromptuInterface's.");
+            ClassicAssert.AreEqual(1, tAfterFirst - tBeforeFirst,
+                "Expected exactly one new delegate type for a brand-new signature.");
+
+            // Repeat call, same signature: cached, so no new type.
+            Dynamic.InvokeMember(tMethodTarget, "Join", Args(57));
+            ClassicAssert.AreEqual(tAfterFirst, CountEmittedTypes(),
+                "Expected the delegate type for a previously-seen signature to be reused, not re-emitted.");
+
+            // Different argument count: a genuinely new signature, one more type.
+            Dynamic.InvokeMember(tMethodTarget, "Join", Args(58));
+            var tAfterSecondSignature = CountEmittedTypes();
+            ClassicAssert.AreEqual(1, tAfterSecondSignature - tAfterFirst,
+                "Expected a distinct signature (different argument count) to emit its own delegate type.");
+
+            // Same shape but through the void-returning InvokeMemberAction path:
+            // a different return type makes this a distinct signature too.
+            Dynamic.InvokeMemberAction(tActionTarget, "Join", Args(59));
+            var tAfterActionFirst = CountEmittedTypes();
+            ClassicAssert.AreEqual(1, tAfterActionFirst - tAfterSecondSignature,
+                "Expected the void-returning path to emit its own delegate type, distinct from the Func-shaped one.");
+
+            Dynamic.InvokeMemberAction(tActionTarget, "Join", Args(59));
+            ClassicAssert.AreEqual(tAfterActionFirst, CountEmittedTypes(),
+                "Expected the void-returning path's delegate type to be cached too.");
+        }
+
         // Issue #15 investigation. Reported as: awaiting the dynamic result of
         // Dynamic.InvokeMember on a method returning ValueTask<T> throws
         // "'System.ValueType' does not contain a definition for 'GetAwaiter'".

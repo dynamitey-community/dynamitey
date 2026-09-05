@@ -666,4 +666,20 @@ namespace Dynamitey.SupportLibrary
         }
     }
 
+    /// <summary>
+    /// For issue #27. InvokeMemberActionCallSite/InvokeMemberAction falls to the
+    /// same >14-argument default branch as the value-returning path above, but
+    /// through a void-returning delegate rather than a Func-shaped one - this
+    /// exercises that instead of the string-returning ParamsMethodPoco.Join.
+    /// </summary>
+    public class ParamsActionMethodPoco
+    {
+        public string Joined { get; private set; }
+
+        public void Join(params string[] args)
+        {
+            Joined = string.Join(",", args);
+        }
+    }
+
 }

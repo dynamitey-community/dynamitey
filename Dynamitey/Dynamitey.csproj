@@ -31,6 +31,15 @@
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
     <PackageReference Include="Microsoft.CSharp" Version="4.*" />
+    <!-- netstandard2.0's own surface has no System.Reflection.Emit; net10.0
+         carries it in-box. EmitCallSiteFuncType in
+         Internal/Optimization/InvokeHelper-Regular.cs needs
+         AssemblyBuilder/ModuleBuilder/TypeBuilder to build the >14-argument
+         call site delegate type itself (issue #27). Conditioned to
+         netstandard2.0 only so net10.0 consumers get no extra dependency;
+         version matches the one ImpromptuInterface itself references for the
+         same netstandard2.0 gap. -->
+    <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
   </ItemGroup>
 
 
