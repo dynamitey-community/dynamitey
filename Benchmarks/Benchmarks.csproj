@@ -13,8 +13,10 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
-    <!-- Pinned to the version the retired SpeedTest fixture measured against,
-         so the F# reflection comparison stays like-for-like. -->
+    <!-- Tracks current FSharp.Core rather than a pinned old version. The tuple
+         benchmarks compare Tupler against F# reflection, and the useful
+         comparison is against the F# a consumer would actually have, not the
+         4.7.2 the retired SpeedTest fixture happened to reference. -->
     <PackageReference Include="FSharp.Core" Version="10.1.400" />
   </ItemGroup>
 
