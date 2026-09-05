@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Dynamitey.SupportLibrary;
 using Microsoft.CSharp.RuntimeBinder;
@@ -32,6 +33,51 @@ namespace Dynamitey.Tests
         {
             var tTest = PublicType.InternalInstance;
             Assert.That((object)Dynamic.InvokeMember(tTest, "InternalMethod", 3), Is.True);
+        }
+
+        // Issue #16 investigation. Reported as: InvokeMember throws
+        // RuntimeBinderException calling an async method of an internal class
+        // (Azure.Data.Tables' internal TableRestClient) with named InvokeArg
+        // arguments. Three variables were tangled in the report - the target
+        // being internal, the method being async, and the arguments being named
+        // via InvokeArg - plus a fourth found while reducing it: the real
+        // signature has optional parameters (nextPartitionKey, nextRowKey)
+        // between the ones actually supplied, which named-argument binding must
+        // skip in favor of their defaults. InternalType.InternalAsyncMethod in
+        // SupportTypes.cs mirrors that shape across the same assembly boundary
+        // as TestInvokeInternalTypeMethodAcrossAssemblyBoundries above.
+        //
+        // This was NOT reproducible, individually or in combination: internal
+        // target + positional args, internal + async + named args, internal +
+        // sync + named args, public + async + named args, and internal + async
+        // + named args that skip optional parameters all succeed - on this
+        // repo's current code and against the pristine upstream baseline (tag
+        // upstream-baseline). These tests record that behaviour as coverage
+        // rather than as fix verification - there was no failing case to fix.
+        [Test]
+        public async Task TestInvokeInternalTypeAsyncMethodAcrossAssemblyBoundriesPositionalArgs()
+        {
+            var tTest = PublicType.InternalInstance;
+
+            var tResult = await Dynamic.InvokeMember(tTest, "InternalAsyncMethod", "table", (int?)10, null, null, "opts", CancellationToken.None);
+
+            Assert.That((string)tResult, Is.EqualTo("table-10---opts"));
+        }
+
+        [Test]
+        public async Task TestInvokeInternalTypeAsyncMethodAcrossAssemblyBoundriesNamedArgsSkippingOptionals()
+        {
+            var tTest = PublicType.InternalInstance;
+
+            var tResult = await Dynamic.InvokeMember(tTest, new InvokeMemberName("InternalAsyncMethod", false), new object[]
+            {
+                new InvokeArg("table", "tableName"),
+                new InvokeArg("timeout", (int?)10),
+                new InvokeArg("queryOptions", "opts"),
+                new InvokeArg("cancellationToken", CancellationToken.None)
+            });
+
+            Assert.That((string)tResult, Is.EqualTo("tableName-10---opts"));
         }
 
         [Test]

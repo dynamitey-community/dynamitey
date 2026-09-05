@@ -5,6 +5,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Dynamitey.SupportLibrary;
 using Microsoft.CSharp.RuntimeBinder;
@@ -180,6 +181,70 @@ namespace Dynamitey.Tests
             ClassicAssert.AreEqual(string.Join(",", Enumerable.Range(0, count)), tOut);
         }
 
+        // Issue #15 investigation. Reported as: awaiting the dynamic result of
+        // Dynamic.InvokeMember on a method returning ValueTask<T> throws
+        // "'System.ValueType' does not contain a definition for 'GetAwaiter'".
+        //
+        // Root cause search: InvokeMember's public API always calls
+        // InvokeMemberTargetType<object, TReturn> with TReturn = object (see
+        // InvokeMember<TReturn> in InvokeHelper-Regular.cs, and its only caller,
+        // InvokeMemberCallSite). Unlike issue #11 - where the >14-argument branch
+        // baked TTarget into the call site's return type instead of TReturn -
+        // there is no code path reachable from Dynamic.InvokeMember where TReturn
+        // is anything other than object, at any argument count. Boxing a struct
+        // to object preserves its exact runtime type, and C#'s "await dynamic"
+        // pattern resolves GetAwaiter from that runtime type, not from a
+        // compile-time type baked into a call site. So the class of defect behind
+        // #11 does not have an equivalent here.
+        //
+        // This was NOT reproducible: not with a genuinely-async ValueTask<T>
+        // method, not with one that completes synchronously, not with a plain
+        // Task<T> for comparison, not awaiting the dynamic result directly vs.
+        // assigning it to a typed local first, and not against this repo's
+        // pristine upstream baseline (tag upstream-baseline) either. These tests
+        // record that InvokeMember correctly supports awaiting a ValueTask<T> (or
+        // Task<T>) result today, as coverage rather than as a fix verification -
+        // there was no failing case to fix.
+        [Test]
+        public async Task TestInvokeMemberAwaitValueTaskResultDirectly()
+        {
+            var tTarget = new AsyncMethodPoco();
+
+            var tResult = await Dynamic.InvokeMember(tTarget, "GetValueTaskAsync", 5);
+
+            ClassicAssert.AreEqual("value-5", tResult);
+        }
+
+        [Test]
+        public async Task TestInvokeMemberAwaitCompletedValueTaskResultDirectly()
+        {
+            var tTarget = new AsyncMethodPoco();
+
+            var tResult = await Dynamic.InvokeMember(tTarget, "GetCompletedValueTaskAsync", 5);
+
+            ClassicAssert.AreEqual("completed-5", tResult);
+        }
+
+        [Test]
+        public async Task TestInvokeMemberAwaitTaskResultDirectly()
+        {
+            var tTarget = new AsyncMethodPoco();
+
+            var tResult = await Dynamic.InvokeMember(tTarget, "GetTaskAsync", 5);
+
+            ClassicAssert.AreEqual("task-5", tResult);
+        }
+
+        [Test]
+        public async Task TestInvokeMemberValueTaskResultAssignedToTypedLocalThenAwaited()
+        {
+            var tTarget = new AsyncMethodPoco();
+
+            ValueTask<string> tValueTask = Dynamic.InvokeMember(tTarget, "GetValueTaskAsync", 5);
+            var tResult = await tValueTask;
+
+            ClassicAssert.AreEqual("value-5", tResult);
+        }
 
         [Test]
         public void TestCacheableConstruct()
@@ -1524,5 +1589,27 @@ namespace Dynamitey.Tests
             ClassicAssert.AreEqual(Dynamic.InvokeBinaryOperator(1, ExpressionType.Subtract, 2), -1);
         }
 
+    }
+
+    // For issue #15's investigation. No assembly boundary is involved, so this
+    // lives in the test file rather than SupportLibrary.
+    public class AsyncMethodPoco
+    {
+        public async ValueTask<string> GetValueTaskAsync(int id)
+        {
+            await Task.Delay(1);
+            return "value-" + id;
+        }
+
+        public ValueTask<string> GetCompletedValueTaskAsync(int id)
+        {
+            return new ValueTask<string>("completed-" + id);
+        }
+
+        public async Task<string> GetTaskAsync(int id)
+        {
+            await Task.Delay(1);
+            return "task-" + id;
+        }
     }
 }

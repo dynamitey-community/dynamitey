@@ -8,6 +8,10 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
+    <!-- ValueTask<T> isn't part of netstandard2.0's BCL surface (added in
+         netstandard2.1); this polyfill package is what brings it in, needed
+         for the issue #15/#16 investigation types below. -->
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 
 </Project>
