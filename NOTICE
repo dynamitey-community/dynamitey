@@ -1,10 +1,17 @@
 Dynamitey
-Copyright 2013-2024 Ekon Benefits
+Copyright 2010-2024 Ekon Benefits
 Copyright 2026 The dynamitey-community contributors
 
 This product includes software originally developed at Ekon Benefits
 (https://github.com/ekonbenefits/dynamitey) and licensed under the Apache
 License, Version 2.0.
+
+The range above is derived from the work itself, not from this repository's git
+history, which only begins in 2013. The earliest copyright notice in the source
+is "Copyright 2010 Ekon Benefits" in Dynamitey/Dynamic.cs; other files carry
+2011, 2013 and 2017. 2024 is the year of the last commit authored upstream.
+Individual source files retain their own notices unchanged, and those govern the
+files they head; this file summarises the work as a whole.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the
