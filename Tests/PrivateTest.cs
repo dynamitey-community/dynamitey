@@ -65,6 +65,120 @@ namespace Dynamitey.Tests
             var tCachedInvoke = new CacheableInvocation(InvocationKind.InvokeMember, "Test", context: typeof(TestWithPrivateMethod));
             Assert.That( tCachedInvoke.Invoke(tTest), Is.EqualTo(3));
         }
+
+        // Issue #12: InvokeGet works on an instance field but throws
+        // RuntimeBinderException on a static field, even though the same class's
+        // instance field works fine. Root cause: InvokeGetCallSite's static-context
+        // binder(s) never had a call shape that reaches a field at all (see the
+        // fix's comments in InvokeHelper-Regular.cs), so a reflection fallback is
+        // used once the DLR binder fails.
+        [Test]
+        public void TestInvokeGetInstanceField()
+        {
+            var tTest = new ClassWithPrivateFields();
+            Assert.That(Dynamic.InvokeGet(tTest, "field"), Is.EqualTo(16));
+        }
+
+        [Test]
+        public void TestInvokeGetPrivateStaticField()
+        {
+            var context = InvokeContext.CreateStatic(typeof(ClassWithPrivateFields));
+            Assert.That(Dynamic.InvokeGet(context, "other"), Is.EqualTo(17));
+        }
+
+        // Found during investigation: the bug is not limited to private fields.
+        // The static-context Get binder always attempts "get_" + name (a property
+        // accessor method), so it fails for ANY static field - even a fully public
+        // field on a fully public type - because fields have no "get_" method.
+        [Test]
+        public void TestInvokeGetPublicStaticField()
+        {
+            var context = InvokeContext.CreateStatic(typeof(PublicClassWithPublicStaticField));
+            Assert.That(Dynamic.InvokeGet(context, "Other"), Is.EqualTo(42));
+        }
+
+        [Test]
+        public void TestCacheableInvokeGetPrivateStaticField()
+        {
+            var tCachedInvoke = new CacheableInvocation(InvocationKind.Get, "other",
+                context: InvokeContext.CreateStatic(typeof(ClassWithPrivateFields)));
+            Assert.That(tCachedInvoke.Invoke(typeof(ClassWithPrivateFields)), Is.EqualTo(17));
+        }
+
+        // Issue #13: InvokeGet with a static context fails to read a private
+        // static PROPERTY when the target type isn't a non-nested public type.
+        // Each shape below uses its own type/property so the tests don't depend
+        // on each other, or on any other test in the suite, having run first -
+        // the reported bug was that behaviour changed depending on execution
+        // order, so a test that relied on ordering to pass would be validating
+        // the wrong thing.
+        [Test]
+        public void TestInvokeGetPrivateStaticProperty_PublicNestedClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(PublicNestedClassWithPrivateStaticProperty));
+            Assert.That(Dynamic.InvokeGet(context, "Hello"), Is.EqualTo("World"));
+        }
+
+        // The exact shape named in the issue's title: a private nested class.
+        [Test]
+        public void TestInvokeGetPrivateStaticProperty_PrivateNestedClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(PrivateNestedClassWithPrivateStaticProperty));
+            Assert.That(Dynamic.InvokeGet(context, "Hello"), Is.EqualTo("World"));
+        }
+
+        [Test]
+        public void TestInvokeGetPrivateStaticProperty_InternalTopLevelClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(InternalClassWithPrivateStaticProperty));
+            Assert.That(Dynamic.InvokeGet(context, "Hello"), Is.EqualTo("World"));
+        }
+
+        [Test]
+        public void TestInvokeGetPrivateStaticProperty_PublicTopLevelClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(PublicClassWithPrivateStaticProperty));
+            Assert.That(Dynamic.InvokeGet(context, "Hello"), Is.EqualTo("World"));
+        }
+
+        // Public nested class shape for issue #13.
+        public class PublicNestedClassWithPrivateStaticProperty
+        {
+            private static string Hello => "World";
+        }
+
+        // Private nested class shape for issue #13.
+        private class PrivateNestedClassWithPrivateStaticProperty
+        {
+            private static string Hello => "World";
+        }
+
+        // Regression coverage: "context" is Dynamitey's accessibility control
+        // (see TestInvokeDoNotExposePrivateMethod above). The #12/#13 reflection
+        // fallback must honor it rather than unconditionally exposing private
+        // static members regardless of which context the caller supplied.
+        [Test]
+        public void TestInvokeGetPrivateStaticFieldRestrictedContextThrows()
+        {
+            var context = InvokeContext.CreateStaticWithContext(typeof(ClassWithPrivateStaticFieldForContextTest), this);
+            Assert.That(() => Dynamic.InvokeGet(context, "Secret"), Throws.InstanceOf<RuntimeBinderException>());
+        }
+
+        [Test]
+        public void TestInvokeGetPrivateStaticPropertyRestrictedContextThrows()
+        {
+            var context = InvokeContext.CreateStaticWithContext(typeof(ClassWithPrivateStaticPropertyForContextTest), this);
+            Assert.That(() => Dynamic.InvokeGet(context, "Secret"), Throws.InstanceOf<RuntimeBinderException>());
+        }
+
+        // A PUBLIC static field is visible from any context, so a restrictive
+        // context must not block it - the gate should not over-correct.
+        [Test]
+        public void TestInvokeGetPublicStaticFieldRestrictedContextStillSucceeds()
+        {
+            var context = InvokeContext.CreateStaticWithContext(typeof(ClassWithPublicStaticFieldForContextTest), this);
+            Assert.That(Dynamic.InvokeGet(context, "Visible"), Is.EqualTo(123));
+        }
     }
 
     public class TestWithPrivateMethod
@@ -73,5 +187,56 @@ namespace Dynamitey.Tests
         {
             return 3;
         }
+    }
+
+    // For issue #12: reproduces the upstream reporter's exact shape - a private
+    // instance field alongside a private static field on an internal
+    // (default-access) top-level type.
+#pragma warning disable CS0414 // fields are only ever read dynamically, never by name
+    class ClassWithPrivateFields
+    {
+        private int field = 16;
+        private static int other = 17;
+    }
+#pragma warning restore CS0414
+
+    // For issue #12, generalized case found during investigation (see
+    // TestInvokeGetPublicStaticField).
+    public class PublicClassWithPublicStaticField
+    {
+        public static int Other = 42;
+    }
+
+    // For issue #13, shape from upstream PR #27: internal top-level class.
+    class InternalClassWithPrivateStaticProperty
+    {
+        private static string Hello => "World";
+    }
+
+    // For issue #13, shape from upstream PR #27: public top-level class.
+    public class PublicClassWithPrivateStaticProperty
+    {
+        private static string Hello => "World";
+    }
+
+    // For the accessibility-gate regression tests: a context unrelated to
+    // these types must not be able to read their private static members via
+    // the reflection fallback, even though reflection itself has no such
+    // restriction.
+#pragma warning disable CS0414 // field is only ever read dynamically, never by name
+    class ClassWithPrivateStaticFieldForContextTest
+    {
+        private static int Secret = 99;
+    }
+#pragma warning restore CS0414
+
+    class ClassWithPrivateStaticPropertyForContextTest
+    {
+        private static string Secret => "Hidden";
+    }
+
+    public class ClassWithPublicStaticFieldForContextTest
+    {
+        public static int Visible = 123;
     }
 }

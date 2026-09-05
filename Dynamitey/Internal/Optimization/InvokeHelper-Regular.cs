@@ -502,8 +502,67 @@ namespace Dynamitey.Internal.Optimization
                                 staticContext: staticContext);
             }
             var tCallSite = (CallSite<Func<CallSite, object, object>>) callsite;
+
+            if (staticContext && target is Type tTargetType)
+            {
+                // Neither of the binder shapes above can reach a static FIELD at
+                // all - InvokeMember("get_"+name,...) only ever finds a property
+                // accessor method, and GetMember(...,IsStaticType) cannot bind a
+                // static member of any kind on its own (verified empirically: it
+                // fails even for a fully public static property on an internal
+                // top-level type, until some other InvokeMember call against the
+                // same type has run first - see the commit message for how that
+                // was diagnosed). That means static-context Get is inherently
+                // order-dependent when it relies on the DLR binder alone: whether
+                // a given call succeeds can depend on what other dynamic
+                // operations already ran against the same type in this process
+                // (issue #13). Reflection has none of these gaps, so on ANY
+                // RuntimeBinderException here we fall back to it - first as a
+                // field (issue #12), then as a property (issue #13) - which
+                // makes the observable result correct and deterministic
+                // regardless of call order, independent of whichever binder path
+                // above happened to run first. This only runs for static-context
+                // gets, and only after the DLR path has already failed, so it
+                // does not affect the instance-member fast path.
+                try
+                {
+                    return tCallSite.Target(tCallSite, target);
+                }
+                catch (RuntimeBinderException)
+                {
+                    // "context" is Dynamitey's accessibility control (see
+                    // TestInvokeDoNotExposePrivateMethod in PrivateTest.cs) - a
+                    // caller who deliberately supplies a context unrelated to the
+                    // target type is asserting that it should NOT see the
+                    // target's private members, and reflection must not silently
+                    // widen that. A PUBLIC member is visible from any context, so
+                    // the fallback may always return one. A NON-PUBLIC member is
+                    // only returned when "context" is the target type itself -
+                    // the ordinary InvokeContext.CreateStatic(type) case, where
+                    // GetTargetContext defaulted context to target - mirroring
+                    // what the DLR path already grants private access for.
+                    const BindingFlags tStaticMemberFlags =
+                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
+                    var tContextOwnsPrivateAccess = context == tTargetType;
+
+                    var tField = tTargetType.GetField(name, tStaticMemberFlags);
+                    if (tField != null && (tField.IsPublic || tContextOwnsPrivateAccess))
+                    {
+                        return tField.GetValue(null);
+                    }
+
+                    var tProperty = tTargetType.GetProperty(name, tStaticMemberFlags);
+                    if (tProperty?.GetMethod != null && (tProperty.GetMethod.IsPublic || tContextOwnsPrivateAccess))
+                    {
+                        return tProperty.GetValue(null);
+                    }
+
+                    throw;
+                }
+            }
+
             return tCallSite.Target(tCallSite, target);
-            
+
         }
 
         internal static object InvokeSetCallSite(object target, string name, object value, Type context, bool staticContext, ref CallSite callSite)
