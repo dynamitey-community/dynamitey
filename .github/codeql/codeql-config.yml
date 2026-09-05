@@ -18,6 +18,10 @@ name: Dynamitey CodeQL configuration
 # Neither project ships to consumers, so an alert in either cannot reach anyone
 # who installs the package. Excluding them keeps the alert list meaningful for
 # the code that does ship — which is the only way the check stays worth reading.
+# Note: for a compiled language this file alone is not enough. CodeQL analyses
+# whatever the build extracts, so the workflow also builds only
+# Dynamitey/Dynamitey.csproj rather than the whole solution. This stays as the
+# declared intent, and as a backstop if the build step ever widens again.
 paths-ignore:
-  - Tests
-  - Benchmarks
+  - Tests/**
+  - Benchmarks/**
