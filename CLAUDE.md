@@ -126,7 +126,7 @@ Three workflows, all pinned to current action majors:
 | Workflow | Does |
 | --- | --- |
 | `ci.yml` | Build and test on Linux, macOS, Windows; `-warnaserror`; TRX artifacts; dry-runs every benchmark |
-| `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly |
+| `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
 | `dependencies.yml` | Dependency review on PRs; weekly `dotnet list package --vulnerable --include-transitive` |
 
 `push` only triggers CI on `main`; `pull_request` covers everything else, which
@@ -141,9 +141,38 @@ suppressed, suppress it narrowly and say why.
 `Directory.Build.props` carries the analyzer settings and NuGet audit config
 (`NuGetAuditMode=all`, `NuGetAuditLevel=low`).
 
+**CodeQL analyses the shipped library only.** `.github/codeql/codeql-config.yml`
+declares the intent, but for a compiled language `paths-ignore` cannot exclude
+code that was compiled — CodeQL analyses whatever the build extracts. So the
+workflow builds `Dynamitey/Dynamitey.csproj` alone rather than the solution. The
+test project deliberately does things static analysis must flag: dynamic calls
+it believes cannot succeed, and casts like `(object)tOut` that look useless but
+move a call from dynamic dispatch to the runtime type. If the CodeQL build step
+is ever widened back to the solution, roughly thirty false positives return.
+
 Dependabot covers NuGet and Actions weekly, grouping test and benchmark tooling
-into one PR. A Dependabot PR bumping NUnit past 3.x will fail until #5 is done —
-NUnit 4 removes the classic asserts this suite uses 323 times.
+into one PR.
+
+### Dependency upgrades that needed code changes
+
+Recorded because the next person to hit them should not have to re-derive them:
+
+- **NUnit 4** removes the classic assertions from `Assert` and moves them to
+  `NUnit.Framework.Legacy.ClassicAssert`. The failure mode here is unusual: most
+  assertions take `dynamic` arguments, so the compiler reports **CS1973**
+  — "extension methods cannot be dynamically dispatched" — rather than a missing
+  method. 291 call sites now use `ClassicAssert`. It also removed
+  `AssertionHelper`, so `Helper` no longer derives from it and the four
+  `Expect(actual, constraint)` sites became `Assert.That`.
+- **IronPython 3** maps Python's `int` to `System.Numerics.BigInteger`, not
+  `System.Int32`, because Python 3 integers are arbitrary precision. Embedded
+  scripts must name .NET types explicitly — `System.Func[System.Int32,
+  System.Boolean]`, never `System.Func[int, bool]` — or overload selection
+  silently picks the wrong overload.
+
+The suite is on NUnit 4 but still uses the classic model through `ClassicAssert`.
+Converting the 291 sites to `Assert.That(actual, Is.EqualTo(expected))` reorders
+arguments at every one of them, and is #5.
 
 ## Architecture
 
