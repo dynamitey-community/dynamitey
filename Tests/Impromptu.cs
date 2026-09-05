@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Dynamitey;
 using Dynamitey.DynamicObjects;
 using Dynamitey.SupportLibrary;
@@ -28,7 +29,7 @@ namespace Dynamitey.Tests
 
             ISimpleStringMethod tActsLike = ImpromptuInterface.Impromptu.ActLike(tNew);
 
-            Assert.AreEqual(false, tActsLike.StartsWith("Te"));
+            ClassicAssert.AreEqual(false, tActsLike.StartsWith("Te"));
         }
 
 
@@ -43,12 +44,12 @@ namespace Dynamitey.Tests
             var propType = new PropretySpecType(testProp);
 
             var propMembers = propType.GetMemberNames();
-            Expect(propMembers, Contains("test"));
-            
+            Assert.That(propMembers, Does.Contain("test"));
+
             var realType = new RealType(typeof(ISimpeleClassProps));
             var realMembers = realType.GetMemberNames();
 
-            Expect(realMembers, Contains("Prop2"));
+            Assert.That(realMembers, Does.Contain("Prop2"));
 
             
 
@@ -56,8 +57,8 @@ namespace Dynamitey.Tests
             
             var aggrMembers = aggrType.GetMemberNames();
 
-            Expect(aggrMembers, Contains("Prop2"));
-            Expect(aggrMembers, Contains("test"));
+            Assert.That(aggrMembers, Does.Contain("Prop2"));
+            Assert.That(aggrMembers, Does.Contain("test"));
 
         }
         
@@ -73,7 +74,7 @@ namespace Dynamitey.Tests
 
             if (baseObj.TryTypeForName("test", out Type ot))
             {
-                Assert.AreEqual(typeof(bool), ot);
+                ClassicAssert.AreEqual(typeof(bool), ot);
             }
             else
             {
@@ -89,7 +90,7 @@ namespace Dynamitey.Tests
 
             if (baseObj.TryTypeForName("Prop2", out Type ot))
             {
-                Assert.AreEqual(typeof(long), ot);
+                ClassicAssert.AreEqual(typeof(long), ot);
             }
             else
             {
@@ -104,7 +105,7 @@ namespace Dynamitey.Tests
 
             ISimpleStringMethod tActsLike = Interfacing << new DynamicObjects.Dictionary();
 
-            Assert.AreEqual(false, tActsLike.StartsWith("Te"));
+            ClassicAssert.AreEqual(false, tActsLike.StartsWith("Te"));
 
 
 
@@ -150,8 +151,8 @@ namespace Dynamitey.Tests
                 })
             });
 
-            Assert.AreEqual("Lvl1", tNest.NameLevel1);
-            Assert.AreEqual("Lvl2", tNest.Nested.NameLevel2);
+            ClassicAssert.AreEqual("Lvl1", tNest.NameLevel1);
+            ClassicAssert.AreEqual("Lvl2", tNest.Nested.NameLevel2);
         }
 
         [Test]
@@ -166,8 +167,8 @@ namespace Dynamitey.Tests
                     )
                 );
 
-            Assert.AreEqual("Lvl1", tNest.NameLevel1);
-            Assert.AreEqual("Lvl2", tNest.Nested.NameLevel2);
+            ClassicAssert.AreEqual("Lvl1", tNest.NameLevel1);
+            ClassicAssert.AreEqual("Lvl2", tNest.Nested.NameLevel2);
         }
 
     }

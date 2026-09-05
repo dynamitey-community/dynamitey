@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Dynamitey.Tests
 {
@@ -153,7 +154,7 @@ namespace Dynamitey.Tests
         {
             dynamic mimic = new SubMimic();
             int result = mimic.Add(2, 2);
-            Assert.AreEqual(4, result);
+            ClassicAssert.AreEqual(4, result);
         }
 
         [Test]
@@ -161,7 +162,7 @@ namespace Dynamitey.Tests
         {
             dynamic mimic = new SubMimic();
             string result = mimic.Add("He", "llo");
-            Assert.AreEqual("Hello", result);
+            ClassicAssert.AreEqual("Hello", result);
         }
 
         [Test]
@@ -169,7 +170,7 @@ namespace Dynamitey.Tests
         {
             dynamic mimic = new SubMimic();
             int result = mimic.Add(1, "llo");
-            Assert.AreEqual(default(int), result);
+            ClassicAssert.AreEqual(default(int), result);
         }
     }
 }
