@@ -53,10 +53,10 @@ dotnet build -c Release -warnaserror
 dotnet test Tests/Tests.csproj -c Release
 ```
 
-**The full suite must pass with no category filter: 186 passed, 0 failed, 0
-skipped.** If you find yourself adding a `--filter` to make it green, something
-is wrong. The wall-clock benchmarks that used to need one now live in
-`Benchmarks/` and assert nothing.
+**The full suite must pass with no category filter — 0 failed, 0 skipped.** If
+you find yourself adding a `--filter` to make it green, something is wrong. The
+wall-clock benchmarks that used to need one now live in `Benchmarks/` and assert
+nothing.
 
 `-warnaserror` matches CI. The tree builds clean with .NET analyzers at
 `AnalysisLevel=latest`, so a new warning is a regression rather than a backlog

@@ -204,7 +204,7 @@ namespace Dynamitey.Internal.Optimization {
 #endregion
                 default:
                     var tArgTypes = Enumerable.Repeat(typeof(object), tSwitch);
-                    var tDelagateType = EmitCallSiteFuncType(tArgTypes, typeof(TTarget));
+                    var tDelagateType = EmitCallSiteFuncType(tArgTypes, typeof(TReturn));
                     return Dynamic.InvokeCallSite(CreateCallSite(tDelagateType, binderType,knownType, binder, name, context, argNames), target, args);
 
             }

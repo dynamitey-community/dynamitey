@@ -131,6 +131,55 @@ namespace Dynamitey.Tests
             ClassicAssert.AreEqual("two", tCast[1]);
         }
 
+        // Issue #11, carried over from upstream. More than 14 arguments took the
+        // default branch of InvokeMemberTargetType, which built the call site with
+        // the wrong return type and threw InvalidCastException. 14 is the boundary
+        // because cases 0..14 are generated individually by InvokeHelper.tt.
+        [TestCase(14)]
+        [TestCase(15)]
+        [TestCase(16)]
+        [TestCase(20)]
+        public void TestConstructManyParamsArgs(int count)
+        {
+            var tParams = Enumerable.Range(0, count).Select(it => it.ToString() as object).ToArray();
+
+            var tCast = Dynamic.InvokeConstructor(typeof(ParamsConstructorPoco), tParams);
+
+            ClassicAssert.AreEqual(string.Join(",", Enumerable.Range(0, count)), tCast.Args);
+        }
+
+        // The second requirement recorded on the upstream thread: the reporter also
+        // needed a leading fixed parameter ahead of the params array.
+        [TestCase(14)]
+        [TestCase(15)]
+        [TestCase(20)]
+        public void TestConstructLeadingArgThenManyParamsArgs(int count)
+        {
+            var tParams = new object[] { "first" }
+                .Concat(Enumerable.Range(0, count).Select(it => it.ToString() as object))
+                .ToArray();
+
+            var tCast = Dynamic.InvokeConstructor(typeof(LeadingArgParamsConstructorPoco), tParams);
+
+            ClassicAssert.AreEqual("first", tCast.First);
+            ClassicAssert.AreEqual(string.Join(",", Enumerable.Range(0, count)), tCast.Rest);
+        }
+
+        // The same default branch serves ordinary member invocation, so more than
+        // 14 arguments must keep working there too.
+        [TestCase(14)]
+        [TestCase(15)]
+        [TestCase(20)]
+        public void TestInvokeMemberManyParamsArgs(int count)
+        {
+            var tTarget = new ParamsMethodPoco();
+            var tParams = Enumerable.Range(0, count).Select(it => it.ToString() as object).ToArray();
+
+            var tOut = Dynamic.InvokeMember(tTarget, "Join", tParams);
+
+            ClassicAssert.AreEqual(string.Join(",", Enumerable.Range(0, count)), tOut);
+        }
+
 
         [Test]
         public void TestCacheableConstruct()

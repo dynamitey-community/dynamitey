@@ -47,7 +47,7 @@ is where the work to move it forward is happening, not yet where you get it.
 | | |
 | --- | --- |
 | Target frameworks | `netstandard2.0;net10.0` — `net40` dropped |
-| Tests | `net10.0`, NUnit 4, 186 passing on Linux, macOS and Windows |
+| Tests | `net10.0`, NUnit 4, green on Linux, macOS and Windows |
 | CI | Rebuilt: build and test on three platforms, CodeQL, dependency review and NuGet audit |
 | Benchmarks | The old wall-clock `SpeedTest` fixture is now a BenchmarkDotNet project |
 | Dependencies | All current; no known vulnerable or deprecated packages |
@@ -94,8 +94,8 @@ dotnet build -c Release
 dotnet test Tests/Tests.csproj -c Release
 ```
 
-The full suite runs with no category filter and should report 186 passed, 0
-failed, 0 skipped. CI additionally builds with `-warnaserror`.
+The full suite runs with no category filter and must report 0 failed and 0
+skipped. CI additionally builds with `-warnaserror`.
 
 Benchmarks are a separate project and never run in CI:
 
