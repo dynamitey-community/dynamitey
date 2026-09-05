@@ -20,7 +20,13 @@
 
   </PropertyGroup>
   
-  <Import Project="..\Version.props" />
+  <ItemGroup>
+    <!-- Computes Version, AssemblyVersion, FileVersion and InformationalVersion
+         from git history and tags. Build-time only: PrivateAssets="all" keeps it
+         out of the produced package's dependencies. Configured by GitVersion.yml
+         at the repository root. Replaces the hardcoded Version.props. -->
+    <PackageReference Include="GitVersion.MsBuild" Version="6.*" PrivateAssets="all" />
+  </ItemGroup>
 
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">

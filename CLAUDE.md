@@ -173,6 +173,36 @@ The suite is on NUnit 4 but still uses the classic model through `ClassicAssert`
 Converting the 291 sites to `Assert.That(actual, Is.EqualTo(expected))` reorders
 arguments at every one of them, and is #5.
 
+## Versioning and releases
+
+**The version is computed by GitVersion from git history and tags. There is no
+version constant to edit.** `Version.props` used to hold one and is gone.
+
+- `GitVersion.yml` at the repository root is the config: GitHubFlow workflow,
+  `ContinuousDelivery` mode, and `next-version: 4.0.0` as the floor.
+- `Dynamitey.csproj` references `GitVersion.MsBuild` with `PrivateAssets="all"`,
+  so it is build-time only and does not reach consumers.
+- A build on `main` produces `4.0.0-preview.N`. **A release is made by pushing a
+  tag, not by editing a file.**
+
+**4.0.0, not 3.0.4.** Upstream stopped at 3.0.3, and this tree drops `net40`,
+which removes support for any consumer on .NET Framework 4.0. That is breaking,
+so the major version moves. Recorded on #6.
+
+Two consequences that will bite if forgotten:
+
+- **CI checkouts need `fetch-depth: 0`.** GitVersion reads history and tags; the
+  default shallow clone has neither and it fails rather than guessing. `ci.yml`
+  and `codeql.yml` set it.
+- **Building without a `.git` directory** — from a source archive rather than a
+  clone — disables the task and falls back to `4.0.0-nogit` via
+  `Directory.Build.props`. That fallback exists so a tarball build works, not as
+  a version anyone should ship.
+
+**Do not tag a release yet.** Publishing is blocked on the upstream maintainer's
+reply (#8), and the `notify-on-close` obligation on the ported issues is
+deliberately held until there is something installable.
+
 ## Architecture
 
 Four projects: `Dynamitey/` (the library), `SupportLibrary/` (a fixture assembly

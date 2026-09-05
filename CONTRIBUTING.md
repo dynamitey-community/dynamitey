@@ -76,6 +76,15 @@ converted yet ([#5](https://github.com/dynamitey-community/dynamitey/issues/5)).
 **New tests should use the constraint model** — `Assert.That(actual,
 Is.EqualTo(expected))` — rather than adding to the pile.
 
+## Versioning
+
+Do not set a version anywhere. GitVersion computes it from git history and tags,
+configured by `GitVersion.yml`; there is no version constant in the tree.
+
+If you build from a source archive rather than a clone, GitVersion has no history
+to read and the build falls back to `4.0.0-nogit`. That is expected, and it is
+why a clone is better for anything you intend to test.
+
 ## Pull requests
 
 - Branch from `main`. It is protected: no force pushes, linear history, and

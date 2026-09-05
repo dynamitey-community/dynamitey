@@ -20,4 +20,12 @@
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAuditLevel>low</NuGetAuditLevel>
     </PropertyGroup>
+    <PropertyGroup Condition="!Exists('$(MSBuildThisFileDirectory).git')">
+        <!-- GitVersion needs git history. Building from a source archive rather
+             than a clone has none, so fall back to a version that is obviously
+             not a release rather than failing the build. -->
+        <DisableGitVersionTask>true</DisableGitVersionTask>
+        <VersionPrefix>4.0.0</VersionPrefix>
+        <VersionSuffix>nogit</VersionSuffix>
+    </PropertyGroup>
 </Project>
