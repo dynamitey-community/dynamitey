@@ -530,17 +530,29 @@ namespace Dynamitey.Internal.Optimization
                 }
                 catch (RuntimeBinderException)
                 {
+                    // "context" is Dynamitey's accessibility control (see
+                    // TestInvokeDoNotExposePrivateMethod in PrivateTest.cs) - a
+                    // caller who deliberately supplies a context unrelated to the
+                    // target type is asserting that it should NOT see the
+                    // target's private members, and reflection must not silently
+                    // widen that. A PUBLIC member is visible from any context, so
+                    // the fallback may always return one. A NON-PUBLIC member is
+                    // only returned when "context" is the target type itself -
+                    // the ordinary InvokeContext.CreateStatic(type) case, where
+                    // GetTargetContext defaulted context to target - mirroring
+                    // what the DLR path already grants private access for.
                     const BindingFlags tStaticMemberFlags =
                         BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
+                    var tContextOwnsPrivateAccess = context == tTargetType;
 
                     var tField = tTargetType.GetField(name, tStaticMemberFlags);
-                    if (tField != null)
+                    if (tField != null && (tField.IsPublic || tContextOwnsPrivateAccess))
                     {
                         return tField.GetValue(null);
                     }
 
                     var tProperty = tTargetType.GetProperty(name, tStaticMemberFlags);
-                    if (tProperty != null)
+                    if (tProperty?.GetMethod != null && (tProperty.GetMethod.IsPublic || tContextOwnsPrivateAccess))
                     {
                         return tProperty.GetValue(null);
                     }

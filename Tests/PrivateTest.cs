@@ -152,6 +152,33 @@ namespace Dynamitey.Tests
         {
             private static string Hello => "World";
         }
+
+        // Regression coverage: "context" is Dynamitey's accessibility control
+        // (see TestInvokeDoNotExposePrivateMethod above). The #12/#13 reflection
+        // fallback must honor it rather than unconditionally exposing private
+        // static members regardless of which context the caller supplied.
+        [Test]
+        public void TestInvokeGetPrivateStaticFieldRestrictedContextThrows()
+        {
+            var context = InvokeContext.CreateStaticWithContext(typeof(ClassWithPrivateStaticFieldForContextTest), this);
+            Assert.That(() => Dynamic.InvokeGet(context, "Secret"), Throws.InstanceOf<RuntimeBinderException>());
+        }
+
+        [Test]
+        public void TestInvokeGetPrivateStaticPropertyRestrictedContextThrows()
+        {
+            var context = InvokeContext.CreateStaticWithContext(typeof(ClassWithPrivateStaticPropertyForContextTest), this);
+            Assert.That(() => Dynamic.InvokeGet(context, "Secret"), Throws.InstanceOf<RuntimeBinderException>());
+        }
+
+        // A PUBLIC static field is visible from any context, so a restrictive
+        // context must not block it - the gate should not over-correct.
+        [Test]
+        public void TestInvokeGetPublicStaticFieldRestrictedContextStillSucceeds()
+        {
+            var context = InvokeContext.CreateStaticWithContext(typeof(ClassWithPublicStaticFieldForContextTest), this);
+            Assert.That(Dynamic.InvokeGet(context, "Visible"), Is.EqualTo(123));
+        }
     }
 
     public class TestWithPrivateMethod
@@ -190,5 +217,26 @@ namespace Dynamitey.Tests
     public class PublicClassWithPrivateStaticProperty
     {
         private static string Hello => "World";
+    }
+
+    // For the accessibility-gate regression tests: a context unrelated to
+    // these types must not be able to read their private static members via
+    // the reflection fallback, even though reflection itself has no such
+    // restriction.
+#pragma warning disable CS0414 // field is only ever read dynamically, never by name
+    class ClassWithPrivateStaticFieldForContextTest
+    {
+        private static int Secret = 99;
+    }
+#pragma warning restore CS0414
+
+    class ClassWithPrivateStaticPropertyForContextTest
+    {
+        private static string Secret => "Hidden";
+    }
+
+    public class ClassWithPublicStaticFieldForContextTest
+    {
+        public static int Visible = 123;
     }
 }
