@@ -1,0 +1,46 @@
+name: Feature or change request
+description: Propose something the library should do differently
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Worth knowing before you write this up: this project is a continuation of
+        a dormant library, and its near-term priority is getting the existing
+        behaviour onto supported ground rather than growing the API. The
+        [roadmap](https://github.com/dynamitey-community/dynamitey/issues/10)
+        says what is planned and in what order.
+
+        That is not a no. It is context for why an answer might be "yes, after
+        the things on the roadmap".
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that is hard or impossible today? Describe the situation rather than the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like
+      description: If you have a specific API or behaviour in mind, sketch it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Workarounds you found, and why they are not good enough.
+
+  - type: checkboxes
+    id: compat
+    attributes:
+      label: Compatibility
+      description: |
+        This library still targets `netstandard2.0` on purpose — it is the only target reaching both .NET Framework and modern .NET from one assembly.
+      options:
+        - label: This can work on `netstandard2.0`, or I have said below why it needs to be `net10.0`-only

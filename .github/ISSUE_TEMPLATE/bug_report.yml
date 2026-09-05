@@ -1,0 +1,66 @@
+name: Bug report
+description: Something behaves differently from what you expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting.
+
+        **If this is a security problem, stop and use
+        [private reporting](https://github.com/dynamitey-community/dynamitey/security/advisories/new)
+        instead.**
+
+        Note that this fork has not published a package. If you hit this using
+        `Dynamitey` 3.0.3 from nuget.org, that is upstream's release — say so
+        below and we will still look, but the fix would land here rather than
+        there.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead? Paste the exception and stack trace if there is one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: |
+        The smallest code that shows it. A failing test against this repository is ideal, but a self-contained snippet is fine.
+
+        This matters more than usual here: several issues carried over from upstream have sat unresolved for years precisely because nobody could reproduce them.
+      render: csharp
+    validations:
+      required: true
+
+  - type: input
+    id: tfm
+    attributes:
+      label: Target framework
+      placeholder: "net10.0, net8.0, net48, netstandard2.0 ..."
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Dynamitey version or commit
+      placeholder: "3.0.3 from nuget.org, or a commit sha from this repository"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Windows 11, Ubuntu 24.04, macOS 15 ..."
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: |
+        Particularly useful for this library: does the behaviour change depending on what ran before it? Call-site caching is shared, so ordering has been the root cause before.
