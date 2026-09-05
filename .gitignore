@@ -157,3 +157,9 @@ $RECYCLE.BIN/
 .idea/*
 .vs/*
 .ionide/*
+
+# WSL/Windows alternate data stream artifacts
+*:Zone.Identifier
+
+# BenchmarkDotNet output
+BenchmarkDotNet.Artifacts/
