@@ -208,9 +208,10 @@ namespace Dynamitey
 
         /// <summary>
         /// Dynamically invokes a member method using the DLR, the same as <see cref="InvokeMember"/>, then
-        /// awaits its result without going through dynamic binding, so an async method whose <c>Task&lt;T&gt;</c>
-        /// has a <typeparamref name="T"/>-analogue inaccessible to the caller (an internal or nested-private
-        /// type in another assembly) does not throw.
+        /// awaits its result without going through dynamic binding. Use this when the invoked method returns
+        /// a <c>Task&lt;TResult&gt;</c> whose <c>TResult</c> is not accessible to the calling assembly - an
+        /// internal or nested-private type declared elsewhere - which is the case that makes
+        /// <c>await Dynamic.InvokeMember(...)</c> throw.
         /// </summary>
         /// <param name="target">The target.</param>
         /// <param name="name">The name. Can be a string; it will be implicitly converted.</param>
