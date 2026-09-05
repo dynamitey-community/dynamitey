@@ -15,7 +15,7 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <!-- Pinned to the version the retired SpeedTest fixture measured against,
          so the F# reflection comparison stays like-for-like. -->
-    <PackageReference Include="FSharp.Core" Version="4.7.2" />
+    <PackageReference Include="FSharp.Core" Version="10.1.400" />
   </ItemGroup>
 
   <ItemGroup>
