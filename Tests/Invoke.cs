@@ -10,6 +10,7 @@ using Dynamitey.SupportLibrary;
 using Microsoft.CSharp.RuntimeBinder;
 using Moq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using System.Globalization;
 
 namespace Dynamitey.Tests
@@ -32,7 +33,7 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSet(tExpando, "Test", tSetValue);
 
-            Assert.AreEqual(tSetValue, tExpando.Test);
+            ClassicAssert.AreEqual(tSetValue, tExpando.Test);
 
         }
 
@@ -47,7 +48,7 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSet(tPoco, "Prop1", tSetValue);
 
-            Assert.AreEqual(tSetValue, tPoco.Prop1);
+            ClassicAssert.AreEqual(tSetValue, tPoco.Prop1);
 
         }
 
@@ -61,7 +62,7 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSet(tPoco, "Prop1", tSetValue);
 
-            Assert.AreEqual(tSetValue, ((PropStruct)tPoco).Prop1);
+            ClassicAssert.AreEqual(tSetValue, ((PropStruct)tPoco).Prop1);
 
         }
 
@@ -77,20 +78,20 @@ namespace Dynamitey.Tests
             tCachedInvoke.Invoke((object)tExpando, tSetValueD);
 
 
-            Assert.AreEqual(tSetValueD, tExpando.Prop1);
+            ClassicAssert.AreEqual(tSetValueD, tExpando.Prop1);
 
             var tPoco = new PropPoco();
             var tSetValue = "1";
 
             tCachedInvoke.Invoke(tPoco, tSetValue);
 
-            Assert.AreEqual(tSetValue, tPoco.Prop1);
+            ClassicAssert.AreEqual(tSetValue, tPoco.Prop1);
 
             String tSetValue2 = null;
 
             tCachedInvoke.Invoke(tPoco, tSetValue2);
 
-            Assert.AreEqual(tSetValue2, tPoco.Prop1);
+            ClassicAssert.AreEqual(tSetValue2, tPoco.Prop1);
         }
 
 
@@ -102,8 +103,8 @@ namespace Dynamitey.Tests
 
             var tCast = Dynamic.InvokeConvert(tEl, typeof(int), @explicit: true);
 
-            Assert.AreEqual(typeof(int), tCast.GetType());
-            Assert.AreEqual(45, tCast);
+            ClassicAssert.AreEqual(typeof(int), tCast.GetType());
+            ClassicAssert.AreEqual(45, tCast);
         }
 
         [Test]
@@ -115,8 +116,8 @@ namespace Dynamitey.Tests
                                                        convertExplicit: true);
             var tCast = tCacheInvoke.Invoke(tEl);
 
-            Assert.AreEqual(typeof(int), tCast.GetType());
-            Assert.AreEqual(45, tCast);
+            ClassicAssert.AreEqual(typeof(int), tCast.GetType());
+            ClassicAssert.AreEqual(45, tCast);
         }
 
         [Test]
@@ -127,7 +128,7 @@ namespace Dynamitey.Tests
                                                                                   new string[] {"one", "two", "three"}
                                                                               });
 
-            Assert.AreEqual("two", tCast[1]);
+            ClassicAssert.AreEqual("two", tCast[1]);
         }
 
 
@@ -141,7 +142,7 @@ namespace Dynamitey.Tests
                                                                                   new string[] {"one", "two", "three"}
                                                                               });
 
-            Assert.AreEqual("two", tCast[1]);
+            ClassicAssert.AreEqual("two", tCast[1]);
         }
 
         
@@ -154,9 +155,9 @@ namespace Dynamitey.Tests
 
             PocoOptConstructor tCast = Dynamic.InvokeConstructor(typeof(PocoOptConstructor), argname("three", "3"));
 
-            Assert.AreEqual("-1", tCast.One);
-            Assert.AreEqual("-2", tCast.Two);
-            Assert.AreEqual("3", tCast.Three);
+            ClassicAssert.AreEqual("-1", tCast.One);
+            ClassicAssert.AreEqual("-2", tCast.Two);
+            ClassicAssert.AreEqual("3", tCast.Three);
         }
 
         [Test]
@@ -166,9 +167,9 @@ namespace Dynamitey.Tests
 
             var tCast = (PocoOptConstructor)tCachedInvoke.Invoke(typeof(PocoOptConstructor), "3");
 
-            Assert.AreEqual("-1", tCast.One);
-            Assert.AreEqual("-2", tCast.Two);
-            Assert.AreEqual("3", tCast.Three);
+            ClassicAssert.AreEqual("-1", tCast.One);
+            ClassicAssert.AreEqual("-2", tCast.Two);
+            ClassicAssert.AreEqual("3", tCast.Three);
         }
 
         [Test]
@@ -180,14 +181,14 @@ namespace Dynamitey.Tests
             var tList = Dynamic.InvokeConstructor(typeof(DynamicObjects.List));
 
 
-            Assert.AreEqual(typeof(DynamicObjects.List), tList.GetType());
+            ClassicAssert.AreEqual(typeof(DynamicObjects.List), tList.GetType());
 
             var tCachedInvoke = new CacheableInvocation(InvocationKind.Constructor);
 
             var tList1 = tCachedInvoke.Invoke(typeof(DynamicObjects.List));
 
 
-            Assert.AreEqual(typeof(DynamicObjects.List), tList1.GetType());
+            ClassicAssert.AreEqual(typeof(DynamicObjects.List), tList1.GetType());
         }
 
 
@@ -197,7 +198,7 @@ namespace Dynamitey.Tests
         {
             var tCast = Dynamic.InvokeConstructor(typeof(DateTime), 2009, 1, 20);
 
-            Assert.AreEqual(20, tCast.Day);
+            ClassicAssert.AreEqual(20, tCast.Day);
 
         }
 
@@ -207,7 +208,7 @@ namespace Dynamitey.Tests
             var tCachedInvoke = new CacheableInvocation(InvocationKind.Constructor, argCount: 3);
             dynamic tCast = tCachedInvoke.Invoke(typeof(DateTime), 2009, 1, 20);
 
-            Assert.AreEqual(20, tCast.Day);
+            ClassicAssert.AreEqual(20, tCast.Day);
 
         }
 
@@ -219,7 +220,7 @@ namespace Dynamitey.Tests
             dynamic month = 1;
             var tCast = new DateTime(year, month, day);
             DateTime tDate = tCast;
-            Assert.AreEqual(20, tDate.Day);
+            ClassicAssert.AreEqual(20, tDate.Day);
         }
 
         [Test]
@@ -227,7 +228,7 @@ namespace Dynamitey.Tests
         {
             var tCast = Dynamic.InvokeConstructor(typeof(Int32));
 
-            Assert.AreEqual(default(Int32), tCast);
+            ClassicAssert.AreEqual(default(Int32), tCast);
         }
 
 
@@ -236,7 +237,7 @@ namespace Dynamitey.Tests
         {
             var tCast = Dynamic.InvokeConstructor(typeof(DateTime));
 
-            Assert.AreEqual(default(DateTime), tCast);
+            ClassicAssert.AreEqual(default(DateTime), tCast);
         }
 
         [Test]
@@ -244,7 +245,7 @@ namespace Dynamitey.Tests
         {
             var tCast = Dynamic.InvokeConstructor(typeof(object));
 
-            Assert.AreEqual(typeof(object), tCast.GetType());
+            ClassicAssert.AreEqual(typeof(object), tCast.GetType());
         }
 
         [Test]
@@ -252,7 +253,7 @@ namespace Dynamitey.Tests
         {
             var tCast = Dynamic.InvokeConstructor(typeof(Nullable<Int32>));
 
-            Assert.AreEqual(null, tCast);
+            ClassicAssert.AreEqual(null, tCast);
         }
 
         [Test]
@@ -260,7 +261,7 @@ namespace Dynamitey.Tests
         {
             var tCast = Dynamic.InvokeConstructor(typeof(Guid));
 
-            Assert.AreEqual(default(Guid), tCast);
+            ClassicAssert.AreEqual(default(Guid), tCast);
         }
 
         [Test]
@@ -270,27 +271,27 @@ namespace Dynamitey.Tests
 
             dynamic tCast = tCachedInvoke.Invoke(typeof(Int32));
 
-            Assert.AreEqual(default(Int32), tCast);
+            ClassicAssert.AreEqual(default(Int32), tCast);
 
             tCast = tCachedInvoke.Invoke(typeof(DateTime));
 
-            Assert.AreEqual(default(DateTime), tCast);
+            ClassicAssert.AreEqual(default(DateTime), tCast);
 
             tCast = tCachedInvoke.Invoke(typeof(List<string>));
 
-            Assert.AreEqual(typeof(List<string>), tCast.GetType());
+            ClassicAssert.AreEqual(typeof(List<string>), tCast.GetType());
 
             tCast = tCachedInvoke.Invoke(typeof(object));
 
-            Assert.AreEqual(typeof(object), tCast.GetType());
+            ClassicAssert.AreEqual(typeof(object), tCast.GetType());
 
             tCast = tCachedInvoke.Invoke(typeof(Nullable<Int32>));
 
-            Assert.AreEqual(null, tCast);
+            ClassicAssert.AreEqual(null, tCast);
 
             tCast = tCachedInvoke.Invoke(typeof(Guid));
 
-            Assert.AreEqual(default(Guid), tCast);
+            ClassicAssert.AreEqual(default(Guid), tCast);
         }
 
 
@@ -302,7 +303,7 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeMember(@static(typeof(StaticType)),
                                               generic("Create",new[]{typeof(bool)}), 1);
-            Assert.AreEqual(false, tOut);
+            ClassicAssert.AreEqual(false, tOut);
         }
 
         [Test]
@@ -315,7 +316,7 @@ namespace Dynamitey.Tests
                                     context: @static(typeof(StaticType)));
 
             var tOut = tCached.Invoke(typeof(StaticType), 1);
-            Assert.AreEqual(false, tOut);
+            ClassicAssert.AreEqual(false, tOut);
         }
         
         private class TestClass
@@ -329,7 +330,7 @@ namespace Dynamitey.Tests
             var staticContext = InvokeContext.CreateStatic;
             Dynamic.InvokeSet(staticContext(typeof(TestClass)), "StaticProperty", 42);
             var tOut = Dynamic.InvokeGet(staticContext(typeof(TestClass)), "StaticProperty");
-            Assert.AreEqual(42, tOut);
+            ClassicAssert.AreEqual(42, tOut);
         }
         
      
@@ -340,7 +341,7 @@ namespace Dynamitey.Tests
 
             var tCast = Dynamic.InvokeConvert(tEl, typeof(long));
 
-            Assert.AreEqual(typeof(long), tCast.GetType());
+            ClassicAssert.AreEqual(typeof(long), tCast.GetType());
         }
 
         [Test]
@@ -362,12 +363,12 @@ namespace Dynamitey.Tests
 
             var tCast = Dynamic.CoerceConvert(tEl, typeof(long));
 
-            Assert.AreEqual(typeof(long), tCast.GetType());
+            ClassicAssert.AreEqual(typeof(long), tCast.GetType());
 
             var tCast2 = Dynamic.CoerceConvert(tEl, typeof(string));
-            Assert.AreEqual(null, tCast2);
+            ClassicAssert.AreEqual(null, tCast2);
 
-            Assert.AreNotEqual(null, tEl);
+            ClassicAssert.AreNotEqual(null, tEl);
         }
 
 
@@ -381,7 +382,7 @@ namespace Dynamitey.Tests
 
             var tCast = tCachedInvoke.Invoke(tEl);
 
-            Assert.AreEqual(typeof(long), tCast.GetType());
+            ClassicAssert.AreEqual(typeof(long), tCast.GetType());
         }
 
 
@@ -394,7 +395,7 @@ namespace Dynamitey.Tests
             var tAnon = new PropPoco { Prop1 = tSetValue };
 
             var tOut = tCached.Invoke(tAnon);
-            Assert.AreEqual(tSetValue, tOut);
+            ClassicAssert.AreEqual(tSetValue, tOut);
 
             var tSetValue2 = "2";
             tAnon = new PropPoco { Prop1 = tSetValue2 };
@@ -403,7 +404,7 @@ namespace Dynamitey.Tests
             var tOut2 = tCached.Invoke(tAnon);
 
 
-            Assert.AreEqual(tSetValue2, tOut2);
+            ClassicAssert.AreEqual(tSetValue2, tOut2);
 
         }
 
@@ -417,7 +418,7 @@ namespace Dynamitey.Tests
 
             string tOut = Dynamic.InvokeGetIndex(tAnon, 0);
 
-            Assert.AreEqual(tSetValue, tOut);
+            ClassicAssert.AreEqual(tSetValue, tOut);
 
         }
 
@@ -432,7 +433,7 @@ namespace Dynamitey.Tests
 
             int tOut = Dynamic.InvokeGetIndex(tAnon, 1);
 
-            Assert.AreEqual(tAnon[1], tOut);
+            ClassicAssert.AreEqual(tAnon[1], tOut);
 
         }
 
@@ -445,7 +446,7 @@ namespace Dynamitey.Tests
 
             int tOut = Dynamic.InvokeGet(tAnon, "Length");
 
-            Assert.AreEqual(2, tOut);
+            ClassicAssert.AreEqual(2, tOut);
 
         }
 
@@ -458,7 +459,7 @@ namespace Dynamitey.Tests
 
             string tOut = Dynamic.InvokeGetIndex(tAnon, 0);
 
-            Assert.AreEqual(tSetValue, tOut);
+            ClassicAssert.AreEqual(tSetValue, tOut);
 
         }
 
@@ -473,31 +474,31 @@ namespace Dynamitey.Tests
 
             var tOut = (string)tCachedInvoke.Invoke(tStrings, 0);
 
-            Assert.AreEqual(tStrings[0], tOut);
+            ClassicAssert.AreEqual(tStrings[0], tOut);
 
             var tOut2 = (string)tCachedInvoke.Invoke(tStrings, 1);
 
-            Assert.AreEqual(tStrings[1], tOut2);
+            ClassicAssert.AreEqual(tStrings[1], tOut2);
 
             var tInts = new int[] { 3, 4 };
 
             var tOut3 = (int)tCachedInvoke.Invoke(tInts, 0);
 
-            Assert.AreEqual(tInts[0], tOut3);
+            ClassicAssert.AreEqual(tInts[0], tOut3);
 
             var tOut4 = (int)tCachedInvoke.Invoke(tInts, 1);
 
-            Assert.AreEqual(tInts[1], tOut4);
+            ClassicAssert.AreEqual(tInts[1], tOut4);
 
             var tList = new List<string> { "5", "6" };
 
             var tOut5 = (string)tCachedInvoke.Invoke(tList, 0);
 
-            Assert.AreEqual(tList[0], tOut5);
+            ClassicAssert.AreEqual(tList[0], tOut5);
 
             var tOut6 = (string)tCachedInvoke.Invoke(tList, 0);
 
-            Assert.AreEqual(tList[0], tOut6);
+            ClassicAssert.AreEqual(tList[0], tOut6);
         }
 
         [Test]
@@ -509,7 +510,7 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSetIndex(tAnon, 0, tSetValue);
 
-            Assert.AreEqual(tSetValue, tAnon[0]);
+            ClassicAssert.AreEqual(tSetValue, tAnon[0]);
 
         }
 
@@ -525,7 +526,7 @@ namespace Dynamitey.Tests
 
             tCachedInvoke.Invoke(tList, 0, tSetValue);
 
-            Assert.AreEqual(tSetValue, tList[0]);
+            ClassicAssert.AreEqual(tSetValue, tList[0]);
 
         }
 
@@ -541,7 +542,7 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeMember(tExpando, "Func", tValue);
 
-            Assert.AreEqual(tValue.ToString(), tOut);
+            ClassicAssert.AreEqual(tValue.ToString(), tOut);
         }
 
 
@@ -557,7 +558,7 @@ namespace Dynamitey.Tests
 
             var tOut = tCachedInvoke.Invoke((object)tExpando, tValue);
 
-            Assert.AreEqual(tValue.ToString(), tOut);
+            ClassicAssert.AreEqual(tValue.ToString(), tOut);
         }
 
 
@@ -570,18 +571,18 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeMember(tPoco, "Func", tValue);
 
-            Assert.AreEqual("int", tOut);
+            ClassicAssert.AreEqual("int", tOut);
 
-            Assert.AreEqual("int", (object)tOut); //should still be int because this uses runtime type
+            ClassicAssert.AreEqual("int", (object)tOut); //should still be int because this uses runtime type
 
 
             var tOut2 = Dynamic.InvokeMember(tPoco, "Func", 1m);
 
-            Assert.AreEqual("object", tOut2);
+            ClassicAssert.AreEqual("object", tOut2);
 
             var tOut3 = Dynamic.InvokeMember(tPoco, "Func", new { Anon = 1 });
 
-            Assert.AreEqual("object", tOut3);
+            ClassicAssert.AreEqual("object", tOut3);
         }
 
         [Test]
@@ -596,18 +597,18 @@ namespace Dynamitey.Tests
 
             var tOut = tCachedInvoke.Invoke(tPoco, tValue);
 
-            Assert.AreEqual("int", tOut);
+            ClassicAssert.AreEqual("int", tOut);
 
-            Assert.AreEqual("int", (object)tOut); //should still be int because this uses runtime type
+            ClassicAssert.AreEqual("int", (object)tOut); //should still be int because this uses runtime type
 
 
             var tOut2 = tCachedInvoke.Invoke(tPoco, 1m);
 
-            Assert.AreEqual("object", tOut2);
+            ClassicAssert.AreEqual("object", tOut2);
 
             var tOut3 = tCachedInvoke.Invoke(tPoco, new { Anon = 1 });
 
-            Assert.AreEqual("object", tOut3);
+            ClassicAssert.AreEqual("object", tOut3);
         }
 
         [Test]
@@ -619,18 +620,18 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeMember(tPoco, "Func", new InvokeArg("arg", tValue));
 
-            Assert.AreEqual("int", tOut);
+            ClassicAssert.AreEqual("int", tOut);
 
-            Assert.AreEqual("int", (object)tOut); //should still be int because this uses runtime type
+            ClassicAssert.AreEqual("int", (object)tOut); //should still be int because this uses runtime type
 
 
             var tOut2 = Dynamic.InvokeMember(tPoco, "Func", 1m);
 
-            Assert.AreEqual("object", tOut2);
+            ClassicAssert.AreEqual("object", tOut2);
 
             var tOut3 = Dynamic.InvokeMember(tPoco, "Func", new { Anon = 1 });
 
-            Assert.AreEqual("object", tOut3);
+            ClassicAssert.AreEqual("object", tOut3);
         }
 
         [Test]
@@ -644,9 +645,9 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeMember(tPoco, "Func", arg("two", tValue));
 
-            Assert.AreEqual("object named", tOut);
+            ClassicAssert.AreEqual("object named", tOut);
 
-            Assert.AreEqual("object named", (object)tOut);
+            ClassicAssert.AreEqual("object named", (object)tOut);
         }
 
         [Test]
@@ -661,9 +662,9 @@ namespace Dynamitey.Tests
 
             var tOut = tCachedIvnocation.Invoke(tPoco, tValue);
 
-            Assert.AreEqual("object named", tOut);
+            ClassicAssert.AreEqual("object named", tOut);
 
-            Assert.AreEqual("object named", (object)tOut);
+            ClassicAssert.AreEqual("object named", (object)tOut);
         }
 
         [Test]
@@ -679,9 +680,9 @@ namespace Dynamitey.Tests
 
             var tOut = tCachedIvnocation.Invoke(tPoco, tValue1, tValue2);
 
-            Assert.AreEqual("object named", tOut);
+            ClassicAssert.AreEqual("object named", tOut);
 
-            Assert.AreEqual("object named", (object)tOut);
+            ClassicAssert.AreEqual("object named", (object)tOut);
         }
 
         [Test]
@@ -695,9 +696,9 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeMember(tPoco, "Func", arg("two", tValue), arg("one", tValue));
 
-            Assert.AreEqual("object named", tOut);
+            ClassicAssert.AreEqual("object named", tOut);
 
-            Assert.AreEqual("object named", (object)tOut);
+            ClassicAssert.AreEqual("object named", (object)tOut);
         }
 
         [Test]
@@ -709,26 +710,26 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeMember(tPoco, "Func", tValue);
 
-            Assert.AreEqual("int", tOut);
+            ClassicAssert.AreEqual("int", tOut);
 
-            Assert.AreEqual("int", (object)tOut); //should still be int because this uses runtime type
+            ClassicAssert.AreEqual("int", (object)tOut); //should still be int because this uses runtime type
 
 
             var tOut2 = Dynamic.InvokeMember(tPoco, "Func", 1m);
 
-            Assert.AreEqual("object", tOut2);
+            ClassicAssert.AreEqual("object", tOut2);
 
             var tOut3 = Dynamic.InvokeMember(tPoco, "Func", null);
 
-            Assert.AreEqual("object", tOut3);
+            ClassicAssert.AreEqual("object", tOut3);
 
             var tOut4 = Dynamic.InvokeMember(tPoco, "Func", null, null, "test", null, null, null);
 
-            Assert.AreEqual("object 6", tOut4);
+            ClassicAssert.AreEqual("object 6", tOut4);
 
             var tOut5 = Dynamic.InvokeMember(tPoco, "Func", null, null, null, null, null, null);
 
-            Assert.AreEqual("object 6", tOut5);
+            ClassicAssert.AreEqual("object 6", tOut5);
         }
 
         /// <summary>
@@ -764,7 +765,7 @@ namespace Dynamitey.Tests
 
             tSite.Target.Invoke(tSite, tPoco, out tResult);
 
-            Assert.AreEqual("success", tResult);
+            ClassicAssert.AreEqual("success", tResult);
 
         }
 
@@ -783,7 +784,7 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeMemberAction(tExpando, "Action", tValue);
 
-            Assert.AreEqual(tValue, tTest);
+            ClassicAssert.AreEqual(tValue, tTest);
         }
 
         [Test]
@@ -800,7 +801,7 @@ namespace Dynamitey.Tests
 
             tCachedInvoke.Invoke((object)tExpando, tValue);
 
-            Assert.AreEqual(tValue, tTest);
+            ClassicAssert.AreEqual(tValue, tTest);
         }
 
         [Test]
@@ -818,13 +819,13 @@ namespace Dynamitey.Tests
 
             tCachedInvoke.Invoke((object)tExpando, tValue);
 
-            Assert.AreEqual(tValue, tTest);
+            ClassicAssert.AreEqual(tValue, tTest);
 
             var tCachedInvoke2 = new CacheableInvocation(InvocationKind.InvokeMemberUnknown, "Func", argCount: 1);
 
             var Test2 = tCachedInvoke2.Invoke((object)tExpando, tValue);
 
-            Assert.AreEqual(tValue, Test2);
+            ClassicAssert.AreEqual(tValue, Test2);
         }
 
 
@@ -838,7 +839,7 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeMember(tValue, "ToString");
 
-            Assert.AreEqual(tValue.ToString(), tOut);
+            ClassicAssert.AreEqual(tValue.ToString(), tOut);
         }
 
 
@@ -860,7 +861,7 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeMember(tValue, "StartsWith", tParam);
 
-            Assert.AreEqual(tExpected, tOut);
+            ClassicAssert.AreEqual(tExpected, tOut);
         }
 
 
@@ -876,7 +877,7 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeGet(tExpando, "Test");
 
-            Assert.AreEqual(tSetValue, tOut);
+            ClassicAssert.AreEqual(tSetValue, tOut);
         }
 
         [Test]
@@ -892,7 +893,7 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeGetChain(tExpando, "Test.Test2.Test3");
 
-            Assert.AreEqual(tSetValue, tOut);
+            ClassicAssert.AreEqual(tSetValue, tOut);
         }
 
         [Test]
@@ -912,7 +913,7 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeGetChain(tExpando, "Test.Test2[0].Test3['Test4']");
 
-            Assert.AreEqual(tSetValue, tOut);
+            ClassicAssert.AreEqual(tSetValue, tOut);
         }
 
 
@@ -928,7 +929,7 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSetChain(tExpando, "Test.Test2.Test3", tSetValue);
 
-            Assert.AreEqual(tSetValue, tExpando.Test.Test2.Test3);
+            ClassicAssert.AreEqual(tSetValue, tExpando.Test.Test2.Test3);
         }
 
         [Test]
@@ -946,9 +947,9 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeSetChain(tExpando, "Test.Test2[0].Test3['Test4']", tSetValue);
 
-            Assert.AreEqual(tSetValue, tExpando.Test.Test2[0].Test3["Test4"]);
+            ClassicAssert.AreEqual(tSetValue, tExpando.Test.Test2[0].Test3["Test4"]);
 
-            Assert.AreEqual(tSetValue, tOut);
+            ClassicAssert.AreEqual(tSetValue, tOut);
         }
 
         [Test]
@@ -965,9 +966,9 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSetChain(tExpando, "Test.Test2.Test3", tSetValue);
 
-            Assert.AreEqual(tSetValue, tExpando.Test.Test2.Test3);
-            Assert.AreEqual(1, tExpando.One);
-            Assert.AreEqual(2, tExpando.Two);
+            ClassicAssert.AreEqual(tSetValue, tExpando.Test.Test2.Test3);
+            ClassicAssert.AreEqual(1, tExpando.One);
+            ClassicAssert.AreEqual(2, tExpando.Two);
         }
 
         [Test]
@@ -978,9 +979,9 @@ namespace Dynamitey.Tests
             Dynamic.InvokeSetAll(tExpando, new { One = 1, Two = 2, Three = 3 });
 
 
-            Assert.AreEqual(1, tExpando.One);
-            Assert.AreEqual(2, tExpando.Two);
-            Assert.AreEqual(3, tExpando.Three);
+            ClassicAssert.AreEqual(1, tExpando.One);
+            ClassicAssert.AreEqual(2, tExpando.Two);
+            ClassicAssert.AreEqual(3, tExpando.Three);
         }
 
         [Test]
@@ -991,9 +992,9 @@ namespace Dynamitey.Tests
             Dynamic.InvokeSetAll(tExpando, One: 1, Two: 2, Three: 3);
 
 
-            Assert.AreEqual(1, tExpando.One);
-            Assert.AreEqual(2, tExpando.Two);
-            Assert.AreEqual(3, tExpando.Three);
+            ClassicAssert.AreEqual(1, tExpando.One);
+            ClassicAssert.AreEqual(2, tExpando.Two);
+            ClassicAssert.AreEqual(3, tExpando.Three);
         }
 
         [Test]
@@ -1006,7 +1007,7 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSetChain(tExpando, "Test", tSetValue);
 
-            Assert.AreEqual(tSetValue, tExpando.Test);
+            ClassicAssert.AreEqual(tSetValue, tExpando.Test);
         }
 
         [Test]
@@ -1021,7 +1022,7 @@ namespace Dynamitey.Tests
 
             var tOut = Dynamic.InvokeGetChain(tExpando, "Test");
 
-            Assert.AreEqual(tSetValue, tOut);
+            ClassicAssert.AreEqual(tSetValue, tOut);
         }
 
         [Test]
@@ -1036,7 +1037,7 @@ namespace Dynamitey.Tests
 
             var tOut = tCached.Invoke((object)tExpando);
 
-            Assert.AreEqual(tSetValue, tOut);
+            ClassicAssert.AreEqual(tSetValue, tOut);
         }
 
         [Test]
@@ -1044,7 +1045,7 @@ namespace Dynamitey.Tests
         {
             var @static = InvokeContext.CreateStatic;
             var tDate = Dynamic.InvokeGet(@static(typeof(DateTime)), "Today");
-            Assert.AreEqual(DateTime.Today, tDate);
+            ClassicAssert.AreEqual(DateTime.Today, tDate);
         }
 
         [Test]
@@ -1054,7 +1055,7 @@ namespace Dynamitey.Tests
             var tCached = new CacheableInvocation(InvocationKind.Get, "Today", context: @static(typeof(DateTime)));
 
             var tDate = tCached.Invoke(typeof(DateTime));
-            Assert.AreEqual(DateTime.Today, tDate);
+            ClassicAssert.AreEqual(DateTime.Today, tDate);
         }
 
 
@@ -1063,14 +1064,14 @@ namespace Dynamitey.Tests
         {
             var @static = InvokeContext.CreateStatic;
             var tVal = Dynamic.InvokeGet(@static(typeof(StaticType)), "Test");
-            Assert.AreEqual(true, tVal);
+            ClassicAssert.AreEqual(true, tVal);
         }
 
         [Test]
         public void TestStaticGet3()
         {
             var tVal = Dynamic.InvokeGet((StaticContext)typeof(StaticType), "Test");
-            Assert.AreEqual(true, tVal);
+            ClassicAssert.AreEqual(true, tVal);
         }
         [Test]
         public void TestStaticSet()
@@ -1078,7 +1079,7 @@ namespace Dynamitey.Tests
             var @static = InvokeContext.CreateStatic;
             int tValue = 12;
             Dynamic.InvokeSet(@static(typeof(StaticType)), "TestSet", tValue);
-            Assert.AreEqual(tValue, StaticType.TestSet);
+            ClassicAssert.AreEqual(tValue, StaticType.TestSet);
         }
 
         [Test]
@@ -1089,7 +1090,7 @@ namespace Dynamitey.Tests
             var tCachedInvoke = new CacheableInvocation(InvocationKind.Set, "TestSet",
                                                         context: @static(typeof(StaticType)));
             tCachedInvoke.Invoke(typeof(StaticType), tValue);
-            Assert.AreEqual(tValue, StaticType.TestSet);
+            ClassicAssert.AreEqual(tValue, StaticType.TestSet);
         }
 
         [Test]
@@ -1098,7 +1099,7 @@ namespace Dynamitey.Tests
             var @static = InvokeContext.CreateStatic;
             object tDateDyn = "01/20/2009";
             var tDate = Dynamic.InvokeMember(@static(typeof(DateTime)), "Parse", tDateDyn, CultureInfo.GetCultureInfo("en-US"));
-            Assert.AreEqual(new DateTime(2009, 1, 20), tDate);
+            ClassicAssert.AreEqual(new DateTime(2009, 1, 20), tDate);
         }
 
         [Test]
@@ -1109,7 +1110,7 @@ namespace Dynamitey.Tests
             var tCachedInvoke = new CacheableInvocation(InvocationKind.InvokeMember, "Parse", 2,
                                                         context: @static(typeof(DateTime)));
             var tDate = tCachedInvoke.Invoke(typeof(DateTime), tDateDyn,CultureInfo.GetCultureInfo("en-US"));
-            Assert.AreEqual(new DateTime(2009, 1, 20), tDate);
+            ClassicAssert.AreEqual(new DateTime(2009, 1, 20), tDate);
         }
 
 
@@ -1121,7 +1122,7 @@ namespace Dynamitey.Tests
 
             var tResult = Dynamic.InvokeIsEvent(tPoco, "Event");
 
-            Assert.AreEqual(true, tResult);
+            ClassicAssert.AreEqual(true, tResult);
         }
 
         [Test]
@@ -1133,7 +1134,7 @@ namespace Dynamitey.Tests
 
             var tResult = tCachedInvoke.Invoke(tPoco);
 
-            Assert.AreEqual(true, tResult);
+            ClassicAssert.AreEqual(true, tResult);
 
             dynamic tDynamic = new DynamicObjects.Dictionary();
 
@@ -1141,7 +1142,7 @@ namespace Dynamitey.Tests
 
             var tResult2 = tCachedInvoke.Invoke((object)tDynamic);
 
-            Assert.AreEqual(false, tResult2);
+            ClassicAssert.AreEqual(false, tResult2);
         }
 
         [Test]
@@ -1153,7 +1154,7 @@ namespace Dynamitey.Tests
 
             var tResult = Dynamic.InvokeIsEvent(tDynamic, "Event");
 
-            Assert.AreEqual(false, tResult);
+            ClassicAssert.AreEqual(false, tResult);
 
             bool tTest = false;
             bool tTest2 = false;
@@ -1163,15 +1164,15 @@ namespace Dynamitey.Tests
 
             tDynamic.Event += new EventHandler<EventArgs>((@object, args) => { tTest2 = true; });
 
-            Assert.AreEqual(false, tTest);
+            ClassicAssert.AreEqual(false, tTest);
 
-            Assert.AreEqual(false, tTest2);
+            ClassicAssert.AreEqual(false, tTest2);
 
             tDynamic.Event(null, null);
 
-            Assert.AreEqual(true, tTest);
+            ClassicAssert.AreEqual(true, tTest);
 
-            Assert.AreEqual(true, tTest2);
+            ClassicAssert.AreEqual(true, tTest2);
 
         }
 
@@ -1185,13 +1186,13 @@ namespace Dynamitey.Tests
 
             tPoco.OnEvent(null, null);
 
-            Assert.AreEqual(true, tTest);
+            ClassicAssert.AreEqual(true, tTest);
 
             var tPoco2 = new PropPoco() { Prop2 = 3 };
 
             Dynamic.InvokeAddAssignMember(tPoco2, "Prop2", 4);
 
-            Assert.AreEqual(7L, tPoco2.Prop2);
+            ClassicAssert.AreEqual(7L, tPoco2.Prop2);
         }
 
         [Test]
@@ -1206,13 +1207,13 @@ namespace Dynamitey.Tests
 
             tPoco.OnEvent(null, null);
 
-            Assert.AreEqual(true, tTest);
+            ClassicAssert.AreEqual(true, tTest);
 
             var tPoco2 = new PropPoco() { Event = 3 };
 
             tCachedInvoke.Invoke(tPoco2, 4);
 
-            Assert.AreEqual(7L, tPoco2.Event);
+            ClassicAssert.AreEqual(7L, tPoco2.Event);
         }
 
         [Test]
@@ -1228,7 +1229,7 @@ namespace Dynamitey.Tests
 
             tPoco.OnEvent(null, null);
 
-            Assert.AreEqual(false, tTest);
+            ClassicAssert.AreEqual(false, tTest);
 
             Dynamic.InvokeSubtractAssignMember(tPoco, "Event", tEvent);//Test Second Time
 
@@ -1236,7 +1237,7 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSubtractAssignMember(tPoco2, "Prop2", 4);
 
-            Assert.AreEqual(-1L, tPoco2.Prop2);
+            ClassicAssert.AreEqual(-1L, tPoco2.Prop2);
         }
 
         [Test]
@@ -1254,7 +1255,7 @@ namespace Dynamitey.Tests
 
             tPoco.OnEvent(null, null);
 
-            Assert.AreEqual(false, tTest);
+            ClassicAssert.AreEqual(false, tTest);
 
             tCachedInvoke.Invoke(tPoco, tEvent);//Test Second Time
 
@@ -1262,7 +1263,7 @@ namespace Dynamitey.Tests
 
             tCachedInvoke.Invoke(tPoco2, 4);
 
-            Assert.AreEqual(-1, tPoco2.Event);
+            ClassicAssert.AreEqual(-1, tPoco2.Event);
         }
 
         [Test]
@@ -1275,11 +1276,11 @@ namespace Dynamitey.Tests
 
             tDyanmic.OnEvent(null, null);
 
-            Assert.AreEqual(true, tTest);
+            ClassicAssert.AreEqual(true, tTest);
 
             Dynamic.InvokeAddAssignMember(tDyanmic, "Prop2", 4);
 
-            Assert.AreEqual(7L, tDyanmic.Prop2);
+            ClassicAssert.AreEqual(7L, tDyanmic.Prop2);
         }
 
         [Test]
@@ -1295,11 +1296,11 @@ namespace Dynamitey.Tests
 
             tDyanmic.OnEvent(null, null);
 
-            Assert.AreEqual(true, tTest);
+            ClassicAssert.AreEqual(true, tTest);
 
             tCachedInvoke.Invoke((object)tDynamic2, 4);
 
-            Assert.AreEqual(7, tDynamic2.Event);
+            ClassicAssert.AreEqual(7, tDynamic2.Event);
         }
 
         [Test]
@@ -1315,12 +1316,12 @@ namespace Dynamitey.Tests
 
             tDyanmic.OnEvent(null, null);
 
-            Assert.AreEqual(false, tTest);
+            ClassicAssert.AreEqual(false, tTest);
 
 
             Dynamic.InvokeSubtractAssignMember(tDyanmic, "Prop2", 4);
 
-            Assert.AreEqual(-1L, tDyanmic.Prop2);
+            ClassicAssert.AreEqual(-1L, tDyanmic.Prop2);
         }
 
 
@@ -1341,12 +1342,12 @@ namespace Dynamitey.Tests
 
             tDyanmic.OnEvent(null, null);
 
-            Assert.AreEqual(false, tTest);
+            ClassicAssert.AreEqual(false, tTest);
 
 
             tCachedInvoke.Invoke((object)tDynamic2, 4);
 
-            Assert.AreEqual(-1, tDynamic2.Event);
+            ClassicAssert.AreEqual(-1, tDynamic2.Event);
         }
 
         [Test]
@@ -1354,7 +1355,7 @@ namespace Dynamitey.Tests
         {
             ExpandoObject tExpando = Build<ExpandoObject>.NewObject(One: 1);
 
-            Assert.AreEqual("One", Dynamic.GetMemberNames(tExpando, dynamicOnly: true).Single());
+            ClassicAssert.AreEqual("One", Dynamic.GetMemberNames(tExpando, dynamicOnly: true).Single());
         }
 
         [Test]
@@ -1362,7 +1363,7 @@ namespace Dynamitey.Tests
         {
             DynamicObjects.Dictionary tDict = Build.NewObject(Two: 2);
 
-            Assert.AreEqual("Two", Dynamic.GetMemberNames(tDict, dynamicOnly: true).Single());
+            ClassicAssert.AreEqual("Two", Dynamic.GetMemberNames(tDict, dynamicOnly: true).Single());
         }
 
         [Test]
@@ -1374,8 +1375,8 @@ namespace Dynamitey.Tests
             var tCachedIvnocation2 = new CacheableInvocation(InvocationKind.InvokeMember, "Func", argCount: 2,
                                                             argNames: new[] { "two" });
 
-            Assert.AreEqual(tCachedIvnocation1.GetHashCode(), tCachedIvnocation2.GetHashCode());
-            Assert.AreEqual(tCachedIvnocation1, tCachedIvnocation2);
+            ClassicAssert.AreEqual(tCachedIvnocation1.GetHashCode(), tCachedIvnocation2.GetHashCode());
+            ClassicAssert.AreEqual(tCachedIvnocation1, tCachedIvnocation2);
         }
 
 
@@ -1396,13 +1397,13 @@ namespace Dynamitey.Tests
             }
 
             public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object result){
-                Assert.AreEqual(_type, binder.Operation);
+                ClassicAssert.AreEqual(_type, binder.Operation);
                 result = _type;
                 return true;
             }
 
             public override bool TryUnaryOperation(UnaryOperationBinder binder, out object result){
-                Assert.AreEqual(_type, binder.Operation);
+                ClassicAssert.AreEqual(_type, binder.Operation);
                 result = _type;
                 return true;
             }
@@ -1424,7 +1425,7 @@ namespace Dynamitey.Tests
         [Test]
         public void TestInvokeAdd()
         {
-            Assert.AreEqual(Dynamic.InvokeBinaryOperator(1, ExpressionType.Add, 2), 3);
+            ClassicAssert.AreEqual(Dynamic.InvokeBinaryOperator(1, ExpressionType.Add, 2), 3);
         }
 
         [Test]
@@ -1471,7 +1472,7 @@ namespace Dynamitey.Tests
         [Test]
         public void TestInvokeSubtract()
         {
-            Assert.AreEqual(Dynamic.InvokeBinaryOperator(1, ExpressionType.Subtract, 2), -1);
+            ClassicAssert.AreEqual(Dynamic.InvokeBinaryOperator(1, ExpressionType.Subtract, 2), -1);
         }
 
     }
