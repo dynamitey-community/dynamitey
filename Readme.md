@@ -4,15 +4,15 @@
 
 Dynamitey is available Nuget [![NuGet](https://img.shields.io/nuget/dt/Dynamitey.svg)](https://www.nuget.org/packages/Dynamitey/)
 
-Framework | Platform | Status
---------- | -------- | ------
-All | Windows | [![Actions Status](https://github.com/ekonbenefits/dynamitey/actions/workflows/dotnet48.yml/badge.svg)](https://github.com/ekonbenefits/dynamitey/actions/workflows/dotnet48.yml)
-.NET Core | Linux/Mac | [![Actions Status](https://github.com/ekonbenefits/dynamitey/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ekonbenefits/dynamitey/actions/workflows/dotnet.yml)
+[![CI](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml)
+
+Built and tested on Linux, macOS and Windows.
 
 Compiled For|
 --------|
-.Net Std 2.0 | 
-.Net 4.0  |
+.Net Std 2.0 |
+.Net 10.0 |
 
 
 

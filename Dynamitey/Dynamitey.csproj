@@ -6,7 +6,9 @@
     <Company>Ekon Benefits</Company>
     <Authors />
     <Copyright>Copyright 2017 Ekon Benefits</Copyright>
-    <PackageProjectUrl>https://github.com/ekonbenefits/dynamitey</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/dynamitey-community/dynamitey</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dynamitey-community/dynamitey.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>dynamic metaprogramming dlr reflection currying tuples expando latetypes</PackageTags>
     <IncludeSymbols>True</IncludeSymbols>
