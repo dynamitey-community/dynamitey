@@ -1,0 +1,80 @@
+name: CI
+
+# Pushes only run CI on main. Everything else is covered by the pull_request
+# trigger, which stops every branch push producing a duplicate run.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to a PR cancels the run still in flight for the previous commit.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      # -warnaserror is the gate. The tree builds clean with .NET analyzers at
+      # AnalysisLevel=latest, so any new warning is a regression, not a backlog
+      # item. Kept out of the project files so a local build stays workable.
+      - name: Build
+        run: dotnet build --no-restore --configuration Release -warnaserror
+
+      # The full suite. There is no category filter: the wall-clock benchmarks
+      # that used to require one now live in Benchmarks/ and assert nothing.
+      - name: Test
+        run: >
+          dotnet test Tests/Tests.csproj
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=tests-${{ matrix.os }}.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ matrix.os }}
+          path: TestResults/*.trx
+          retention-days: 14
+
+  benchmarks-smoke:
+    name: Benchmarks compile and run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      # A dry job runs every benchmark exactly once. It measures nothing useful
+      # and takes a couple of seconds, but it catches a benchmark that compiles
+      # and then throws — which a build-only check would miss.
+      - name: Dry-run every benchmark
+        run: >
+          dotnet run --configuration Release --project Benchmarks --
+          --filter '*' --job dry --inProcess

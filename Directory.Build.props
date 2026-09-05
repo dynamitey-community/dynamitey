@@ -1,5 +1,23 @@
 <Project>
     <PropertyGroup>
+        <!-- Inherited from upstream. Nothing reads this any more: its consumer was
+             build.fsx via AppVeyor, and LGTM was retired by GitHub in 2022.
+             Left in place pending a decision, see the repo issues. -->
         <WithoutCrossCompile Condition="'$(GITHUB_ACTION)' != '' OR '$(LGTM_SRC)' != ''">True</WithoutCrossCompile>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Static analysis. Warnings are not errors yet: this is a twelve-year-old
+             codebase and the backlog needs triaging before it can gate a build. -->
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisLevel>latest</AnalysisLevel>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+        <!-- NuGet's built-in vulnerability audit, checked at restore against the
+             GitHub Advisory Database. Transitive dependencies included, and the
+             threshold dropped to low so nothing is silently tolerated. -->
+        <NuGetAudit>true</NuGetAudit>
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAuditLevel>low</NuGetAuditLevel>
     </PropertyGroup>
 </Project>
