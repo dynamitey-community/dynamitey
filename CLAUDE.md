@@ -74,7 +74,7 @@ Requires the .NET 10 SDK.
 ```bash
 dotnet restore
 dotnet build -c Release                     # add -warnaserror to match CI
-dotnet test Tests/Tests.csproj -c Release   # no filter, must be 186/186
+dotnet test Tests/Tests.csproj -c Release   # no filter, 0 failed, 0 skipped
 ```
 
 | Project | Target frameworks |
@@ -97,27 +97,26 @@ dotnet run -c Release --project Benchmarks -- --filter '*Tuple*'
 
 ### The test count, because it looks wrong and is not
 
-`Tests/*.cs` carries **187** `[Test]` attributes and there are no `[TestCase]`
-attributes. **186** tests execute.
+Two numbers will not match, and both are fine.
 
-The one that does not is `TestCodeDomLateTypeBind` in `Tests/DynamicObjects.cs`,
-inside `#if NETFRAMEWORK`. It compiles an assembly at runtime with
-`CSharpCodeProvider`, so it only ever ran on .NET Framework and has been
-unreachable since `net48` was dropped. Tracked in #23.
+`Tests/*.cs` carries **187** `[Test]` attributes and **10** `[TestCase]`
+attributes. NUnit expands each `[TestCase]` into its own test, so the executed
+count is higher than the `[Test]` count, not lower.
 
-```bash
-grep -rhcE '^\s*\[Test\]' Tests/*.cs | paste -sd+ | bc   # 187
-```
+One test does not run at all: `TestCodeDomLateTypeBind` in
+`Tests/DynamicObjects.cs`, inside `#if NETFRAMEWORK`. It compiles an assembly at
+runtime with `CSharpCodeProvider`, so it only ever ran on .NET Framework and has
+been unreachable since `net48` was dropped. Tracked in #23.
 
-CI runs the full suite with **no category filter** and requires 186 passed, 0
-failed, 0 skipped. If a filter ever reappears in a test command, something has
-gone backwards.
+**Do not pin the executed count in documentation.** It was pinned at 186 in four
+files, and the first bug fix that added tests made all four wrong at once. The
+bar is *0 failed, 0 skipped, with no category filter* — that survives new tests,
+and a filter reappearing in a test command is the thing actually worth catching.
 
 **Where older numbers came from.** Before the `SpeedTest` fixture moved to
 `Benchmarks/` in #9, the source carried 219 `[Test]` attributes and CI needed
-`--filter TestCategory!=Performance` to stay green — that filter is what
-produced the same 186. The 32 that left are the benchmarks. So 219 and "186
-under a filter" both refer to the tree before #9, and neither describes it now.
+`--filter TestCategory!=Performance` to stay green, which produced 186. So 219
+and "186 under a filter" both describe the tree before #9.
 
 ## Continuous integration
 

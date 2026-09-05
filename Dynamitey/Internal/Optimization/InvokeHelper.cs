@@ -1,4 +1,4 @@
-﻿
+
 // 
 //  Copyright 2011 Ekon Benefits
 // 
@@ -614,7 +614,7 @@ namespace Dynamitey.Internal.Optimization {
 #endregion
                 default:
                     var tArgTypes = Enumerable.Repeat(typeof(object), tSwitch);
-                    var tDelagateType = EmitCallSiteFuncType(tArgTypes, typeof(TTarget));
+                    var tDelagateType = EmitCallSiteFuncType(tArgTypes, typeof(TReturn));
                     return Dynamic.InvokeCallSite(CreateCallSite(tDelagateType, binderType,knownType, binder, name, context, argNames), target, args);
 
             }
@@ -668,7 +668,6 @@ namespace Dynamitey.Internal.Optimization {
 					return new DynamicFunc<TReturn>(args=>(TReturn)Dynamic.Invoke((object)invokable,args));
 			}
         }
-
 
         internal static Delegate WrapAction(dynamic invokable, int length)
         {

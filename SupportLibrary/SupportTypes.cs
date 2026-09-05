@@ -496,4 +496,48 @@ namespace Dynamitey.SupportLibrary
         public bool IsFixedSize => throw new NotImplementedException();
     }
 
+
+    /// <summary>
+    /// For issue #11. A params constructor, which is what the original upstream
+    /// report used: 14 arguments worked and 15 threw InvalidCastException.
+    /// </summary>
+    public class ParamsConstructorPoco
+    {
+        public ParamsConstructorPoco(params string[] args)
+        {
+            Args = string.Join(",", args);
+        }
+
+        public string Args { get; }
+    }
+
+    /// <summary>
+    /// For issue #11. The reporter also needed a fixed leading parameter ahead of
+    /// the params array, and said the suggested workaround did not cover it.
+    /// </summary>
+    public class LeadingArgParamsConstructorPoco
+    {
+        public LeadingArgParamsConstructorPoco(string first, params string[] rest)
+        {
+            First = first;
+            Rest = string.Join(",", rest);
+        }
+
+        public string First { get; }
+
+        public string Rest { get; }
+    }
+
+    /// <summary>
+    /// For issue #11. Exercises the same many-argument path through ordinary member
+    /// invocation rather than a constructor.
+    /// </summary>
+    public class ParamsMethodPoco
+    {
+        public string Join(params string[] args)
+        {
+            return string.Join(",", args);
+        }
+    }
+
 }
