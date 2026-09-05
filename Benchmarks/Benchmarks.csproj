@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Dynamitey.Benchmarks</AssemblyName>
+    <RootNamespace>Dynamitey.Benchmarks</RootNamespace>
+    <!-- BenchmarkDotNet refuses to run a non-optimised build, and warns on any
+         attached debugger. Always run this with -c Release. -->
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <!-- Pinned to the version the retired SpeedTest fixture measured against,
+         so the F# reflection comparison stays like-for-like. -->
+    <PackageReference Include="FSharp.Core" Version="4.7.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dynamitey\Dynamitey.csproj" />
+    <ProjectReference Include="..\SupportLibrary\SupportLibrary.csproj" />
+  </ItemGroup>
+
+</Project>

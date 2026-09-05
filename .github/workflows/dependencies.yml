@@ -1,0 +1,79 @@
+name: Dependencies
+
+on:
+  pull_request:
+  schedule:
+    # Weekly. A dependency does not have to change to become vulnerable —
+    # an advisory published today applies to the versions pinned last year.
+    - cron: '23 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependencies-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Dependency review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # Blocks a PR that introduces a dependency with a known advisory, before
+      # it is merged rather than after.
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: low
+          comment-summary-in-pr: on-failure
+
+  audit:
+    name: NuGet audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      # `dotnet list package --vulnerable` exits 0 whether or not it finds
+      # anything, so the exit code cannot be trusted. Grep the output instead.
+      - name: Vulnerable packages
+        run: |
+          dotnet list package --vulnerable --include-transitive | tee vulnerable.txt
+          if grep -q "has the following vulnerable packages" vulnerable.txt; then
+            echo "::error::Vulnerable packages found. See the output above."
+            exit 1
+          fi
+          echo "No vulnerable packages."
+
+      # Deprecated and outdated are reported, not enforced. A deprecated package
+      # needs a human decision about what replaces it, and failing the build on
+      # "outdated" would mean every upstream release breaks this repository.
+      - name: Deprecated packages
+        continue-on-error: true
+        run: dotnet list package --deprecated
+
+      - name: Outdated packages
+        continue-on-error: true
+        run: dotnet list package --outdated
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: dependency-report
+          path: vulnerable.txt
+          retention-days: 30
