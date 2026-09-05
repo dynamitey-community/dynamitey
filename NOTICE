@@ -1,0 +1,63 @@
+Dynamitey
+Copyright 2010-2024 Ekon Benefits
+Copyright 2026 The dynamitey-community contributors
+
+This product includes software originally developed at Ekon Benefits
+(https://github.com/ekonbenefits/dynamitey) and licensed under the Apache
+License, Version 2.0.
+
+The range above is derived from the work itself, not from this repository's git
+history, which only begins in 2013. The earliest copyright notice in the source
+is "Copyright 2010 Ekon Benefits" in Dynamitey/Dynamic.cs; other files carry
+2011, 2013 and 2017. 2024 is the year of the last commit authored upstream.
+Individual source files retain their own notices unchanged, and those govern the
+files they head; this file summarises the work as a whole.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+
+
+NOTICE OF MODIFICATION
+----------------------
+
+As required by section 4(b) of the License, this is notice that the files in
+this distribution have been modified from the original work.
+
+This repository is a community continuation of ekonbenefits/dynamitey, which
+has been dormant since its 3.0.3 release in November 2023. It was created on
+2026-09-05 by mirror-cloning the upstream repository and pushing to a new,
+empty repository in the dynamitey-community organisation. The complete git
+history of the original work is preserved.
+
+The boundary is recorded in the repository itself. The tag
+
+    upstream-baseline  ->  commit c44f5c57cb8a075e417b3eca9dc231d9eddaa7f6
+
+marks the last commit that is purely the original authors' work. Every commit
+reachable from that tag is theirs. Every commit after it belongs to this
+project, and `git log upstream-baseline..main` lists the modifications
+exactly.
+
+Summary of the changes made after that point, at the time of writing:
+
+  - Target frameworks changed from netstandard2.0;net40 to
+    netstandard2.0;net10.0. The test project moved from net8.0;net48 to
+    net10.0.
+  - The inherited build and publish automation was removed and replaced.
+  - The test suite was moved to NUnit 4, and its wall-clock performance
+    fixture was moved out of the test suite into a separate benchmark project.
+  - Dependencies were updated.
+
+No change has been made to the identity of the published package. The
+`Dynamitey` package on nuget.org remains the original authors' work, and this
+project has not published a package or reserved a package identifier.
+
+This NOTICE file is an addition. The original work did not include one.
