@@ -83,13 +83,8 @@ namespace Dynamitey.DynamicObjects
                                       return m.ReturnType;
                                   case EventInfo e:
                                       return e.EventHandlerType;
-#if NETFRAMEWORK || PROFILE158
-                                  case Type t:
-                                      return t;
-#else
                                   case TypeInfo t:
                                        return t.UnderlyingSystemType;
-#endif
                                   default:
                                       return typeof (object);
                                }
