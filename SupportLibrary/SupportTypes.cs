@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Dynamitey;
 
 namespace Dynamitey.SupportLibrary
@@ -43,6 +45,23 @@ namespace Dynamitey.SupportLibrary
         public bool InternalMethod(object param)
         {
             return param != null;
+        }
+
+        // For issue #16: an internal, async method reached across an assembly
+        // boundary, mirroring the reporter's Azure.Data.Tables shape - a
+        // genuinely-async ValueTask<T> method with optional parameters
+        // (nextPartitionKey, nextRowKey) that a caller using named InvokeArg
+        // arguments skips over, relying on their defaults.
+        public async ValueTask<string> InternalAsyncMethod(
+            string table,
+            int? timeout = null,
+            string nextPartitionKey = null,
+            string nextRowKey = null,
+            string queryOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(1, cancellationToken);
+            return $"{table}-{timeout}-{nextPartitionKey}-{nextRowKey}-{queryOptions}";
         }
     }
 

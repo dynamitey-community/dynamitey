@@ -8,6 +8,13 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
+    <!-- ValueTask<T> isn't part of netstandard2.0's BCL surface (added in
+         netstandard2.1); this polyfill package is what brings it in. Needed by
+         InternalType.InternalAsyncMethod, the cross-assembly internal async
+         target used by the issue #16 coverage. Issue #15's coverage does not
+         live here - it needs no assembly boundary, so it sits in
+         Tests/Invoke.cs against a type declared there. -->
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 
 </Project>
