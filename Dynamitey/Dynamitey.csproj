@@ -39,14 +39,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Computes Version, AssemblyVersion, FileVersion and InformationalVersion
-         from git history and tags. Build-time only: PrivateAssets="all" keeps it
-         out of the produced package's dependencies. Configured by GitVersion.yml
-         at the repository root. Replaces the hardcoded Version.props. -->
+    <!-- Analyzers, all dev-only: PrivateAssets="all" keeps every one of them out
+         of the produced package, so a consumer never inherits them. Their
+         findings and the rules currently deferred are documented in the NoWarn
+         blocks further down. -->
     <PackageReference Include="AsyncFixer" Version="2.1.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- Computes Version, AssemblyVersion, FileVersion and InformationalVersion
+         from git history and tags. Build-time only: PrivateAssets="all" keeps it
+         out of the produced package's dependencies. Configured by GitVersion.yml
+         at the repository root. Replaces the hardcoded Version.props. -->
     <PackageReference Include="GitVersion.MsBuild" Version="6.*" PrivateAssets="all" />
     <PackageReference Include="IDisposableAnalyzers" Version="4.0.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -57,6 +61,19 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Roslynator.Analyzers" Version="5.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- Pinned to 10.5.0.109200 deliberately: it is the last release under
+         LGPL-3.0-only. From 10.6.0.109712 the package moved to the SONAR
+         Source-Available License, which is not OSI-approved and whose grant
+         excludes "employing, using, or engaging artificial intelligence
+         technology ... to ingest, interpret, analyze ... or interact with the
+         data provided by the Program" - that is, AI-assisted triage of its own
+         findings, which is how this repository works. Being open source does not
+         change that; the licence has no such carve-out. The pin costs almost
+         nothing: 10.33 reports 93 findings here against 10.5's 90. -->
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.5.0.109200">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -190,5 +207,34 @@
            CA1822 (56), CA1305 (24), CA1307 (4), CA1819 (3), CA1031 (4)
     -->
     <NoWarn>$(NoWarn);CA1000;CA1002;CA1019;CA1024;CA1031;CA1032;CA1033;CA1034;CA1040;CA1051;CA1062;CA1065;CA1305;CA1307;CA1707;CA1710;CA1711;CA1716;CA1720;CA1724;CA1725;CA1810;CA1812;CA1819;CA1822;CA1825;CA1851;CA1852;CA1859;CA1860;CA1861;CA2201;CA2208;CA2225;CA2227;CA1508</NoWarn>
+
+    <!-- Sonar's share of the backlog: 90 findings across 31 rules, on the same
+         terms as the CA list above. Its signal is different in kind - it found
+         the swapped NewItems/OldItems in List's Replace notification (#59),
+         which the test suite, CodeQL and the CA rules had all passed over.
+
+         Real defects, expected to end as fixes:
+           S1481 (8)  unused local variables
+           S125  (5)  commented-out code
+           S112  (4)  System.Exception thrown directly
+           S2094 (3)  empty classes
+           S1854 (2)  dead stores
+           S1144 (1)  unused private method
+           S2372 (1)  property getter that throws
+           S1871 (1)  two switch arms with identical bodies
+         Overlaps something already known:
+           S2743 (12) static field in a generic type - the same design CA1000
+                      flags 36 times, seen by a second tool, not 12 new problems
+           S3897 (6) / S4035 (5) IEquatable<T> on the types #52 just settled
+         Style or preference:
+           S4136 (11) overloads not adjacent, S6608 (6) indexer over ElementAt,
+           and singletons of S101, S907, S927, S1133, S2219, S2223, S2325, S2328,
+           S3011, S3218, S3247, S3260, S3265, S3267, S3963, S4019, S4050
+
+         S2234 is listed only until #60 merges. It has exactly one instance - the
+         Replace transposition at List.cs:326 - and that PR fixes it. Remove this
+         entry then, so the rule that caught a real bug is live again. -->
+    <NoWarn>$(NoWarn);S101;S112;S125;S907;S927;S1133;S1144;S1481;S1854;S1871;S2094;S2219;S2223;S2234;S2325;S2328;S2372;S2743;S3011;S3218;S3247;S3260;S3265;S3267;S3897;S3963;S4019;S4035;S4050;S4136;S6608</NoWarn>
+
   </PropertyGroup>
 </Project>

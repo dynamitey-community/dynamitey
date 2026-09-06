@@ -94,7 +94,6 @@ namespace Dynamitey.DynamicObjects
                                
                            }).ToList();
 
-;
             if (!types.Any())
                 return false;
 
