@@ -587,200 +587,151 @@ namespace Dynamitey.Internal.Optimization
             return InvokeMemberTargetType<object, TReturn>(ref callsite, binderType, knownType, binder, name, staticContext, context, argNames, target, args);
         }
 
-        [RequiresUnreferencedCode("Resolves 'name' via Binder.GetMember/Binder.InvokeMember (falling back to reflection only for a static context after the DLR path fails); trimming can remove the member being resolved.")]
-        [RequiresDynamicCode("The primary path binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+        // Issue #31: a static-context Get or Set used to reach the property
+        // through its accessor *method* - Binder.InvokeMember("get_"/"set_" +
+        // name, ...) for a public top-level type, or Binder.GetMember(...,
+        // IsStaticType) otherwise. Microsoft.CSharp.RuntimeBinder keeps its
+        // own symbol cache for a type, shared process-wide and independent of
+        // Dynamitey's own CallSite caching (BinderHash/CacheableInvocation key
+        // correctly by type, name and delegate type - clearing those caches
+        // does not touch this). The FIRST successful InvokeMember bind of
+        // either accessor of a property registers that property in the
+        // binder's symbol table; binding the SIBLING accessor of the SAME
+        // property afterward then fails with "cannot explicitly call
+        // operator or accessor", because the binder now recognizes the call
+        // as an explicit accessor invocation and (correctly, per C#
+        // semantics) refuses it. Whichever accessor's bind runs second always
+        // throws - proven by instrumenting the Get-side fallback below: it
+        // fires, and is silently swallowed, on a get that follows a set on
+        // the same property (see the commit message). Get looks unaffected
+        // only because the #12/#13 reflection fallback happens to catch and
+        // paper over its RuntimeBinderException; Set has no such fallback,
+        // so the failure is directional in what's observable, not in what
+        // actually happens inside the binder.
+        //
+        // Both Get and Set now go straight to reflection for a static
+        // context instead of attempting the DLR bind at all. That removes
+        // the collision entirely (no InvokeMember call means no symbol-table
+        // entry to poison) rather than adding another failure path to catch,
+        // and per Benchmarks/StaticMemberBenchmarks.cs it costs nothing extra
+        // in the steady state: cached, Get is ~1.16x reflection's cost and
+        // Set ~1.63x - about what the DLR trick already cost - because the
+        // static path never had a real DLR fast path to lose; it was always
+        // the slow, uncommon case relative to instance access.
+        private const BindingFlags StaticMemberFlags =
+            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
+
+        [RequiresUnreferencedCode("Resolves 'name' via reflection against the static members of the target type; trimming can remove the member being resolved.")]
+        private static object GetStaticMemberByReflection(Type targetType, string name, Type context)
+        {
+            // "context" is Dynamitey's accessibility control (see
+            // TestInvokeDoNotExposePrivateMethod in PrivateTest.cs) - a
+            // caller who deliberately supplies a context unrelated to the
+            // target type is asserting that it should NOT see the target's
+            // private members. A PUBLIC member is visible from any context.
+            // A NON-PUBLIC member is only returned when "context" is the
+            // target type itself - the ordinary InvokeContext.CreateStatic(type)
+            // case, where GetTargetContext defaulted context to target.
+            var tContextOwnsPrivateAccess = context == targetType;
+
+            var tField = targetType.GetField(name, StaticMemberFlags);
+            if (tField != null && (tField.IsPublic || tContextOwnsPrivateAccess))
+            {
+                return tField.GetValue(null);
+            }
+
+            var tProperty = targetType.GetProperty(name, StaticMemberFlags);
+            if (tProperty?.GetMethod != null && (tProperty.GetMethod.IsPublic || tContextOwnsPrivateAccess))
+            {
+                return tProperty.GetValue(null);
+            }
+
+            throw new RuntimeBinderException($"'{targetType}' does not contain an accessible definition for '{name}'");
+        }
+
+        [RequiresUnreferencedCode("Resolves 'name' via reflection against the static members of the target type; trimming can remove the member being resolved.")]
+        private static void SetStaticMemberByReflection(Type targetType, string name, Type context, object value)
+        {
+            // Same accessibility gate as GetStaticMemberByReflection above.
+            var tContextOwnsPrivateAccess = context == targetType;
+
+            var tField = targetType.GetField(name, StaticMemberFlags);
+            if (tField != null && (tField.IsPublic || tContextOwnsPrivateAccess))
+            {
+                tField.SetValue(null, value);
+                return;
+            }
+
+            var tProperty = targetType.GetProperty(name, StaticMemberFlags);
+            if (tProperty?.SetMethod != null && (tProperty.SetMethod.IsPublic || tContextOwnsPrivateAccess))
+            {
+                tProperty.SetValue(null, value);
+                return;
+            }
+
+            throw new RuntimeBinderException($"'{targetType}' does not contain an accessible, settable definition for '{name}'");
+        }
+
+        [RequiresUnreferencedCode("Resolves 'name' via Binder.GetMember for an instance context, or via reflection for a static context; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("The instance-context path binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeGetCallSite(object target, string name, Type context, bool staticContext, ref CallSite callsite)
         {
+            if (staticContext && target is Type tTargetType)
+            {
+                return GetStaticMemberByReflection(tTargetType, name, context);
+            }
+
             if (callsite == null)
             {
                 var tTargetFlag = CSharpArgumentInfoFlags.None;
-                LazyBinder tBinder;
-                Type tBinderType;
-                int tKnownType;
-                if (staticContext) //CSharp Binder won't call Static properties, grrr.
-                {
-                    var tStaticFlag = CSharpBinderFlags.None;
-                    if ((target is Type && ((Type)target).GetTypeInfo().IsPublic))
-                    {
-                        tBinder = () => Binder.InvokeMember(tStaticFlag, "get_" + name,
-                                                            null,
-                                                            context,
-                                                            new List<CSharpArgumentInfo>
-                                                                {
-                                                                    CSharpArgumentInfo.Create(
-                                                                        CSharpArgumentInfoFlags.IsStaticType |
-                                                                        CSharpArgumentInfoFlags.UseCompileTimeType,
-                                                                        null)
-                                                                });
+                LazyBinder tBinder = ()=> Binder.GetMember(CSharpBinderFlags.None, name,
+                                                  context,
+                                                  new List<CSharpArgumentInfo>
+                                                      {
+                                                          CSharpArgumentInfo.Create(
+                                                              tTargetFlag, null)
+                                                      });
 
-                        tBinderType = typeof (InvokeMemberBinder);
-                        tKnownType = KnownMember;
-                    }
-                    else
-                    {
-
-                        tBinder = () => Binder.GetMember(tStaticFlag, name,
-                                                            context,
-                                                            new List<CSharpArgumentInfo>
-                                                                {
-                                                                    CSharpArgumentInfo.Create(
-                                                                        CSharpArgumentInfoFlags.IsStaticType,                                                                        null)
-                                                                });
-
-                        tBinderType = typeof(InvokeMemberBinder);
-                        tKnownType = KnownMember;
-                    }
-                }
-                else
-                {
-
-                    tBinder =()=> Binder.GetMember(CSharpBinderFlags.None, name,
-                                                      context,
-                                                      new List<CSharpArgumentInfo>
-                                                          {
-                                                              CSharpArgumentInfo.Create(
-                                                                  tTargetFlag, null)
-                                                          });
-                    tBinderType = typeof(GetMemberBinder);
-                    tKnownType = KnownGet;
-                }
-
-
-                callsite = CreateCallSite<Func<CallSite, object, object>>(tBinderType,tKnownType, tBinder, name, context,
+                callsite = CreateCallSite<Func<CallSite, object, object>>(typeof(GetMemberBinder), KnownGet, tBinder, name, context,
                                 staticContext: staticContext);
             }
             var tCallSite = (CallSite<Func<CallSite, object, object>>) callsite;
 
-            if (staticContext && target is Type tTargetType)
-            {
-                // Neither of the binder shapes above can reach a static FIELD at
-                // all - InvokeMember("get_"+name,...) only ever finds a property
-                // accessor method, and GetMember(...,IsStaticType) cannot bind a
-                // static member of any kind on its own (verified empirically: it
-                // fails even for a fully public static property on an internal
-                // top-level type, until some other InvokeMember call against the
-                // same type has run first - see the commit message for how that
-                // was diagnosed). That means static-context Get is inherently
-                // order-dependent when it relies on the DLR binder alone: whether
-                // a given call succeeds can depend on what other dynamic
-                // operations already ran against the same type in this process
-                // (issue #13). Reflection has none of these gaps, so on ANY
-                // RuntimeBinderException here we fall back to it - first as a
-                // field (issue #12), then as a property (issue #13) - which
-                // makes the observable result correct and deterministic
-                // regardless of call order, independent of whichever binder path
-                // above happened to run first. This only runs for static-context
-                // gets, and only after the DLR path has already failed, so it
-                // does not affect the instance-member fast path.
-                try
-                {
-                    return tCallSite.Target(tCallSite, target);
-                }
-                catch (RuntimeBinderException)
-                {
-                    // "context" is Dynamitey's accessibility control (see
-                    // TestInvokeDoNotExposePrivateMethod in PrivateTest.cs) - a
-                    // caller who deliberately supplies a context unrelated to the
-                    // target type is asserting that it should NOT see the
-                    // target's private members, and reflection must not silently
-                    // widen that. A PUBLIC member is visible from any context, so
-                    // the fallback may always return one. A NON-PUBLIC member is
-                    // only returned when "context" is the target type itself -
-                    // the ordinary InvokeContext.CreateStatic(type) case, where
-                    // GetTargetContext defaulted context to target - mirroring
-                    // what the DLR path already grants private access for.
-                    const BindingFlags tStaticMemberFlags =
-                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
-                    var tContextOwnsPrivateAccess = context == tTargetType;
-
-                    var tField = tTargetType.GetField(name, tStaticMemberFlags);
-                    if (tField != null && (tField.IsPublic || tContextOwnsPrivateAccess))
-                    {
-                        return tField.GetValue(null);
-                    }
-
-                    var tProperty = tTargetType.GetProperty(name, tStaticMemberFlags);
-                    if (tProperty?.GetMethod != null && (tProperty.GetMethod.IsPublic || tContextOwnsPrivateAccess))
-                    {
-                        return tProperty.GetValue(null);
-                    }
-
-                    throw;
-                }
-            }
-
             return tCallSite.Target(tCallSite, target);
-
         }
 
-        [RequiresUnreferencedCode("Resolves 'name' via Binder.SetMember/Binder.InvokeMember; trimming can remove the member being resolved.")]
-        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+        [RequiresUnreferencedCode("Resolves 'name' via Binder.SetMember for an instance context, or via reflection for a static context; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("The instance-context path binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeSetCallSite(object target, string name, object value, Type context, bool staticContext, ref CallSite callSite)
         {
-            if (callSite == null)
+            if (staticContext && target is Type tTargetType)
             {
-                LazyBinder tBinder;
-                Type tBinderType;
-                if (staticContext) //CSharp Binder won't call Static properties, grrr.
-                {
-
-                    tBinder = () =>{
-                                    var tStaticFlag = CSharpBinderFlags.ResultDiscarded;
-
-                                      return Binder.InvokeMember(tStaticFlag, "set_" + name,
-                                                          null,
-                                                          context,
-                                                          new List<CSharpArgumentInfo>
-                                                              {
-                                                                  CSharpArgumentInfo.Create(
-                                                                      CSharpArgumentInfoFlags.IsStaticType |
-                                                                      CSharpArgumentInfoFlags.UseCompileTimeType, null),
-                                                                  CSharpArgumentInfo.Create(
-
-                                                                      CSharpArgumentInfoFlags.None
-
-                                                                      , null)
-                                                              });
-                                  };
-
-                    tBinderType = typeof(InvokeMemberBinder);
-                    callSite = CreateCallSite<Action<CallSite, object, object>>(tBinderType,KnownMember, tBinder, name, context, staticContext:true);
-                }
-                else
-                {
-
-                    tBinder = ()=> Binder.SetMember(CSharpBinderFlags.None, name,
-                                               context,
-                                               new List<CSharpArgumentInfo>
-                                                   {
-                                                       CSharpArgumentInfo.Create(
-                                                           CSharpArgumentInfoFlags.None, null),
-                                                       CSharpArgumentInfo.Create(
-
-                                                           CSharpArgumentInfoFlags.None
-
-                                                           , null)
-
-                                                   });
-
-
-                    tBinderType = typeof(SetMemberBinder);
-                    callSite = CreateCallSite<Func<CallSite, object, object, object>>(tBinderType,KnownSet, tBinder, name, context, staticContext: false);
-                }
-            }
-
-            if (staticContext)
-            {
-                var tCallSite = (CallSite<Action<CallSite, object, object>>) callSite;
-                tCallSite.Target(callSite, target, value);
+                SetStaticMemberByReflection(tTargetType, name, context, value);
                 return value;
             }
-            else
+
+            if (callSite == null)
             {
-                var tCallSite = (CallSite<Func<CallSite, object, object, object>>) callSite;
-                var tResult = tCallSite.Target(callSite, target, value);
-                return tResult;
+                LazyBinder tBinder = ()=> Binder.SetMember(CSharpBinderFlags.None, name,
+                                           context,
+                                           new List<CSharpArgumentInfo>
+                                               {
+                                                   CSharpArgumentInfo.Create(
+                                                       CSharpArgumentInfoFlags.None, null),
+                                                   CSharpArgumentInfo.Create(
+
+                                                       CSharpArgumentInfoFlags.None
+
+                                                       , null)
+
+                                               });
+
+                callSite = CreateCallSite<Func<CallSite, object, object, object>>(typeof(SetMemberBinder),KnownSet, tBinder, name, context, staticContext: false);
             }
+
+            var tCallSiteResult = (CallSite<Func<CallSite, object, object, object>>) callSite;
+            var tResult = tCallSiteResult.Target(tCallSiteResult, target, value);
+            return tResult;
         }
 
         [RequiresUnreferencedCode("Resolves name.Name via Binder.InvokeMember; trimming can remove the member being resolved.")]
