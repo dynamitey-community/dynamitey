@@ -160,11 +160,11 @@ namespace Dynamitey.Internal.Optimization
 
                     var tArgNames = ArgNames;
                     var tOtherArgNames = other.ArgNames;
-                // Same simplification as the base class's Equals(BinderHash?) above
-                // (cs/complex-condition): each mutual-null pair collapses to a single
-                // nullness-equality check, and the IsSpecialName XOR to a plain ==, with every
-                // conjunct left in its original position so short-circuiting is unchanged.
-                return
+                    // Same simplification as the base class's Equals(BinderHash?) above
+                    // (cs/complex-condition): each mutual-null pair collapses to a single
+                    // nullness-equality check, and the IsSpecialName XOR to a plain ==, with every
+                    // conjunct left in its original position so short-circuiting is unchanged.
+                    return
                            (tArgNames == null) == (tOtherArgNames == null)
                            && other.IsEvent == IsEvent
                            && other.StaticContext == StaticContext
