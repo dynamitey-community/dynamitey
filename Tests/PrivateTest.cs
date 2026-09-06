@@ -433,6 +433,127 @@ namespace Dynamitey.Tests
             var context = InvokeContext.CreateStaticWithContext(typeof(ClassWithPublicStaticFieldForContextTest), this);
             Assert.That(Dynamic.InvokeGet(context, "Visible"), Is.EqualTo(123));
         }
+
+        // Issue #31: get and set of the SAME static property used to collide
+        // inside Microsoft.CSharp.RuntimeBinder's process-wide symbol cache -
+        // see the long comment on InvokeGetCallSite/InvokeSetCallSite in
+        // InvokeHelper-Regular.cs for the mechanism. Reproducing the exact bug
+        // shape needs a public TOP-LEVEL type (that's the one path that used
+        // to route through the accessor-method DLR trick at all); each test
+        // below gets its own type, never touched by any other test, because
+        // the whole point of the bug was that outcome depended on what else
+        // had run first against the type in this process.
+
+        [Test]
+        public void TestStaticPropertyGetThenSet_PublicTopLevelClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(Issue31GetThenSetType));
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("initial"));
+            Dynamic.InvokeSet(context, "Prop", "changed");
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("changed"));
+        }
+
+        [Test]
+        public void TestStaticPropertySetThenGet_PublicTopLevelClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(Issue31SetThenGetType));
+            Dynamic.InvokeSet(context, "Prop", "changed");
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("changed"));
+        }
+
+        // Proves the fix isn't a one-shot: a single lucky pair passing isn't
+        // enough evidence, since #31's failure appeared only on whichever
+        // accessor bound second.
+        [Test]
+        public void TestStaticPropertyAlternatingGetSetRepeatedly_PublicTopLevelClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(Issue31AlternatingType));
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("initial"));
+            for (var i = 0; i < 4; i++)
+            {
+                var tExpected = "value" + i;
+                Dynamic.InvokeSet(context, "Prop", tExpected);
+                Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo(tExpected));
+            }
+        }
+
+        // Regression coverage for issue #12: this fix routes static Get AND
+        // Set through reflection unconditionally, so a static FIELD (not just
+        // a property) must keep working, in both directions, on a public
+        // top-level type.
+        [Test]
+        public void TestStaticFieldAlternatingGetSetRepeatedly_PublicTopLevelClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(Issue31FieldType));
+            Assert.That(Dynamic.InvokeGet(context, "Field"), Is.EqualTo(1));
+            Dynamic.InvokeSet(context, "Field", 2);
+            Assert.That(Dynamic.InvokeGet(context, "Field"), Is.EqualTo(2));
+            Dynamic.InvokeSet(context, "Field", 3);
+            Assert.That(Dynamic.InvokeGet(context, "Field"), Is.EqualTo(3));
+        }
+
+        // Non-public and nested types never took the accessor-method DLR path
+        // that #31 poisons (see the #12/#13 fallback) - they must keep
+        // working unchanged by this fix, get/set alternating just like the
+        // public top-level case above.
+        [Test]
+        public void TestStaticPropertyAlternatingGetSetRepeatedly_PrivateNestedClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(Issue31PrivateNestedType));
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("initial"));
+            Dynamic.InvokeSet(context, "Prop", "changed");
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("changed"));
+            Dynamic.InvokeSet(context, "Prop", "changed-again");
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("changed-again"));
+        }
+
+        [Test]
+        public void TestStaticPropertyAlternatingGetSetRepeatedly_InternalTopLevelClass()
+        {
+            var context = InvokeContext.CreateStatic(typeof(Issue31InternalTopLevelType));
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("initial"));
+            Dynamic.InvokeSet(context, "Prop", "changed");
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("changed"));
+            Dynamic.InvokeSet(context, "Prop", "changed-again");
+            Assert.That(Dynamic.InvokeGet(context, "Prop"), Is.EqualTo("changed-again"));
+        }
+
+        // Set now reaches static members through the same reflection path as
+        // Get, so it needs the same accessibility gate (see
+        // TestInvokeGetPrivateStaticFieldRestrictedContextThrows and its
+        // siblings above): a caller-supplied context unrelated to the target
+        // type must not be able to set a private static member, but a PUBLIC
+        // one must remain settable regardless.
+        [Test]
+        public void TestInvokeSetPrivateStaticFieldRestrictedContextThrows()
+        {
+            var context = InvokeContext.CreateStaticWithContext(typeof(Issue31PrivateFieldForSetContextTest), this);
+            Assert.That(() => Dynamic.InvokeSet(context, "Secret", 5), Throws.InstanceOf<RuntimeBinderException>());
+        }
+
+        [Test]
+        public void TestInvokeSetPrivateStaticPropertyRestrictedContextThrows()
+        {
+            var context = InvokeContext.CreateStaticWithContext(typeof(Issue31PrivatePropertyForSetContextTest), this);
+            Assert.That(() => Dynamic.InvokeSet(context, "Secret", "hacked"), Throws.InstanceOf<RuntimeBinderException>());
+        }
+
+        [Test]
+        public void TestInvokeSetPublicStaticFieldRestrictedContextStillSucceeds()
+        {
+            var context = InvokeContext.CreateStaticWithContext(typeof(Issue31PublicFieldForSetContextTest), this);
+            Dynamic.InvokeSet(context, "Visible", 456);
+            Assert.That(Issue31PublicFieldForSetContextTest.Visible, Is.EqualTo(456));
+        }
+
+        // Nested private class shape for the non-public/nested coverage above.
+        // The property itself is private too, so this also exercises the
+        // context-owns-private-access gate (InvokeContext.CreateStatic
+        // defaults context to the target type itself, so access is granted).
+        private class Issue31PrivateNestedType
+        {
+            private static string Prop { get; set; } = "initial";
+        }
     }
 
     public class TestWithPrivateMethod
@@ -490,6 +611,55 @@ namespace Dynamitey.Tests
     }
 
     public class ClassWithPublicStaticFieldForContextTest
+    {
+        public static int Visible = 123;
+    }
+
+    // Issue #31 fixtures. Each type below backs exactly one test above - see
+    // that test's comment for why they can't be shared.
+
+    public class Issue31GetThenSetType
+    {
+        public static string Prop { get; set; } = "initial";
+    }
+
+    public class Issue31SetThenGetType
+    {
+        public static string Prop { get; set; } = "initial";
+    }
+
+    public class Issue31AlternatingType
+    {
+        public static string Prop { get; set; } = "initial";
+    }
+
+    public class Issue31FieldType
+    {
+        public static int Field = 1;
+    }
+
+    // For issue #31's non-public/nested coverage: internal top-level class,
+    // matching the #13 shape (see InternalClassWithPrivateStaticProperty
+    // above), but with a settable property so both directions can be
+    // exercised.
+    class Issue31InternalTopLevelType
+    {
+        private static string Prop { get; set; } = "initial";
+    }
+
+#pragma warning disable CS0414 // field is only ever read dynamically, never by name
+    class Issue31PrivateFieldForSetContextTest
+    {
+        private static int Secret = 99;
+    }
+#pragma warning restore CS0414
+
+    class Issue31PrivatePropertyForSetContextTest
+    {
+        private static string Secret { get; set; } = "Hidden";
+    }
+
+    public class Issue31PublicFieldForSetContextTest
     {
         public static int Visible = 123;
     }
