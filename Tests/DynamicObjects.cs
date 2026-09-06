@@ -512,6 +512,47 @@ namespace Dynamitey.Tests
             Assert.That(tList.Equals(new DynamicObjects.Dictionary()), Is.False);
         }
 
+        // A backing store is free to define its own Equals, and the store is whatever the caller
+        // passed, because the fields holding it are interface-typed. The contract is store
+        // *identity*, so a store claiming content equality must not make two distinct wrappers
+        // compare equal. Both Equals implementations used to call the static object.Equals, which
+        // dispatches virtually and so would have adopted the store's own semantics.
+        private class ContentEqualStore : Dictionary<string, object>
+        {
+            public override bool Equals(object obj) => obj is ContentEqualStore;
+
+            public override int GetHashCode() => 0;
+        }
+
+        [Test]
+        public void StoresClaimingContentEqualityDoNotMakeDictionaryWrappersEqual()
+        {
+            var tStoreOne = new ContentEqualStore { { "A", 1 } };
+            var tStoreTwo = new ContentEqualStore { { "A", 1 } };
+
+            // The premise: these two stores are distinct objects that consider themselves equal.
+            Assert.That(ReferenceEquals(tStoreOne, tStoreTwo), Is.False);
+            Assert.That(tStoreOne.Equals(tStoreTwo), Is.True);
+
+            object tOne = new DynamicObjects.Dictionary(tStoreOne);
+            object tTwo = new DynamicObjects.Dictionary(tStoreTwo);
+
+            Assert.That(tOne.Equals(tTwo), Is.False,
+                "The contract is store identity. A store's own Equals must not be able to widen it into content comparison.");
+        }
+
+        [Test]
+        public void StoresClaimingContentEqualityDoNotMakeListWrappersEqual()
+        {
+            var tElements = new List<object> { 1, 2, 3 };
+
+            object tOne = new DynamicObjects.List(tElements, new ContentEqualStore());
+            object tTwo = new DynamicObjects.List(tElements, new ContentEqualStore());
+
+            Assert.That(tOne.Equals(tTwo), Is.False,
+                "Sharing the element list is not enough, and the property stores are distinct objects however they define Equals.");
+        }
+
         [Test]
         public void DynamicAnnonymousWrapper()
         {

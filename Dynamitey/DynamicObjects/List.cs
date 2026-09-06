@@ -395,7 +395,14 @@ namespace Dynamitey.DynamicObjects
             // Compare the backing dictionary directly rather than through base.Equals(object):
             // both fields are protected, and going through the base method is what routed this
             // into the typeof(Dictionary) test that made it always false.
-            return Equals(other._dictionary, _dictionary) && Equals(other._list, _list);
+            //
+            // ReferenceEquals, not Equals: these fields are interface-typed, so the concrete store
+            // is whatever the caller passed. The static object.Equals dispatches virtually, so a
+            // store type that overrides Equals with content semantics would silently turn this into
+            // a content comparison - the exact thing this contract exists to avoid. The BCL
+            // collections normally passed here do not override Equals, so this is the same result
+            // for them; it only closes the gap for a store that does.
+            return ReferenceEquals(other._dictionary, _dictionary) && ReferenceEquals(other._list, _list);
         }
 
         /// <summary>

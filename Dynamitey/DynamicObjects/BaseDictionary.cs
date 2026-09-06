@@ -355,7 +355,14 @@ namespace Dynamitey.DynamicObjects
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other._dictionary, _dictionary);
+
+            // ReferenceEquals, not the static object.Equals this used to call: _dictionary is
+            // interface-typed, so the concrete store is whatever the caller passed, and
+            // object.Equals dispatches virtually. A store type overriding Equals with content
+            // semantics would silently turn this into a content comparison - the very thing this
+            // contract exists to avoid. The BCL dictionaries normally passed here do not override
+            // Equals, so the result is unchanged for them.
+            return ReferenceEquals(other._dictionary, _dictionary);
         }
 
         /// <summary>
