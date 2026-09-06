@@ -499,8 +499,8 @@ namespace Dynamitey.Tests
                                 .LastName("Dejardin")
                                 .Aliases(new[] {"Lou"});
 
-                Assert.That("Louis", Is.EqualTo(person.FirstName));
-                Assert.That("Lou", Is.EqualTo(person.Aliases[0]));
+                Assert.That(person.FirstName, Is.EqualTo("Louis"));
+                Assert.That(person.Aliases[0], Is.EqualTo("Lou"));
             }
 
             {
@@ -509,8 +509,8 @@ namespace Dynamitey.Tests
                                                 FirstName = "Louis",
                                                 LastName = "Dejardin"
                                             });
-                Assert.That("Louis", Is.EqualTo(person.FirstName));
-                Assert.That("Dejardin", Is.EqualTo(person.LastName));
+                Assert.That(person.FirstName, Is.EqualTo("Louis"));
+                Assert.That(person.LastName, Is.EqualTo("Dejardin"));
             }
 
         }
@@ -600,7 +600,7 @@ namespace Dynamitey.Tests
             dynamic DynConcatenateString = new DynamicObjects.LateType(cr.CompiledAssembly, "CodeInjection.DynConcatenateString");
 
 
-            Assert.That("1 ! 2", Is.EqualTo(DynConcatenateString.Concatenate("1","2")));
+            Assert.That(DynConcatenateString.Concatenate("1","2"), Is.EqualTo("1 ! 2"));
 
         }
     

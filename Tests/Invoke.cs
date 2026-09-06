@@ -1638,7 +1638,7 @@ namespace Dynamitey.Tests
         [Test]
         public void TestInvokeAdd()
         {
-            Assert.That(3, Is.EqualTo(Dynamic.InvokeBinaryOperator(1, ExpressionType.Add, 2)));
+            Assert.That(Dynamic.InvokeBinaryOperator(1, ExpressionType.Add, 2), Is.EqualTo(3));
         }
 
         [Test]
@@ -1685,7 +1685,7 @@ namespace Dynamitey.Tests
         [Test]
         public void TestInvokeSubtract()
         {
-            Assert.That(-1, Is.EqualTo(Dynamic.InvokeBinaryOperator(1, ExpressionType.Subtract, 2)));
+            Assert.That(Dynamic.InvokeBinaryOperator(1, ExpressionType.Subtract, 2), Is.EqualTo(-1));
         }
 
     }
