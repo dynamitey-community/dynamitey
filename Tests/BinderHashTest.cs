@@ -97,6 +97,35 @@ namespace Dynamitey.Tests
             Assert.That(tTwo.Equals(tOne), Is.True);
         }
 
+        // A null ArgNames is not the same call shape as an empty or populated one: a call site with
+        // no named arguments binds differently from one that has them. Every other case in this
+        // fixture passes a non-null array, which left the nullness comparison in Equals untested -
+        // and that is the conjunct guarding the SequenceEqual calls below it, so getting it wrong
+        // either returns a cached binder for the wrong call shape or throws on a null array.
+        [Test]
+        public void NullAndNonNullArgNamesAreNeverEqual()
+        {
+            var tNull = Create<Func<object>>("Foo", typeof(string), null!, DummyBinderType);
+            var tNamed = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType);
+
+            // Both directions: an asymmetric Equals would corrupt the binder cache depending only
+            // on which instance happened to be the lookup key.
+            Assert.That(tNull.Equals(tNamed), Is.False);
+            Assert.That(tNamed.Equals(tNull), Is.False);
+        }
+
+        [Test]
+        public void TwoNullArgNamesAreEqual()
+        {
+            var tOne = Create<Func<object>>("Foo", typeof(string), null!, DummyBinderType);
+            var tTwo = Create<Func<object>>("Foo", typeof(string), null!, DummyBinderType);
+
+            Assert.That(tOne, Is.Not.SameAs(tTwo), "the two instances must be distinct objects, not the same reference.");
+            Assert.That(tOne.Equals(tTwo), Is.True);
+            Assert.That(tTwo.Equals(tOne), Is.True);
+            Assert.That(tOne.GetHashCode(), Is.EqualTo(tTwo.GetHashCode()));
+        }
+
         [Test]
         public void DifferentGenericDelegateTypeIsNeverEqual()
         {
