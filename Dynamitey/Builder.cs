@@ -136,11 +136,7 @@ namespace Dynamitey
             Type = type;
 
             var tArg = args.OfType<Func<object[]>>().SingleOrDefault();
-            if (tArg != null)
-                Arguments = tArg;
-            else
-                Arguments = () => args;
-            
+            Arguments = tArg != null ? tArg : () => args;
         }
 
 

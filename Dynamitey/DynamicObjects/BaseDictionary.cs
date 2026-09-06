@@ -56,10 +56,10 @@ namespace Dynamitey.DynamicObjects
                 return;
             }
 
-            if(dict is IDictionary<string,object>) //Don't need to enumerate if it's the right type.
-                _dictionary = (IDictionary<string,object>)dict;
-            else
-                _dictionary = dict.ToDictionary(k => k.Key, v => v.Value);
+            //Don't need to enumerate if it's the right type.
+            _dictionary = dict is IDictionary<string, object> tDict
+                ? tDict
+                : dict.ToDictionary(k => k.Key, v => v.Value);
         }
 
         /// <summary>
@@ -360,7 +360,7 @@ namespace Dynamitey.DynamicObjects
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != typeof (Dictionary)) return _dictionary.Equals(obj);
-            return Equals((Dictionary) ((object) ((Dictionary) obj)));
+            return Equals((Dictionary) obj);
         }
 
         /// <summary>

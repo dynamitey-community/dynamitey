@@ -1013,10 +1013,9 @@ namespace Dynamitey
         [RequiresDynamicCode("ConvertEach's DLR conversion path requires runtime code generation; not supported when AOT-compiled.")]
         public static void ApplyEquivalentType(DynamicObjects.IEquivalentType target, params Type[] types)
         {
-            if(types.Length == 1)
-                target.EquivalentType = types.First();
-            else
-                target.EquivalentType = new DynamicObjects.AggreType(types.ConvertEach<DynamicObjects.FauxType>().ToArray());
+            target.EquivalentType = types.Length == 1
+                ? types.First()
+                : new DynamicObjects.AggreType(types.ConvertEach<DynamicObjects.FauxType>().ToArray());
           
         }
 
