@@ -365,15 +365,44 @@ namespace Dynamitey.DynamicObjects
         }
 
         /// <summary>
-        /// Equalses the specified other.
+        /// Determines whether the specified <see cref="List"/> is equal to this instance.
         /// </summary>
         /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <returns>
+        /// <c>true</c> when both instances are views over the same backing stores - the same
+        /// <see cref="IList{T}"/> of elements and the same dictionary of dynamic properties.
+        /// </returns>
+        /// <remarks>
+        /// This is deliberately store identity, not content comparison: these types are mutable
+        /// views over a store someone else owns, so two wrappers over one store are one value,
+        /// while two stores that merely happen to hold equal data are not. Comparing content would
+        /// also force a content-derived <see cref="GetHashCode"/> on a mutable type, which makes an
+        /// instance unfindable in a hash container as soon as it is mutated.
+        /// <para>
+        /// This previously opened with <c>base.Equals(other)</c>, which resolves to
+        /// <see cref="BaseDictionary.Equals(object)"/> - a method whose body type-tests against
+        /// <c>typeof(Dictionary)</c> and so, for a <see cref="List"/>, compared the backing
+        /// dictionary against the <see cref="List"/> itself and returned false. That made the whole
+        /// method return false unconditionally and left the element comparison below it
+        /// unreachable, even for two wrappers over one <see cref="IList{T}"/>. See issue #52.
+        /// </para>
+        /// </remarks>
         public bool Equals(List? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) && Equals(other._list, _list);
+
+            // Compare the backing dictionary directly rather than through base.Equals(object):
+            // both fields are protected, and going through the base method is what routed this
+            // into the typeof(Dictionary) test that made it always false.
+            //
+            // ReferenceEquals, not Equals: these fields are interface-typed, so the concrete store
+            // is whatever the caller passed. The static object.Equals dispatches virtually, so a
+            // store type that overrides Equals with content semantics would silently turn this into
+            // a content comparison - the exact thing this contract exists to avoid. The BCL
+            // collections normally passed here do not override Equals, so this is the same result
+            // for them; it only closes the gap for a store that does.
+            return ReferenceEquals(other._dictionary, _dictionary) && ReferenceEquals(other._list, _list);
         }
 
         /// <summary>
