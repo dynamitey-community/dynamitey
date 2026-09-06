@@ -48,8 +48,11 @@ jobs:
 
       # The full suite. There is no category filter: the wall-clock benchmarks
       # that used to require one now live in Benchmarks/ and assert nothing.
-      # shell: bash for pipefail - without it the pipeline's exit status is
-      # tee's, which is always 0, and a failing suite would sail past this step.
+      # shell: bash, and an explicit pipefail, because the pipeline's exit status
+      # would otherwise be tee's - always 0 - and a failing suite would sail past
+      # this step. GitHub's bash shell already runs with -eo pipefail, so the
+      # `set` line is belt and braces: it keeps the guarantee local to the script
+      # rather than resting on a runner default that is not visible here.
       - name: Test
         shell: bash
         run: |
@@ -139,8 +142,10 @@ jobs:
           --results-directory TestResults
 
       # ReportGenerator as a local tool rather than a third-party action: one
-      # fewer external action in the supply chain, and the version is pinned by
-      # the same mechanism as every other dependency here.
+      # fewer external action in the supply chain. The explicit --version is the
+      # point of doing it this way - without it `dotnet tool install` takes
+      # whatever is newest at the moment the job runs, which is neither
+      # reproducible nor reviewable.
       - name: Install ReportGenerator
         run: dotnet tool install --tool-path ./tools --version 5.5.11 dotnet-reportgenerator-globaltool
 
