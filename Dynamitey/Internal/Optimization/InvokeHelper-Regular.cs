@@ -14,7 +14,7 @@ using Dynamitey.Internal.Compat;
 namespace Dynamitey.Internal.Optimization
 {
 
-    internal class DummmyNull
+    internal sealed class DummmyNull
     {
 
     }
@@ -897,8 +897,8 @@ namespace Dynamitey.Internal.Optimization
             InvokeMemberAction(ref callSite, tBinderType, KnownDirect, tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, args!);
         }
 
-        internal class IsEventBinderDummy{
-            
+        internal sealed class IsEventBinderDummy{
+
         }
         [RequiresUnreferencedCode("Resolves 'name' via Binder.IsEvent; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
@@ -980,7 +980,7 @@ namespace Dynamitey.Internal.Optimization
 
         }
 
-        internal class InvokeConstructorDummy{};
+        internal sealed class InvokeConstructorDummy{};
 
         internal static readonly InvokeMemberName ConstructorName = new InvokeMemberName(Invocation.ConstructorBinderName);
 

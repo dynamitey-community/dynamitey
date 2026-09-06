@@ -89,7 +89,7 @@ namespace Dynamitey
             _convertType = convertType;
             _convertExplicit = convertExplicit;
 
-            _argNames = argNames ?? new string?[] {};
+            _argNames = argNames ?? Array.Empty<string?>();
 
             if (storedArgs != null)
             {
@@ -172,7 +172,7 @@ namespace Dynamitey
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other)
                 && other._argCount == _argCount
-                && (_argNames ?? new string?[] { }).SequenceEqual(other._argNames ?? new string?[] { })
+                && (_argNames ?? Array.Empty<string?>()).SequenceEqual(other._argNames ?? Array.Empty<string?>())
                 && other._staticContext.Equals(_staticContext)
                 && Equals(other._context, _context) 
                 && other._convertExplicit.Equals(_convertExplicit)

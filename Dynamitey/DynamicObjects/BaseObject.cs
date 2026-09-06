@@ -94,7 +94,7 @@ namespace Dynamitey.DynamicObjects
                                
                            }).ToList();
 
-            if (!types.Any())
+            if (types.Count == 0)
                 return false;
 
             // EventInfo.EventHandlerType (above) is itself nullable: a member that is an event

@@ -86,7 +86,7 @@ namespace Dynamitey.DynamicObjects
 
         public override Type[] GetContainedTypes()
         {
-            return new Type []{};
+            return Array.Empty<Type>();
         }
     }
 

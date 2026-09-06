@@ -213,7 +213,7 @@ namespace Dynamitey
         {
             var tArgs = Arguments();
 
-            if(tArgs.Any())
+            if(tArgs.Length != 0)
                 return base.Create();
 
 

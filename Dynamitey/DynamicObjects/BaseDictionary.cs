@@ -145,7 +145,7 @@ namespace Dynamitey.DynamicObjects
                 var tFunc = result as Delegate;
                 if (result == null)
                     return false;
-                if (!binder.CallInfo.ArgumentNames.Any() && tFunc != null)
+                if (binder.CallInfo.ArgumentNames.Count == 0 && tFunc != null)
                 {
                     try
                     {

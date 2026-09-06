@@ -154,7 +154,7 @@ namespace Dynamitey.Internal.Optimization
 
 
 
-    internal class BinderHash<T> : BinderHash where T : class
+    internal sealed class BinderHash<T> : BinderHash where T : class
     {
         public static BinderHash<T> Create(string name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
         {
@@ -166,12 +166,12 @@ namespace Dynamitey.Internal.Optimization
             return new BinderHash<T>(name, context, argNames, binderType, staticContext, isEvent, knownBinder);
         }
 
-        protected BinderHash(InvokeMemberName name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent,bool knownBinder)
+        private BinderHash(InvokeMemberName name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent,bool knownBinder)
             : base(typeof(T), name, context, argNames, binderType, staticContext, isEvent,knownBinder)
         {
         }
 
-        protected BinderHash(string name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
+        private BinderHash(string name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
             : base(typeof(T), name, context, argNames, binderType, staticContext, isEvent, knownBinder)
         {
         }

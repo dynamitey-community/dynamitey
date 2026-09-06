@@ -457,7 +457,7 @@ namespace Dynamitey.DynamicObjects
 
         [RequiresUnreferencedCode("Calls the annotated Activate.Create/Dynamic.InvokeConstructor/Dynamic.InvokeSetAll, and Activator.CreateInstance<TObjectProtoType>(), which requires TObjectProtoType to have a public parameterless constructor for trim analysis.")]
         [RequiresDynamicCode("Dynamic.InvokeConstructor/InvokeSetAll require the DLR's runtime code generation; not supported when AOT-compiled.")]
-        private static object InvokeHelper(CallInfo callinfo, IList<object?> args, Activate? buildType =null)
+        private static object InvokeHelper(CallInfo callinfo, object?[] args, Activate? buildType =null)
         {
            
             bool tSetWithName = true;

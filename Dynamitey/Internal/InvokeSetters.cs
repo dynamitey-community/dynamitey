@@ -55,7 +55,7 @@ namespace Dynamitey.Internal
             var args = rawArgs!;
 
             //Setup Properties as dictionary
-            if (binder.CallInfo.ArgumentNames.Any())
+            if (binder.CallInfo.ArgumentNames.Count != 0)
             {
 
                 if (binder.CallInfo.ArgumentNames.Count + 1 == binder.CallInfo.ArgumentCount)

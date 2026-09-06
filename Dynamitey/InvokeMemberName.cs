@@ -97,7 +97,7 @@ namespace Dynamitey
         public InvokeMemberName(string name, bool isSpecialName)
         {
             Name = name;
-            GenericArgs = new Type[]{};
+            GenericArgs = Array.Empty<Type>();
             IsSpecialName = isSpecialName;
         }
 

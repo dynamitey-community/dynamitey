@@ -95,7 +95,7 @@ namespace Dynamitey.DynamicObjects
                 var tInterface = UnwrappedTarget().GetType().GetTypeInfo().GetInterfaces().Single(it => it.Name == _extendedType.Name);
                 var typeInfo = tInterface.GetTypeInfo();
                 result = new Invoker(binder.Name,
-                                     typeInfo.IsGenericType ? typeInfo.GetGenericArguments() : new Type[] {},null, this);
+                                     typeInfo.IsGenericType ? typeInfo.GetGenericArguments() : Array.Empty<Type>(),null, this);
             }
             return true;
         }
@@ -168,7 +168,7 @@ namespace Dynamitey.DynamicObjects
                             var tParams = tMethodInfo.GetParameters().Select(it => it.ParameterType).ToArray();
 
                             OverloadTypes[tParams.Length] = OverloadTypes.ContainsKey(tParams.Length)
-                                ? new Type[] { }
+                                ? Array.Empty<Type>()
                                 : tParams.Select(ReplaceGenericTypes).ToArray();
                         }
 
@@ -396,7 +396,7 @@ namespace Dynamitey.DynamicObjects
             {
                 var tInterface = UnwrappedTarget().GetType().GetTypeInfo().GetInterfaces().Single(it => it.Name == _extendedType.Name);
                 var tTypeGenerics = (tInterface.GetTypeInfo().IsGenericType ? tInterface.GetTypeInfo().GetGenericArguments()
-                                            : new Type[] { }).Concat(name.GenericArgs).ToArray();
+                                            : Array.Empty<Type>()).Concat(name.GenericArgs).ToArray();
 
                 tGenericPossibles.Add(tTypeGenerics);
                 tGenericPossibles.Add(name.GenericArgs);
