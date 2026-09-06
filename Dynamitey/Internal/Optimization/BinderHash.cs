@@ -80,18 +80,23 @@ namespace Dynamitey.Internal.Optimization
             var tGenArgs = GenericArgs;
             var tOtherGenArgs = other.GenericArgs;
 
+            // Each "!(a == null && b != null) && !(a != null && b == null)" pair below is the
+            // same provable identity: it's equivalent to "(a == null) == (b == null)" (De Morgan
+            // plus the fact both halves are always false together). Merging them - and the
+            // matching "!(x ^ y)" into "x == y" - is a pure boolean-algebra simplification with
+            // no reordering (cs/complex-condition): every conjunct stays in its original
+            // position, so short-circuiting still protects the SequenceEqual calls exactly as
+            // before.
             return
-                !(tOtherArgNames == null && tArgNames != null)
-                && !(tArgNames == null && tOtherArgNames != null)
+                (tArgNames == null) == (tOtherArgNames == null)
                 && other.IsEvent == IsEvent
                 && other.StaticContext == StaticContext
                 && other.Context == Context
                 && (KnownBinder || other.BinderType == BinderType)
                 && other.DelegateType == DelegateType
                 && Equals(other.Name, Name)
-                && !(other.IsSpecialName ^ IsSpecialName)
-                && !(tOtherGenArgs == null && tGenArgs != null)
-                && !(tGenArgs == null && tOtherGenArgs != null)
+                && other.IsSpecialName == IsSpecialName
+                && (tGenArgs == null) == (tOtherGenArgs == null)
                 && (tOtherGenArgs == null || tOtherGenArgs.SequenceEqual(tGenArgs!))
                 && (tOtherArgNames == null || tOtherArgNames.SequenceEqual(tArgNames!));
         }
@@ -155,17 +160,19 @@ namespace Dynamitey.Internal.Optimization
 
                     var tArgNames = ArgNames;
                     var tOtherArgNames = other.ArgNames;
+                // Same simplification as the base class's Equals(BinderHash?) above
+                // (cs/complex-condition): each mutual-null pair collapses to a single
+                // nullness-equality check, and the IsSpecialName XOR to a plain ==, with every
+                // conjunct left in its original position so short-circuiting is unchanged.
                 return
-                           !(tOtherArgNames == null && tArgNames != null)
-                           && !(tArgNames == null && tOtherArgNames != null)
+                           (tArgNames == null) == (tOtherArgNames == null)
                            && other.IsEvent == IsEvent
                            && other.StaticContext == StaticContext
                            && (KnownBinder || other.BinderType == BinderType)
                            && other.Context == Context
                            && Equals(other.Name, Name)
-                           && !(other.IsSpecialName ^ IsSpecialName)
-                           && !(tOtherGenArgs == null && tGenArgs != null)
-                           && !(tGenArgs == null && tOtherGenArgs != null)
+                           && other.IsSpecialName == IsSpecialName
+                           && (tGenArgs == null) == (tOtherGenArgs == null)
                            && (tGenArgs == null || tGenArgs.SequenceEqual(tOtherGenArgs!))
                            // other.ArgNames' nullness matches ArgNames' by the mutual-null checks
                            // above (tArgNames/tOtherArgNames are local copies of the same values).
