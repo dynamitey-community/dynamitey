@@ -150,12 +150,34 @@ jobs:
           # from https://nvd.nist.gov/developers/request-an-api-key
           DC_NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
-          tKeyArg=()
+          # An NVD API key is mandatory, not merely helpful. NIST retired the
+          # old JSON data feeds in favour of a rate-limited API, and
+          # Dependency-Check 12 and later fail outright without a key rather
+          # than running slowly: "Invalid API Key, length of 0 too short".
+          #
+          # When the key is absent the scan is skipped rather than failed, so a
+          # missing secret does not block every pull request. What it must never
+          # do is pass quietly - a scan that did not run reporting "no
+          # vulnerabilities" is worse than no scan, so the summary says plainly
+          # that nothing was checked.
           if [ -z "${DC_NVD_API_KEY}" ]; then
-            echo "::notice::No NVD_API_KEY secret is set. The scan will still run, but the NVD update is rate-limited and slower."
-          else
-            tKeyArg=(--nvdApiKey "${DC_NVD_API_KEY}")
+            echo "::warning::OWASP Dependency-Check did NOT run: no NVD_API_KEY repository secret is set. A key is free from https://nvd.nist.gov/developers/request-an-api-key"
+            {
+              echo "### OWASP Dependency-Check: NOT RUN"
+              echo
+              echo "No \`NVD_API_KEY\` repository secret is set, and Dependency-Check 12+ requires one:"
+              echo "NIST retired the JSON data feeds in favour of a rate-limited API."
+              echo
+              echo "**This is not a clean result. Nothing was scanned.**"
+              echo
+              echo "A key is free from <https://nvd.nist.gov/developers/request-an-api-key>."
+              echo "Add it as a repository secret named \`NVD_API_KEY\` and this job starts scanning."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "DC_SKIPPED=1" >> "$GITHUB_ENV"
+            exit 0
           fi
+
+          tKeyArg=(--nvdApiKey "${DC_NVD_API_KEY}")
 
           # Dependency-Check validates --out before it runs and refuses a path
           # that does not exist yet, rather than creating it.
@@ -188,6 +210,11 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ "${DC_SKIPPED:-0}" = "1" ]; then
+            echo "Scan skipped; the summary already says so. Not treating this as a pass."
+            exit 0
+          fi
+
           if [ ! -f reports/dependency-check-report.json ]; then
             echo "::error::Dependency-Check produced no report. The scan did not complete."
             exit 1
