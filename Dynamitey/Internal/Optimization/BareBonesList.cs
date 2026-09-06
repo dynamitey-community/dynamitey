@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 namespace Dynamitey.Internal.Optimization
 {
-    internal class BareBonesList<T>: ICollection<T>
+    internal sealed class BareBonesList<T>: ICollection<T>
     {
         private readonly T[] _list;
         private int _addIndex;
