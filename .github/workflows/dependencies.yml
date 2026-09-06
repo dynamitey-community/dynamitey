@@ -77,3 +77,188 @@ jobs:
           name: dependency-report
           path: vulnerable.txt
           retention-days: 30
+
+  owasp:
+    name: OWASP dependency check
+    runs-on: ubuntu-latest
+    # This is deliberately not redundant with the NuGet audit above. That audit
+    # queries the GitHub Advisory Database; OWASP Dependency-Check matches
+    # against the NVD by CPE. The two datasets genuinely diverge - an advisory
+    # can exist in one before, or without, the other - so running both widens
+    # coverage rather than repeating it.
+    #
+    # The tradeoff is that CPE matching is name-based and produces false
+    # positives, which is what the suppression file is for. A suppression there
+    # needs a written reason, the same standard as a dismissed CodeQL alert.
+    env:
+      DC_VERSION: '13.0.0'
+      # Pinned by content, not just by URL. The project publishes a GPG
+      # signature but no checksum file, so this hash was computed from the
+      # v13.0.0 release asset and committed. If the download ever stops matching,
+      # the step fails rather than running an unverified binary.
+      DC_SHA256: '44d920d1ec03e948df862a253f0912782a31b9beee8a7c8895b9cb95760176ed'
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      # Restore first so obj/project.assets.json exists. That file is what
+      # Dependency-Check's MSBuild analyzer reads to learn the real resolved
+      # dependency graph, transitive packages included - scanning the csproj
+      # alone would only see direct references.
+      - name: Restore
+        run: dotnet restore
+
+      # The NVD database is large and slow to build from scratch. Keyed by week
+      # so it refreshes regularly without re-downloading on every run.
+      - name: Compute Dependency-Check cache key (year-week)
+        shell: bash
+        run: echo "DC_CACHE_KEY=$(date -u +'%G-%V')" >> "$GITHUB_ENV"
+
+      - name: Cache the NVD data
+        uses: actions/cache@v5
+        with:
+          path: ~/.dependency-check/data
+          key: dependency-check-${{ env.DC_VERSION }}-${{ env.DC_CACHE_KEY }}
+          restore-keys: |
+            dependency-check-${{ env.DC_VERSION }}-
+      - name: Download and verify Dependency-Check
+        shell: bash
+        run: |
+          curl -sSL -o dc.zip \
+            "https://github.com/dependency-check/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
+
+          echo "${DC_SHA256}  dc.zip" | sha256sum --check --status || {
+            echo "::error::Dependency-Check download did not match the pinned SHA-256. Refusing to run it."
+            echo "Expected: ${DC_SHA256}"
+            echo "Actual:   $(sha256sum dc.zip | cut -d' ' -f1)"
+            exit 1
+          }
+
+          unzip -q dc.zip
+          echo "Verified dependency-check ${DC_VERSION}."
+
+      - name: Run Dependency-Check
+        shell: bash
+        env:
+          # Optional. Without it the NVD API throttles hard and the first run of
+          # the week takes far longer; findings are the same either way. Add a
+          # repository secret named NVD_API_KEY to speed it up - a key is free
+          # from https://nvd.nist.gov/developers/request-an-api-key
+          DC_NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          # An NVD API key is mandatory, not merely helpful. NIST retired the
+          # old JSON data feeds in favour of a rate-limited API, and
+          # Dependency-Check 12 and later fail outright without a key rather
+          # than running slowly: "Invalid API Key, length of 0 too short".
+          #
+          # When the key is absent the scan is skipped rather than failed, so a
+          # missing secret does not block every pull request. What it must never
+          # do is pass quietly - a scan that did not run reporting "no
+          # vulnerabilities" is worse than no scan, so the summary says plainly
+          # that nothing was checked.
+          if [ -z "${DC_NVD_API_KEY}" ]; then
+            echo "::warning::OWASP Dependency-Check did NOT run: no NVD_API_KEY repository secret is set. A key is free from https://nvd.nist.gov/developers/request-an-api-key"
+            {
+              echo "### OWASP Dependency-Check: NOT RUN"
+              echo
+              echo "No \`NVD_API_KEY\` repository secret is set, and Dependency-Check 12+ requires one:"
+              echo "NIST retired the JSON data feeds in favour of a rate-limited API."
+              echo
+              echo "**This is not a clean result. Nothing was scanned.**"
+              echo
+              echo "A key is free from <https://nvd.nist.gov/developers/request-an-api-key>."
+              echo "Add it as a repository secret named \`NVD_API_KEY\` and this job starts scanning."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "DC_SKIPPED=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          tKeyArg=(--nvdApiKey "${DC_NVD_API_KEY}")
+
+          # Dependency-Check validates --out before it runs and refuses a path
+          # that does not exist yet, rather than creating it.
+          mkdir -p reports
+
+          # --enableExperimental turns on the MSBuild project assets analyzer,
+          # which is the one that understands PackageReference. Without it a
+          # modern .NET project reports almost nothing.
+          #
+          # --failOnCVSS 7 fails the job on High and Critical only. Everything
+          # found is still written to the report regardless of score.
+          set +e
+          ./dependency-check/bin/dependency-check.sh \
+            --project "Dynamitey" \
+            --scan "." \
+            --exclude "**/dependency-check/**" \
+            --enableExperimental \
+            --failOnCVSS 7 \
+            --suppression .github/owasp-suppressions.xml \
+            --format HTML --format JSON --format SARIF \
+            --out reports \
+            "${tKeyArg[@]}"
+          tExit=$?
+          set -e
+
+          echo "DC_EXIT=${tExit}" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Summarise findings
+        if: always()
+        shell: bash
+        run: |
+          if [ "${DC_SKIPPED:-0}" = "1" ]; then
+            echo "Scan skipped; the summary already says so. Not treating this as a pass."
+            exit 0
+          fi
+
+          if [ ! -f reports/dependency-check-report.json ]; then
+            echo "::error::Dependency-Check produced no report. The scan did not complete."
+            exit 1
+          fi
+
+          # Count dependencies carrying at least one vulnerability. jq is
+          # preinstalled on the GitHub runners.
+          tVulnerable=$(jq '[.dependencies[]? | select(.vulnerabilities != null)] | length' reports/dependency-check-report.json)
+          tFindings=$(jq '[.dependencies[]?.vulnerabilities // [] | .[]] | length' reports/dependency-check-report.json)
+
+          {
+            echo "### OWASP Dependency-Check"
+            echo
+            echo "Scanned against the NVD, which is a different dataset from the GitHub Advisory Database used by the NuGet audit."
+            echo
+            echo "| Dependencies with findings | Total findings |"
+            echo "| ---: | ---: |"
+            echo "| $tVulnerable | $tFindings |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$tFindings" -eq 0 ]; then
+            echo "No vulnerabilities reported." >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo
+              echo "| Dependency | CVE | Severity | CVSS |"
+              echo "| --- | --- | --- | ---: |"
+              jq -r '.dependencies[]? | select(.vulnerabilities != null) | .fileName as $f | .vulnerabilities[] | "| \($f) | \(.name) | \(.severity // "unknown") | \(.cvssv3.baseScore // .cvssv2.score // "n/a") |"' \
+                reports/dependency-check-report.json
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # The scan step deliberately swallowed its own exit code so this
+          # summary always gets written. Re-apply it here: a non-zero exit from
+          # Dependency-Check means it found something at or above CVSS 7.
+          if [ "${DC_EXIT}" -ne 0 ]; then
+            echo "::error::Dependency-Check failed the CVSS 7 threshold. See the report artifact and the table above."
+            exit 1
+          fi
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: owasp-dependency-check-report
+          path: reports
+          retention-days: 30

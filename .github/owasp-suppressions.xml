@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Suppressions for OWASP Dependency-Check.
+
+  Dependency-Check identifies libraries by matching their metadata against CPE
+  names in the NVD. That matching is name-based, so a package can be attributed
+  a CVE belonging to an unrelated product with a similar name. Those are the
+  false positives this file exists to record.
+
+  The standard for adding one here is the same as for dismissing a CodeQL
+  alert: a written reason a reviewer who has not read the code can evaluate,
+  naming what was checked and why the CVE does not apply. "It is noisy" is not
+  a reason. If a finding is real but accepted, say that explicitly and say who
+  accepted it, rather than describing it as a false positive.
+
+  Prefer the narrowest suppression that works. A <packageUrl> plus a single
+  <cve> suppresses one finding for one package; a bare <cpe> can silence an
+  entire product across future versions, including a genuine advisory published
+  later.
+
+  Format reference:
+  https://dependency-check.github.io/DependencyCheck/general/suppression.html
+
+  Example of the shape a real entry takes:
+
+  <suppress>
+    <notes><![CDATA[
+      CVE-YYYY-NNNNN is against <other product>, which shares a CPE prefix with
+      this package but is unrelated code by a different vendor. Verified by
+      reading the advisory's affected-product list on <date>.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:nuget/Some\.Package@.*$</packageUrl>
+    <cve>CVE-YYYY-NNNNN</cve>
+  </suppress>
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <!-- No suppressions yet. The scan is clean; add entries here only with a
+       reason, and only when a finding has actually been investigated. -->
+</suppressions>
