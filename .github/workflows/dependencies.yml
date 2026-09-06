@@ -154,6 +154,10 @@ jobs:
             tKeyArg="--nvdApiKey ${NVD_API_KEY}"
           fi
 
+          # Dependency-Check validates --out before it runs and refuses a path
+          # that does not exist yet, rather than creating it.
+          mkdir -p reports
+
           # --enableExperimental turns on the MSBuild project assets analyzer,
           # which is the one that understands PackageReference. Without it a
           # modern .NET project reports almost nothing.
