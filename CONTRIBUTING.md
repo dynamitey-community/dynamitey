@@ -70,11 +70,13 @@ a failing test that reproduces the report is a genuinely useful contribution on
 its own, even without a fix — several of those issues have sat for years with
 no reproduction anyone could run.
 
-The suite uses NUnit 4. Most assertions currently go through
-`NUnit.Framework.Legacy.ClassicAssert` because 291 call sites have not been
-converted yet ([#5](https://github.com/dynamitey-community/dynamitey/issues/5)).
-**New tests should use the constraint model** — `Assert.That(actual,
-Is.EqualTo(expected))` — rather than adding to the pile.
+The suite uses NUnit 4 and the constraint model throughout —
+**`Assert.That(actual, Is.EqualTo(expected))`**, not
+`NUnit.Framework.Legacy.ClassicAssert`
+([#5](https://github.com/dynamitey-community/dynamitey/issues/5)).
+`NUnit.Analyzers` is wired into `Tests.csproj` and flags any new
+`ClassicAssert` call at build time; `-warnaserror` turns that into a build
+failure, so there is no legacy pile to avoid adding to.
 
 ## Versioning
 
@@ -89,8 +91,8 @@ why a clone is better for anything you intend to test.
 
 - Branch from `main`. It is protected: no force pushes, linear history, and
   seven required status checks.
-- Keep one concern per pull request. A dependency bump that also rewrites 291
-  assertions is not reviewable.
+- Keep one concern per pull request. A dependency bump that also rewrites
+  hundreds of assertions is not reviewable.
 - Write the commit message for someone reading it in five years without the
   context. Say what changed and why the alternative was rejected.
 - CI must be green, and review conversations must be resolved before merge.

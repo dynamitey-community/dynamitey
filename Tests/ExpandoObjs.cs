@@ -1,6 +1,5 @@
 ﻿using System.Dynamic;
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
 
 namespace Dynamitey.Tests
 {
@@ -23,12 +22,12 @@ namespace Dynamitey.Tests
                 );
 
 
-            ClassicAssert.AreEqual("test1", tExpandoNew.Test);
-            ClassicAssert.AreEqual("Test 2nd", tExpandoNew.Test2);
+            Assert.That(tExpandoNew.Test, Is.EqualTo("test1"));
+            Assert.That(tExpandoNew.Test2, Is.EqualTo("Test 2nd"));
 
-            ClassicAssert.AreEqual(tExpando.Test, tExpandoNew.Test);
-            ClassicAssert.AreEqual(tExpando.Test2, tExpandoNew.Test2);
-            ClassicAssert.AreEqual(tExpando.GetType(), tExpandoNew.GetType());
+            Assert.That(tExpandoNew.Test, Is.EqualTo(tExpando.Test));
+            Assert.That(tExpandoNew.Test2, Is.EqualTo(tExpando.Test2));
+            Assert.That(tExpandoNew.GetType(), Is.EqualTo(tExpando.GetType()));
         }
 
 
@@ -49,12 +48,12 @@ namespace Dynamitey.Tests
                RightArm: "Clamp"
                );
 
-            ClassicAssert.AreEqual("Rise", tExpandoNamedTestShortcut.LeftArm);
-            ClassicAssert.AreEqual("Clamp", tExpandoNamedTestShortcut.RightArm);
+            Assert.That(tExpandoNamedTestShortcut.LeftArm, Is.EqualTo("Rise"));
+            Assert.That(tExpandoNamedTestShortcut.RightArm, Is.EqualTo("Clamp"));
 
-            ClassicAssert.AreEqual(tExpandoNamedTest.LeftArm, tExpandoNamedTestShortcut.LeftArm);
-            ClassicAssert.AreEqual(tExpandoNamedTest.RightArm, tExpandoNamedTestShortcut.RightArm);
-            ClassicAssert.AreEqual(tExpandoNamedTest.GetType(), tExpandoNamedTestShortcut.GetType());
+            Assert.That(tExpandoNamedTestShortcut.LeftArm, Is.EqualTo(tExpandoNamedTest.LeftArm));
+            Assert.That(tExpandoNamedTestShortcut.RightArm, Is.EqualTo(tExpandoNamedTest.RightArm));
+            Assert.That(tExpandoNamedTestShortcut.GetType(), Is.EqualTo(tExpandoNamedTest.GetType()));
         }
     }
 }

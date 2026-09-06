@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
 
 namespace Dynamitey.Tests
 {
@@ -20,7 +19,7 @@ namespace Dynamitey.Tests
             var tResult = tCurriedAdd4(6);
 
 
-            ClassicAssert.AreEqual(10, tResult);
+            Assert.That(tResult, Is.EqualTo(10));
 
         }
 
@@ -34,7 +33,7 @@ namespace Dynamitey.Tests
             var tResult = tCurriedSub7(arg1: 10);
 
 
-            ClassicAssert.AreEqual(3, tResult);
+            Assert.That(tResult, Is.EqualTo(3));
 
         }
 
@@ -46,7 +45,7 @@ namespace Dynamitey.Tests
             var tCastToFunc = (Func<string, string>)tCurriedAdd4;
             var tResult2 = tCastToFunc("10");
 
-            ClassicAssert.AreEqual("410", tResult2);
+            Assert.That(tResult2, Is.EqualTo("410"));
         }
         [Test]
         public void TestBasicConvertDelegateCurryReturnValueType()
@@ -56,7 +55,7 @@ namespace Dynamitey.Tests
             Func<string, int> tCastToFunc = tCurriedAdd4;
             var tResult2 = tCastToFunc("10");
 
-            ClassicAssert.AreEqual(14, tResult2);
+            Assert.That(tResult2, Is.EqualTo(14));
         }
 
         public delegate bool TestDeclaredDelagate(string value);
@@ -67,7 +66,7 @@ namespace Dynamitey.Tests
             var tCurriedContains = Dynamic.Curry(tContains)("it");
             TestDeclaredDelagate tCastToDel = tCurriedContains;
             var tResult = tCastToDel("bait");
-            ClassicAssert.AreEqual(true, tResult);
+            Assert.That(tResult, Is.EqualTo(true));
         }
         public delegate void TestRunDelagate(string value);
         [Test]
@@ -78,7 +77,7 @@ namespace Dynamitey.Tests
             var tCurriedContains = Dynamic.Curry(tContains)("it");
             TestRunDelagate tCastToDel = tCurriedContains;
             tCastToDel("bait");
-            ClassicAssert.AreEqual(true, tBool);
+            Assert.That(tBool, Is.EqualTo(true));
         }
 
         [Test]
@@ -89,7 +88,7 @@ namespace Dynamitey.Tests
             Func<int, int> tCastToFunc = tCurriedAdd4;
             var tResult2 = tCastToFunc(10);
 
-            ClassicAssert.AreEqual(14, tResult2);
+            Assert.That(tResult2, Is.EqualTo(14));
         }
 
         [Test]
@@ -100,7 +99,7 @@ namespace Dynamitey.Tests
             Func<int, int> Curry2 = Curry1(6);
             int tResult = Curry2(10);
 
-            ClassicAssert.AreEqual(20, tResult);
+            Assert.That(tResult, Is.EqualTo(20));
         }
 
         [Test]
@@ -113,7 +112,7 @@ namespace Dynamitey.Tests
             var Curry3 = Curry2(6);
             var tResult = Curry3(20);
 
-            ClassicAssert.AreEqual(35, tResult);
+            Assert.That(tResult, Is.EqualTo(35));
         }
 
 
@@ -125,10 +124,10 @@ namespace Dynamitey.Tests
 
             var tCurry = Dynamic.Curry(tNewObj).Add(4);
             var tResult = tCurry(10);
-            ClassicAssert.AreEqual(14, tResult);
+            Assert.That(tResult, Is.EqualTo(14));
             //Test cached invocation;
             var tResult2 = tCurry(30);
-            ClassicAssert.AreEqual(34, tResult2);
+            Assert.That(tResult2, Is.EqualTo(34));
         }
 
         [Test]
@@ -141,7 +140,7 @@ namespace Dynamitey.Tests
             curry = curry("B");
             curry = curry("C");
             string result = curry("D");
-            ClassicAssert.AreEqual("Test A, B, C, D", result);
+            Assert.That(result, Is.EqualTo("Test A, B, C, D"));
         }
 
         [Test]
@@ -185,10 +184,10 @@ namespace Dynamitey.Tests
 
             var tCurry = Dynamic.Curry(tNewObj).Add(4);
             var tResult = tCurry(10);
-            ClassicAssert.AreEqual(14, tResult);
+            Assert.That(tResult, Is.EqualTo(14));
             //Test cached invocation;
             var tResult2 = tCurry(30);
-            ClassicAssert.AreEqual(34, tResult2);
+            Assert.That(tResult2, Is.EqualTo(34));
         }
 
         [Test]
@@ -197,8 +196,8 @@ namespace Dynamitey.Tests
             var tNewObject = Dynamic.Curry(Build.NewObject);
             var tCurriedNewObject = tNewObject(One: 1);
             var tResult = tCurriedNewObject(Two: 2);
-            ClassicAssert.AreEqual(1, tResult.One);
-            ClassicAssert.AreEqual(2, tResult.Two);
+            Assert.That(tResult.One, Is.EqualTo(1));
+            Assert.That(tResult.Two, Is.EqualTo(2));
 
         }
         [Test]
@@ -208,9 +207,9 @@ namespace Dynamitey.Tests
             tNewObject = tNewObject(One: 1);
             tNewObject = Dynamic.Curry(tNewObject)(Two: 2);
             var tResult = tNewObject(Three: 3);
-            ClassicAssert.AreEqual(1, tResult.One);
-            ClassicAssert.AreEqual(2, tResult.Two);
-            ClassicAssert.AreEqual(3, tResult.Three);
+            Assert.That(tResult.One, Is.EqualTo(1));
+            Assert.That(tResult.Two, Is.EqualTo(2));
+            Assert.That(tResult.Three, Is.EqualTo(3));
         }
 
         [Test]
@@ -220,9 +219,9 @@ namespace Dynamitey.Tests
             tNewObject = tNewObject(One: 1);
             tNewObject = tNewObject(Two: 2);
             var tResult = tNewObject(Three: 3);
-            ClassicAssert.AreEqual(1, tResult.One);
-            ClassicAssert.AreEqual(2, tResult.Two);
-            ClassicAssert.AreEqual(3, tResult.Three);
+            Assert.That(tResult.One, Is.EqualTo(1));
+            Assert.That(tResult.Two, Is.EqualTo(2));
+            Assert.That(tResult.Three, Is.EqualTo(3));
         }
 
         [Test]
@@ -249,7 +248,7 @@ namespace Dynamitey.Tests
             var tNewObj = new PocoAdder();
             var tCurry = Dynamic.Curry(tNewObj).Add(4, 6);
             var tResult = tCurry();
-            ClassicAssert.AreEqual(10, tResult);
+            Assert.That(tResult, Is.EqualTo(10));
         }
 
         [Test]
@@ -258,10 +257,10 @@ namespace Dynamitey.Tests
             var tNewObject = Dynamic.Curry(Build.NewObject);
             tNewObject = tNewObject(One: 1, Two: 2);
             var tResult = tNewObject(Three: 3, Four: 4);
-            ClassicAssert.AreEqual(1, tResult.One);
-            ClassicAssert.AreEqual(2, tResult.Two);
-            ClassicAssert.AreEqual(3, tResult.Three);
-            ClassicAssert.AreEqual(4, tResult.Four);
+            Assert.That(tResult.One, Is.EqualTo(1));
+            Assert.That(tResult.Two, Is.EqualTo(2));
+            Assert.That(tResult.Three, Is.EqualTo(3));
+            Assert.That(tResult.Four, Is.EqualTo(4));
 
         }
 
@@ -272,13 +271,13 @@ namespace Dynamitey.Tests
 
             var curried = Dynamic.Curry(adder);
 
-            ClassicAssert.AreEqual(6, curried(1, 2, 3));
+            Assert.That(curried(1, 2, 3), Is.EqualTo(6));
 
-            ClassicAssert.AreEqual(6, curried(1, 2)(3));
+            Assert.That(curried(1, 2)(3), Is.EqualTo(6));
 
-            ClassicAssert.AreEqual(6, curried(1)(2, 3));
+            Assert.That(curried(1)(2, 3), Is.EqualTo(6));
 
-            ClassicAssert.AreEqual(6, curried(1)(2)(3));
+            Assert.That(curried(1)(2)(3), Is.EqualTo(6));
         }
 
         [Test]

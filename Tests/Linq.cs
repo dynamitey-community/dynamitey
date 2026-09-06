@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
 using IronPython.Hosting;
 using Microsoft.Scripting;
 
@@ -24,7 +23,7 @@ namespace Dynamitey.Tests
             var expected = Enumerable.Range(1, 10).Where(i => i > 5).Skip(1).Take(2).Max();
             var actual = Dynamic.Linq(Enumerable.Range(1, 10)).Where(new Func<int, bool>(i => i > 5)).Skip(1).Take(2).Max();
 
-            ClassicAssert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
         [Test]
         public void MoreGenericsDynamicLinq()
@@ -34,7 +33,7 @@ namespace Dynamitey.Tests
                 .Select(new Func<int, Tuple<int, int>>(i => Tuple.Create(1, i)))
                 .Aggregate(0, new Func<int, Tuple<int, int>, int>((accum, each) => each.Item2));
 
-            ClassicAssert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
 
         }
 
@@ -67,7 +66,7 @@ import System
 result = linq.OfType[System.Int32]().Skip(1).First()
 
 ");
-            ClassicAssert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
 
@@ -89,7 +88,7 @@ result = linq.Where.Overloads[System.Func[System.Int32, System.Boolean]](lambda 
 
 ");
 
-            ClassicAssert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
 

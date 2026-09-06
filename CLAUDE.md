@@ -169,9 +169,12 @@ Recorded because the next person to hit them should not have to re-derive them:
   System.Boolean]`, never `System.Func[int, bool]` — or overload selection
   silently picks the wrong overload.
 
-The suite is on NUnit 4 but still uses the classic model through `ClassicAssert`.
-Converting the 291 sites to `Assert.That(actual, Is.EqualTo(expected))` reorders
-arguments at every one of them, and is #5.
+The suite is on NUnit 4 and uses the constraint model (`Assert.That(actual,
+Is.EqualTo(expected))`) throughout; the one-time `ClassicAssert` migration was
+#5. `NUnit.Analyzers` is referenced by `Tests.csproj` as a
+`PrivateAssets="all"` dev dependency so any new `ClassicAssert` usage is
+flagged (NUnit2005 and siblings) at build time — CI builds with
+`-warnaserror`, so a reintroduced classic-model call fails the build.
 
 ## Versioning and releases
 
