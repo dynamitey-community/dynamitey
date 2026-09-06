@@ -40,8 +40,8 @@ namespace Dynamitey
             }
         }
        
-        private static TuplerFix TuplerHelper = new TuplerFix();
-        private static InvokeContext StaticTuple = InvokeContext.CreateStatic(typeof (Tuple));
+        private static readonly TuplerFix TuplerHelper = new TuplerFix();
+        private static readonly InvokeContext StaticTuple = InvokeContext.CreateStatic(typeof (Tuple));
 
         /// <summary>
         /// Creates a Tuple with arg runtime types.
@@ -232,13 +232,10 @@ namespace Dynamitey
 
         private static int HelperSize(object tuple, bool safe)
         {
-            if (HelperIsTuple(tuple, out var type, out var genericType, out var size, safe))
+            if (HelperIsTuple(tuple, out var type, out var genericType, out var size, safe) && size == 8)
             {
-                if (size == 8)
-                {
-                    var lasttype = type.GetTypeInfo().GetGenericArguments()[7];
-                    size = size + HelperSize(lasttype, true) - 1;
-                }
+                var lasttype = type.GetTypeInfo().GetGenericArguments()[7];
+                size = size + HelperSize(lasttype, true) - 1;
             }
             return size;
         }

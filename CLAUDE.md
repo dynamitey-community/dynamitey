@@ -26,6 +26,13 @@ It is history, not a task list.
   pending a reply. The `upstream` remote's push URL is set to `DISABLED` for
   exactly this reason; do not undo it. Fetching is fine and is how upstream work
   gets pulled in.
+- **Always pass `--repo dynamitey-community/dynamitey --base main` to
+  `gh pr create`.** Because an `upstream` remote exists, `gh` treats this clone as
+  a fork and picks `ekonbenefits:master` as the default base — so a bare
+  `gh pr create` aims a PR at upstream. It fails there today only because that
+  repo rejects the write, which is luck, not a guardrail. `gh repo set-default
+  dynamitey-community/dynamitey` is set locally, but that is per-machine and does
+  not survive a fresh clone; the explicit flags do.
 - **Also avoid incidental writes to upstream.** A clickable link to an
   `ekonbenefits` issue or PR posts a cross-reference event onto their timeline,
   and an `@mention` copied out of upstream text notifies a real person. Put both

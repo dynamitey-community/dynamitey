@@ -21,10 +21,10 @@ namespace Dynamitey.Internal.Optimization
 {
     internal class BareBonesList<T>: ICollection<T>
     {
-        private T[] _list;
+        private readonly T[] _list;
         private int _addIndex;
-   
-        private int _length;
+
+        private readonly int _length;
 
 
         /// <summary>
@@ -84,9 +84,9 @@ namespace Dynamitey.Internal.Optimization
         internal class BareBonesEnumerator : IEnumerator<T>
 
         {
-            private T[] _list;
+            private readonly T[] _list;
             private int _enumerateInex = -1;
-            private int _length;
+            private readonly int _length;
 
             public BareBonesEnumerator(T[] list, int length)
             {

@@ -303,7 +303,7 @@ namespace Dynamitey.DynamicObjects
         ///</summary>
         public class BuilderTrampoline<TInnerObjectProtoType> : DynamicObject
         {
-            Builder<TInnerObjectProtoType> _buider;
+            readonly Builder<TInnerObjectProtoType> _buider;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}.BuilderTrampoline"/> class.
@@ -343,7 +343,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         public class SetupTrampoline<TInnerObjectProtoType> : DynamicObject
         {
-			Builder<TInnerObjectProtoType> _buider;
+			readonly Builder<TInnerObjectProtoType> _buider;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}.SetupTrampoline"/> class.
