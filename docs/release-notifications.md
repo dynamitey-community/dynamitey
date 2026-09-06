@@ -44,7 +44,7 @@ if a reproduction would change the outcome.
 > `InvalidCastException` above 14 arguments is fixed, in the community
 > continuation at `dynamitey-community/dynamitey`.
 >
-> The cause was not an arity ceiling, which is how it looked. `InvokeHelper.tt`
+> The cause was not a hard arity limit; it was a return-type mismatch. `InvokeHelper.tt`
 > generates a case per argument count up to 14; anything above that fell to a
 > hand-written branch that built the call site with `typeof(TTarget)` where it
 > should have used `typeof(TReturn)`. For a constructor `TTarget` is
