@@ -8,18 +8,18 @@
          throughout the annotated code. `latest` matches what net10.0 already gets by
          default, so both legs of the multi-target compile the same syntax. -->
     <LangVersion>latest</LangVersion>
-    <Description>(pronounced dyna-mighty) flexes DLR muscle to do meta-mazing things in .net</Description>
-    <Company>Ekon Benefits</Company>
-    <Authors />
-    <Copyright>Copyright 2017 Ekon Benefits</Copyright>
+    <Description>(pronounced dyna-mighty) flexes DLR muscle to do meta-mazing things in .net. This package is a community continuation fork; it is not the original `Dynamitey` package published by Ekon Benefits.</Description>
+    <Company>The dynamitey-community contributors</Company>
+    <Authors>Ekon Benefits; The dynamitey-community contributors</Authors>
+    <Copyright>Copyright 2010-2024 Ekon Benefits. Copyright 2026 The dynamitey-community contributors.</Copyright>
     <PackageProjectUrl>https://github.com/dynamitey-community/dynamitey</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dynamitey-community/dynamitey.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <PackageTags>dynamic metaprogramming dlr reflection currying tuples expando latetypes</PackageTags>
     <IncludeSymbols>True</IncludeSymbols>
     <IncludeSource>True</IncludeSource>
-    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>sn.snk</AssemblyOriginatorKeyFile>
     <DelaySign>False</DelaySign>
@@ -60,6 +60,14 @@
     <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <!-- Ships the repository root README as the NuGet listing page (#6). Pack="true"
+         puts it in the package; PackagePath places it at the package root, matching
+         PackageReadmeFile above. Visible="false" keeps it out of the Solution Explorer
+         "Dynamitey" project node, since the file physically lives one level up. -->
+    <None Include="..\Readme.md" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="InlineLambdas.tt">
