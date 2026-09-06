@@ -53,6 +53,7 @@ jobs:
       - name: Test
         shell: bash
         run: |
+          set -o pipefail
           dotnet test Tests/Tests.csproj \
             --configuration Release \
             --no-build \
