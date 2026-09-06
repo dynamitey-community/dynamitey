@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Dynamic;
 using System.IO;
@@ -510,6 +511,96 @@ namespace Dynamitey.Tests
             Assert.That(tList.Equals(null), Is.False);
             Assert.That(tList.Equals("not a list"), Is.False);
             Assert.That(tList.Equals(new DynamicObjects.Dictionary()), Is.False);
+        }
+
+        // Issue #59. The Replace notification passed its two values to
+        // NotifyCollectionChangedEventArgs in the wrong order, so NewItems carried the value that
+        // had just been removed and OldItems the one that replaced it. Both parameters are
+        // object?, so the transposition compiled cleanly and was invisible to every other check
+        // here - the type system, the suite, CodeQL, and the .NET analyzers all passed it.
+        // A bound control was the only thing that would have shown it, by displaying the discarded
+        // value. These tests assert the event's contents, which is the only place it is visible in
+        // process.
+        private static NotifyCollectionChangedEventArgs CaptureCollectionChange(
+            DynamicObjects.List list, Action<DynamicObjects.List> act, NotifyCollectionChangedAction expected)
+        {
+            NotifyCollectionChangedEventArgs tCaptured = null;
+            NotifyCollectionChangedEventHandler tHandler = (s, e) =>
+            {
+                if (e.Action == expected) tCaptured = e;
+            };
+
+            ((INotifyCollectionChanged)list).CollectionChanged += tHandler;
+            try
+            {
+                act(list);
+            }
+            finally
+            {
+                ((INotifyCollectionChanged)list).CollectionChanged -= tHandler;
+            }
+
+            Assert.That(tCaptured, Is.Not.Null, $"No {expected} notification was raised.");
+            return tCaptured;
+        }
+
+        [Test]
+        public void ReplaceNotificationReportsNewAndOldItemsTheRightWayRound()
+        {
+            var tList = new DynamicObjects.List(new object[] { "first", "second" });
+
+            var tEvent = CaptureCollectionChange(
+                tList, it => it[0] = "REPLACEMENT", NotifyCollectionChangedAction.Replace);
+
+            Assert.That(tEvent.NewItems[0], Is.EqualTo("REPLACEMENT"),
+                "NewItems must carry the value that replaced the old one - a bound control reads this to update itself.");
+            Assert.That(tEvent.OldItems[0], Is.EqualTo("first"),
+                "OldItems must carry the value that was removed.");
+            Assert.That(tEvent.OldStartingIndex, Is.EqualTo(0));
+        }
+
+        // The other three actions were always correct. Asserting them stops a future edit to this
+        // switch from fixing one arm and breaking another, which is exactly what happened here.
+        //
+        // These three build on a List<object> rather than an object[] on purpose. The constructor
+        // keeps whatever IList<object> it is handed as the backing store, and an array satisfies
+        // that interface while being fixed-size - so Add, RemoveAt and Clear throw
+        // NotSupportedException on an array-backed instance. Indexer assignment does not, which is
+        // why the Replace test above can use an array.
+        [Test]
+        public void AddNotificationReportsTheAddedItem()
+        {
+            var tList = new DynamicObjects.List(new List<object> { "first" });
+
+            var tEvent = CaptureCollectionChange(
+                tList, it => it.Add("added"), NotifyCollectionChangedAction.Add);
+
+            Assert.That(tEvent.NewItems[0], Is.EqualTo("added"));
+            Assert.That(tEvent.OldItems, Is.Null);
+        }
+
+        [Test]
+        public void RemoveNotificationReportsTheRemovedItem()
+        {
+            var tList = new DynamicObjects.List(new List<object> { "first", "second" });
+
+            var tEvent = CaptureCollectionChange(
+                tList, it => it.RemoveAt(0), NotifyCollectionChangedAction.Remove);
+
+            Assert.That(tEvent.OldItems[0], Is.EqualTo("first"));
+            Assert.That(tEvent.NewItems, Is.Null);
+        }
+
+        [Test]
+        public void ResetNotificationCarriesNeitherItemList()
+        {
+            var tList = new DynamicObjects.List(new List<object> { "first", "second" });
+
+            var tEvent = CaptureCollectionChange(
+                tList, it => it.Clear(), NotifyCollectionChangedAction.Reset);
+
+            Assert.That(tEvent.NewItems, Is.Null);
+            Assert.That(tEvent.OldItems, Is.Null);
         }
 
         // A backing store is free to define its own Equals, and the store is whatever the caller
