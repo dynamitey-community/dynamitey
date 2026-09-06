@@ -151,7 +151,7 @@ namespace Dynamitey
 
             if (context != null)
             {
-                var dummy = context.GetTargetContext(out _context, out _staticContext); //lgtm [cs/useless-assignment-to-local]
+                context.GetTargetContext(out _context, out _staticContext);
             }
             else
             {
@@ -243,16 +243,10 @@ namespace Dynamitey
                 switch (Kind)
                 {
                     case InvocationKind.Convert:
-                        if (args.Length > 0)
-                        {
-                            if (!Equals(args[0], _convertType))
-                                throw new ArgumentException("CacheableInvocation can't change conversion type on invoke.", nameof(args));
-                        }
-                        if (args.Length > 1)
-                        {
-                            if(!Equals(args[1], _convertExplicit))
-                                throw new ArgumentException("CacheableInvocation can't change explicit/implicit conversion on invoke.", nameof(args));
-                        }
+                        if (args.Length > 0 && !Equals(args[0], _convertType))
+                            throw new ArgumentException("CacheableInvocation can't change conversion type on invoke.", nameof(args));
+                        if (args.Length > 1 && !Equals(args[1], _convertExplicit))
+                            throw new ArgumentException("CacheableInvocation can't change explicit/implicit conversion on invoke.", nameof(args));
 
                         if(args.Length > 2)
                             goto default;
