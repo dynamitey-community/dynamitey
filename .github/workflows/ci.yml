@@ -142,7 +142,7 @@ jobs:
       # fewer external action in the supply chain, and the version is pinned by
       # the same mechanism as every other dependency here.
       - name: Install ReportGenerator
-        run: dotnet tool install --tool-path ./tools dotnet-reportgenerator-globaltool
+        run: dotnet tool install --tool-path ./tools --version 5.5.11 dotnet-reportgenerator-globaltool
 
       - name: Generate report
         run: >
