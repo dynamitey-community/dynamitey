@@ -126,8 +126,11 @@
          fails the build until the change is written into these files, which
          makes an accidental breaking change impossible to merge quietly.
 
-         Shipped holds the surface of the last release; Unshipped holds what has
-         been added since. At release time Unshipped is folded into Shipped. -->
+         Shipped holds the surface of the last release; Unshipped holds what
+         has been added since. This fork has not released yet, so Shipped is
+         empty apart from its nullable directive and the entire surface sits in
+         Unshipped. At 4.0.0 the Unshipped entries move across, and from then on
+         the split carries its usual meaning. -->
     <AdditionalFiles Include="PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
   </ItemGroup>

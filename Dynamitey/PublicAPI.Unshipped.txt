@@ -1,3 +1,4 @@
+#nullable enable
 abstract Dynamitey.DynamicObjects.FauxType.GetContainedTypes() -> System.Type![]!
 abstract Dynamitey.DynamicObjects.FauxType.GetMember(string! binderName) -> System.Collections.Generic.IEnumerable<System.Reflection.MemberInfo!>!
 abstract Dynamitey.DynamicObjects.FauxType.GetMemberNames() -> System.Collections.Generic.IEnumerable<string!>!

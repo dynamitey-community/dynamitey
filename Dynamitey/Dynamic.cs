@@ -166,8 +166,8 @@ namespace Dynamitey
             Justification = "Pre-existing public surface inherited from upstream 3.0.3. The rule guards against a "
                 + "later version adding optional parameters to an overload set, which silently breaks binary "
                 + "compatibility for already-compiled callers. Removing the optional parameters now would itself "
-                + "be that break. Frozen instead: PublicAPI.Shipped.txt records this shape, so any future change "
-                + "to it has to be written down before it can build.")]
+                + "be that break. Frozen instead: the PublicAPI declaration files record this shape, so any "
+                + "future change to it has to be written down before it can build.")]
         public static CallSite CreateCallSite(Type delegateType, CallSiteBinder binder, String_OR_InvokeMemberName name,
                                               Type context, string?[]? argNames = null, bool staticContext = false,
                                               bool isEvent = false) =>
@@ -213,8 +213,8 @@ namespace Dynamitey
             Justification = "Pre-existing public surface inherited from upstream 3.0.3. The rule guards against a "
                 + "later version adding optional parameters to an overload set, which silently breaks binary "
                 + "compatibility for already-compiled callers. Removing the optional parameters now would itself "
-                + "be that break. Frozen instead: PublicAPI.Shipped.txt records this shape, so any future change "
-                + "to it has to be written down before it can build.")]
+                + "be that break. Frozen instead: the PublicAPI declaration files record this shape, so any "
+                + "future change to it has to be written down before it can build.")]
         public static CallSite<T> CreateCallSite<T>(CallSiteBinder binder, String_OR_InvokeMemberName name, Type context,
                                                     string?[]? argNames = null, bool staticContext = false,
                                                     bool isEvent = false) where T : class 
