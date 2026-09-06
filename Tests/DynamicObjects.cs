@@ -428,6 +428,90 @@ namespace Dynamitey.Tests
             Assert.That(tDictionary, Is.EqualTo(tNotDynamic));
         }
 
+        // Issue #52. These types compare by backing-store identity, not by content: they are
+        // mutable views over a store someone else owns, so two wrappers over one store are one
+        // value. Dictionary already worked this way; List returned false even for two wrappers
+        // over the same IList, because Equals(List) opened with base.Equals(other), which resolves
+        // to BaseDictionary.Equals(object) and type-tests against typeof(Dictionary) - so for a
+        // List it compared the backing dictionary against the List itself, and the element
+        // comparison after it was unreachable.
+        [Test]
+        public void DictionariesOverTheSameBackingStoreAreEqual()
+        {
+            var tBacking = new Dictionary<string, object> { { "A", 1 } };
+
+            object tOne = new DynamicObjects.Dictionary(tBacking);
+            object tTwo = new DynamicObjects.Dictionary(tBacking);
+
+            Assert.That(tOne, Is.Not.SameAs(tTwo), "the two instances must be distinct objects, not the same reference.");
+            Assert.That(tOne.Equals(tTwo), Is.True);
+            Assert.That(tTwo.Equals(tOne), Is.True);
+            Assert.That(tOne.GetHashCode(), Is.EqualTo(tTwo.GetHashCode()));
+        }
+
+        [Test]
+        public void DictionariesOverSeparateStoresWithEqualContentAreNotEqual()
+        {
+            object tOne = new DynamicObjects.Dictionary(new Dictionary<string, object> { { "A", 1 } });
+            object tTwo = new DynamicObjects.Dictionary(new Dictionary<string, object> { { "A", 1 } });
+
+            Assert.That(tOne.Equals(tTwo), Is.False,
+                "Equal content over separate stores is deliberately not equal - content comparison would force a content-derived hash on a mutable type.");
+        }
+
+        // A List has two backing stores, elements and dynamic properties, and both must be shared
+        // for the two wrappers to be the same value. The constructor gives each instance a fresh
+        // property dictionary unless 'members' is passed, so sharing both takes both arguments.
+        [Test]
+        public void ListsOverTheSameBackingStoresAreEqual()
+        {
+            var tElements = new List<object> { 1, 2, 3 };
+            var tMembers = new Dictionary<string, object> { { "Prop", "x" } };
+
+            object tOne = new DynamicObjects.List(tElements, tMembers);
+            object tTwo = new DynamicObjects.List(tElements, tMembers);
+
+            Assert.That(tOne, Is.Not.SameAs(tTwo), "the two instances must be distinct objects, not the same reference.");
+            Assert.That(tOne.Equals(tTwo), Is.True, "Two views over the same element list and the same property dictionary are one value.");
+            Assert.That(tTwo.Equals(tOne), Is.True);
+            Assert.That(tOne.GetHashCode(), Is.EqualTo(tTwo.GetHashCode()));
+        }
+
+        // Guards against "simplifying" Equals down to the element list alone: the dynamic
+        // properties are part of the value, so sharing only the elements is not enough.
+        [Test]
+        public void ListsSharingOnlyTheirElementsAreNotEqual()
+        {
+            var tElements = new List<object> { 1, 2, 3 };
+
+            object tOne = new DynamicObjects.List(tElements, new Dictionary<string, object> { { "Prop", "x" } });
+            object tTwo = new DynamicObjects.List(tElements, new Dictionary<string, object> { { "Prop", "x" } });
+
+            Assert.That(tOne.Equals(tTwo), Is.False);
+            Assert.That(tTwo.Equals(tOne), Is.False);
+        }
+
+        [Test]
+        public void ListsOverSeparateStoresWithEqualContentAreNotEqual()
+        {
+            var tMembers = new Dictionary<string, object>();
+
+            object tOne = new DynamicObjects.List(new List<object> { 1, 2, 3 }, tMembers);
+            object tTwo = new DynamicObjects.List(new List<object> { 1, 2, 3 }, tMembers);
+
+            Assert.That(tOne.Equals(tTwo), Is.False);
+        }
+
+        [Test]
+        public void ListIsNotEqualToNullOrToAnUnrelatedType()
+        {
+            object tList = new DynamicObjects.List(new List<object> { 1 });
+
+            Assert.That(tList.Equals(null), Is.False);
+            Assert.That(tList.Equals("not a list"), Is.False);
+            Assert.That(tList.Equals(new DynamicObjects.Dictionary()), Is.False);
+        }
+
         [Test]
         public void DynamicAnnonymousWrapper()
         {

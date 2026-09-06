@@ -337,10 +337,20 @@ namespace Dynamitey.DynamicObjects
         public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
-        /// Equalses the specified other.
+        /// Determines whether the specified <see cref="Dictionary"/> is equal to this instance.
         /// </summary>
         /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <returns>
+        /// <c>true</c> when both instances are views over the same backing dictionary.
+        /// </returns>
+        /// <remarks>
+        /// Store identity, not content comparison. These types are mutable views over a dictionary
+        /// someone else owns, so two wrappers over one store are one value, while two stores that
+        /// merely hold equal data are not - and <see cref="GetHashCode"/> matches, returning the
+        /// backing store's hash. Comparing content would instead require a content-derived hash on
+        /// a mutable type, which makes an instance unfindable in a hash container the moment it is
+        /// mutated. <see cref="List"/> documents and now implements the same contract; see issue #52.
+        /// </remarks>
         public bool Equals(Dictionary? other)
         {
             if (ReferenceEquals(null, other)) return false;
