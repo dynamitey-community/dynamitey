@@ -167,22 +167,14 @@ namespace Dynamitey.DynamicObjects
                         {
                             var tParams = tMethodInfo.GetParameters().Select(it => it.ParameterType).ToArray();
 
-                            if (OverloadTypes.ContainsKey(tParams.Length))
-                            {
-                                OverloadTypes[tParams.Length] = new Type[] {};
-                            }
-                            else
-                            {
-                                OverloadTypes[tParams.Length] = tParams.Select(ReplaceGenericTypes).ToArray();
-                            }
+                            OverloadTypes[tParams.Length] = OverloadTypes.ContainsKey(tParams.Length)
+                                ? new Type[] { }
+                                : tParams.Select(ReplaceGenericTypes).ToArray();
                         }
 
-                        foreach (var tOverloadType in OverloadTypes.ToList())
+                        foreach (var tOverloadType in OverloadTypes.Where(it => it.Value.Length == 0).ToList())
                         {
-                            if (tOverloadType.Value.Length == 0)
-                            {
-                                OverloadTypes.Remove(tOverloadType);
-                            }
+                            OverloadTypes.Remove(tOverloadType);
                         }
 
                     }
