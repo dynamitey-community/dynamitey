@@ -165,3 +165,14 @@ $RECYCLE.BIN/
 
 # BenchmarkDotNet output
 BenchmarkDotNet.Artifacts/
+
+# CI analysis artifacts. Produced by the coverage and OWASP jobs, and by
+# running those same commands locally; none of it belongs in the history.
+CoverageReport/
+reports/
+tools/
+dependency-check/
+dc.zip
+
+# Scratch worktrees created for isolated agent runs.
+.claude/worktrees/

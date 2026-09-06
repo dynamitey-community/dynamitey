@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Coverage settings, passed to `dotnet test` with the settings option.
+
+  The filters exist because a coverage number is only useful if it describes
+  the thing being shipped. Without them the figure also covers SupportLibrary,
+  a fixture assembly that exists purely to be called from tests, which drags
+  the number toward whatever the fixtures happen to exercise rather than toward
+  how well Dynamitey itself is tested.
+-->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+
+          <!-- The shipped library only. SupportLibrary and the test assembly
+               are fixtures, not product code. -->
+          <Include>[Dynamitey]*</Include>
+
+          <!-- Compiler generated members (iterator state machines, lambda
+               display classes) report as lines no test can reach directly. -->
+          <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+
+          <!-- Auto properties have no logic to cover, and counting them
+               inflates the line figure without saying anything about tests. -->
+          <SkipAutoProps>true</SkipAutoProps>
+
+          <UseSourceLink>true</UseSourceLink>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
