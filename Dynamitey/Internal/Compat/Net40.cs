@@ -9,7 +9,7 @@ namespace Dynamitey.Internal.Compat
 
     public static class Net40
     {
-        public static CultureInfo GetDefaultThreadCurrentCulture() {
+        public static CultureInfo? GetDefaultThreadCurrentCulture() {
 
             return CultureInfo.DefaultThreadCurrentCulture;
 

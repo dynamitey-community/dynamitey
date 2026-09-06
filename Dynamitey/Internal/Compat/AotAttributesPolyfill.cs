@@ -43,7 +43,7 @@ namespace System.Diagnostics.CodeAnalysis
 
         public string Message { get; }
 
-        public string Url { get; set; }
+        public string? Url { get; set; }
     }
 }
 #endif
@@ -65,7 +65,7 @@ namespace System.Diagnostics.CodeAnalysis
 
         public string Message { get; }
 
-        public string Url { get; set; }
+        public string? Url { get; set; }
     }
 }
 #endif
@@ -94,13 +94,13 @@ namespace System.Diagnostics.CodeAnalysis
 
         public string CheckId { get; }
 
-        public string Scope { get; set; }
+        public string? Scope { get; set; }
 
-        public string Target { get; set; }
+        public string? Target { get; set; }
 
-        public string MessageId { get; set; }
+        public string? MessageId { get; set; }
 
-        public string Justification { get; set; }
+        public string? Justification { get; set; }
     }
 }
 #endif

@@ -36,7 +36,7 @@ namespace Dynamitey.DynamicObjects
         /// Gets the target.
         /// </summary>
         /// <value>The target.</value>
-        object Target { get; }
+        object? Target { get; }
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ namespace Dynamitey.DynamicObjects
             /// </summary>
             /// <value>The delegate.</value>
            
-            public object Delegate { get; protected set; }
+            public object? Delegate { get; protected set; }
 
             /// <summary>
             /// Gets or sets a value indicating whether this instance is adding.
@@ -103,7 +103,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="target">The target.</param>
         [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        protected BaseForwarder(object target)
+        protected BaseForwarder(object? target)
         {
             Target = target;
         }
@@ -124,10 +124,10 @@ namespace Dynamitey.DynamicObjects
         public override IEnumerable<string> GetDynamicMemberNames()
         {
            
-                var tDyanmic = Dynamic.GetMemberNames(CallTarget, dynamicOnly: true);
+                var tDyanmic = Dynamic.GetMemberNames(CallTarget!, dynamicOnly: true);
                 if (!tDyanmic.Any())
                 {
-                    return Dynamic.GetMemberNames(CallTarget);
+                    return Dynamic.GetMemberNames(CallTarget!);
                 }
             
             return base.GetDynamicMemberNames();
@@ -140,15 +140,15 @@ namespace Dynamitey.DynamicObjects
         /// <value>The target.</value>
          
        
-        protected object Target {  get;  set; }
+        protected object? Target {  get;  set; }
 
-        object IForwarder.Target => Target;
+        object? IForwarder.Target => Target;
 
         /// <summary>
         /// Gets the call target.
         /// </summary>
         /// <value>The call target.</value>
-        protected virtual object CallTarget => Target;
+        protected virtual object? CallTarget => Target;
 
         /// <summary>
         /// Provides the implementation for operations that get member values. Classes derived from the <see cref="T:System.Dynamic.DynamicObject"/> class can override this method to specify dynamic behavior for operations such as getting a value for a property.
@@ -165,7 +165,7 @@ namespace Dynamitey.DynamicObjects
             "consumer's own dynamic member access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeIsEvent/InvokeGet calls as above; see the IL2026 suppression on this member.")]
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             if (CallTarget == null)
             {
@@ -210,7 +210,7 @@ namespace Dynamitey.DynamicObjects
             "call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.Invoke/InvokeAction calls as above; see the IL2026 suppression on this member.")]
-        public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
+        public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
         {
             if (CallTarget == null)
             {
@@ -218,7 +218,7 @@ namespace Dynamitey.DynamicObjects
                 return false;
             }
 
-            var tArgs = Util.NameArgsIfNecessary(binder.CallInfo, args);
+            var tArgs = Util.NameArgsIfNecessary(binder.CallInfo, args!);
 
             try
             {
@@ -256,7 +256,7 @@ namespace Dynamitey.DynamicObjects
             "after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeGet/InvokeMember/InvokeMemberAction calls as above; see the IL2026 suppression on this member.")]
-        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             if (CallTarget == null)
             {
@@ -264,16 +264,16 @@ namespace Dynamitey.DynamicObjects
                 return false;
             }
 
-            object[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, args);
+            object?[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, args!);
 
 
-            Type[] types = null;
+            Type[]? types = null;
 
             try
             { 
                 //.net core
                 // Try and pull generic arguments from binder
-                IList<Type> typeList = Dynamic.InvokeGet(binder,
+                IList<Type>? typeList = Dynamic.InvokeGet(binder,
                     "TypeArguments");
                 if (typeList != null)
                 {
@@ -292,7 +292,7 @@ namespace Dynamitey.DynamicObjects
                 { 
                     //.net 4.0
                     // Try and pull generic arguments from binder
-                    IList<Type> typeList = Dynamic.InvokeGet(binder,
+                    IList<Type>? typeList = Dynamic.InvokeGet(binder,
                         "Microsoft.CSharp.RuntimeBinder.ICSharpInvokeOrInvokeMemberBinder.TypeArguments");
                     if (typeList != null)
                     {
@@ -347,7 +347,7 @@ namespace Dynamitey.DynamicObjects
             "triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.* calls as above; see the IL2026 suppression on this member.")]
-        public override bool TrySetMember(SetMemberBinder binder, object value)
+        public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
             if (CallTarget == null)
             {
@@ -396,24 +396,26 @@ namespace Dynamitey.DynamicObjects
             "indexer access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeGetIndex call as above; see the IL2026 suppression on this member.")]
-        public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
+        public override bool TryGetIndex(GetIndexBinder binder, object?[]? indexes, out object result)
         {
             if (CallTarget == null)
             {
-                result = null;
+                result = null!;
                 return false;
             }
 
-            object[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, indexes);
+            object?[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, indexes!);
 
             try
             {
-                result = Dynamic.InvokeGetIndex(CallTarget, tArgs);
+                // DynamicObject.TryGetIndex declares result non-nullable even though an indexer
+                // can genuinely return null; matching upstream rather than the real value space.
+                result = Dynamic.InvokeGetIndex(CallTarget, tArgs)!;
                 return true;
             }
             catch (RuntimeBinderException)
             {
-                result = null;
+                result = null!;
                 return false;
             }
         }
@@ -432,15 +434,15 @@ namespace Dynamitey.DynamicObjects
             "indexer assignment already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeSetIndex call as above; see the IL2026 suppression on this member.")]
-        public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
+        public override bool TrySetIndex(SetIndexBinder binder, object?[]? indexes, object? value)
         {
             if (CallTarget == null)
             {
                 return false;
             }
 
-            var tCombinedArgs = indexes.Concat(new[] { value }).ToArray();
-            object[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, tCombinedArgs);
+            var tCombinedArgs = indexes!.Concat(new[] { value }).ToArray();
+            object?[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, tCombinedArgs);
             try
             {
 
@@ -460,7 +462,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="other">The other.</param>
         /// <returns></returns>
-        public bool Equals(BaseForwarder other)
+        public bool Equals(BaseForwarder? other)
         {
             if (ReferenceEquals(null, other)) return ReferenceEquals(null, CallTarget);
             if (ReferenceEquals(this, other)) return true;
@@ -474,9 +476,9 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj)) return ReferenceEquals(null, CallTarget); 
+            if (ReferenceEquals(null, obj)) return ReferenceEquals(null, CallTarget);
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != typeof (BaseForwarder)) return false;
             return Equals((BaseForwarder) obj);

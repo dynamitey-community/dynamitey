@@ -119,7 +119,7 @@ namespace Dynamitey
             /// was cancelled.
             /// </exception>
             [RequiresUnreferencedCode("Reads the wrapped task's 'Result' property via Type.GetProperty(nameof(Result)) reflection; trimming can remove that property from the task's concrete type.")]
-            public object GetResult()
+            public object? GetResult()
             {
                 // Statically typed against Task, not the task's actual runtime type: the compiler binds
                 // GetAwaiter/GetResult at compile time from Task itself, so an inaccessible TResult on the

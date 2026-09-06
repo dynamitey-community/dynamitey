@@ -75,9 +75,9 @@ namespace Dynamitey.Internal.Optimization
         /// <param name="callInfo">The call info.</param>
         /// <param name="args">The args.</param>
         /// <returns></returns>
-        public static object[] NameArgsIfNecessary(CallInfo callInfo, object[] args)
+        public static object?[] NameArgsIfNecessary(CallInfo callInfo, object?[] args)
         {
-            object[] tArgs;
+            object?[] tArgs;
             if (callInfo.ArgumentNames.Count == 0)
                 tArgs = args;
             else
@@ -102,7 +102,9 @@ namespace Dynamitey.Internal.Optimization
             if (tInvokeContext != null)
             {
                 staticContext = tInvokeContext.StaticContext;
-                context = tInvokeContext.Context;
+                // InvokeContext.Context is null only via its (target, context) constructor called
+                // with a null context - a documented gap in that type, not introduced here.
+                context = tInvokeContext.Context!;
                 context = context.FixContext();
                 return tInvokeContext.Target;
             }
@@ -130,11 +132,14 @@ namespace Dynamitey.Internal.Optimization
    
         [RequiresUnreferencedCode("Calls the annotated Dynamic.CoerceConvert/InvokeConstructor to coerce result to the interface type TryTypeForName resolved; trimming can remove the member either resolves.")]
         [RequiresDynamicCode("Dynamic.CoerceConvert/InvokeConstructor bind through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
-        internal static bool MassageResultBasedOnInterface(this BaseObject target, string binderName, bool resultFound, ref object result)
+        internal static bool MassageResultBasedOnInterface(this BaseObject target, string binderName, bool resultFound, ref object? result)
         {
             if (result is BaseForwarder.AddRemoveMarker) //Don't massage AddRemove Proxies
                 return true;
 
+            // TryTypeForName is [NotNullWhen(true)] on tType, but that postcondition doesn't survive
+            // into the separate `if (tTryType)`/`if (!tTryType) return false;` checks below (tTryType
+            // is a plain bool by the time it's read again) - hence the `!`s on tType from here on.
             var tTryType = target.TryTypeForName(binderName, out var tType);
             if (tTryType && tType == typeof(void))
             {
@@ -149,7 +154,7 @@ namespace Dynamitey.Internal.Optimization
                 }
               else if (tTryType)
               {
-                  result = Dynamic.CoerceConvert(result, tType);
+                  result = Dynamic.CoerceConvert(result, tType!);
               }
             }
             else
@@ -160,14 +165,14 @@ namespace Dynamitey.Internal.Optimization
 
                     return false;
                 }
-                if (typeof (Delegate).GetTypeInfo().IsAssignableFrom(tType))
+                if (typeof (Delegate).GetTypeInfo().IsAssignableFrom(tType!))
                 {
                     result = new BaseForwarder.AddRemoveMarker();
                 }
 
-                if (tType.GetTypeInfo().IsValueType)
+                if (tType!.GetTypeInfo().IsValueType)
                 {
-                    result = Dynamic.InvokeConstructor(tType);
+                    result = Dynamic.InvokeConstructor(tType!);
                 }
             }
             return true;
@@ -176,22 +181,22 @@ namespace Dynamitey.Internal.Optimization
 
 
 
-        internal static object[] GetArgsAndNames(object[]args,out string[]argNames)
+        internal static object?[] GetArgsAndNames(object?[]args,out string?[]?argNames)
         {
             if (args == null)
-                args = new object[] { null };
+                args = new object?[] { null };
 
             //Optimization: linq statement creates a slight overhead in this case
             // ReSharper disable LoopCanBeConvertedToQuery
             // ReSharper disable ForCanBeConvertedToForeach
-            argNames = new string[args.Length];
+            argNames = new string?[args.Length];
 
             var tArgSet = false;
-            var tNewArgs = new object[args.Length];
+            var tNewArgs = new object?[args.Length];
             for (int i = 0; i < args.Length; i++)
             {
                 var tArg = args[i];
-                string tName = null;
+                string? tName = null;
 
                 if (tArg is InvokeArg)
                 {

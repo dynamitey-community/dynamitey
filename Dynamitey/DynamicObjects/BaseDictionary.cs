@@ -36,6 +36,10 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Wrapped Dictionary
         /// </summary>
+        // Non-nullable value type: Dictionary (the one concrete subclass) implements the closed
+        // IDictionary<string, object> - not object? - so this has to match that public contract.
+        // SetProperty below (which every nullable DynamicObject override funnels through) is the
+        // one place that bridges a value the DLR may hand us as null into this non-null storage.
         protected IDictionary<string,object> _dictionary;
 
 
@@ -44,7 +48,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="dict">The dict.</param>
         [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        protected BaseDictionary(IEnumerable<KeyValuePair<string, object>> dict =null)
+        protected BaseDictionary(IEnumerable<KeyValuePair<string, object>>? dict =null)
         {
             if (dict == null)
             {
@@ -105,7 +109,7 @@ namespace Dynamitey.DynamicObjects
             "member access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same MassageResultBasedOnInterface call as above; see the IL2026 suppression on this member.")]
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
 
             if (_dictionary.TryGetValue(binder.Name, out result))
@@ -134,7 +138,7 @@ namespace Dynamitey.DynamicObjects
             "the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same InvokeMethodDelegate/Dynamic.Invoke/MassageResultBasedOnInterface calls as above; see the IL2026 suppression on this member.")]
-        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             if (_dictionary.TryGetValue(binder.Name, out result))
             {
@@ -145,7 +149,7 @@ namespace Dynamitey.DynamicObjects
                 {
                     try
                     {
-                        result = this.InvokeMethodDelegate(tFunc, args);
+                        result = this.InvokeMethodDelegate(tFunc, args!);
                     }
                     catch (RuntimeBinderException)//If it has out parmaters etc it can't be invoked dynamically like this.
                     //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation 
@@ -158,7 +162,7 @@ namespace Dynamitey.DynamicObjects
                 {
                     try
                     {
-                        result = Dynamic.Invoke(result, Util.NameArgsIfNecessary(binder.CallInfo, args));
+                        result = Dynamic.Invoke(result, Util.NameArgsIfNecessary(binder.CallInfo, args!));
                     }
                     catch (RuntimeBinderException)
                         //If it has out parmaters etc it can't be invoked dynamically like this.
@@ -182,7 +186,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
-        public override bool TrySetMember(SetMemberBinder binder, object value)
+        public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
        
             SetProperty(binder.Name,value);
@@ -279,7 +283,9 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public bool TryGetValue(string key, out object value)
         {
-            return _dictionary.TryGetValue(key, out value);
+            var found = _dictionary.TryGetValue(key, out var tValue);
+            value = tValue!;
+            return found;
         }
 
 
@@ -289,11 +295,14 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        protected void SetProperty(string key, object value)
+        protected void SetProperty(string key, object? value)
         {
             if (!_dictionary.TryGetValue(key, out var tOldValue) || value != tOldValue)
             {
-                _dictionary[key] = value;
+                // _dictionary's value type is non-null to match Dictionary's public
+                // IDictionary<string, object>, but the DLR can hand TrySetMember a null value;
+                // this stores it anyway, exactly as the untyped original code did.
+                _dictionary[key] = value!;
                 OnPropertyChanged(key);
             }
         }
@@ -319,14 +328,14 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Occurs when a property value changes.
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         /// Equalses the specified other.
         /// </summary>
         /// <param name="other">The other.</param>
         /// <returns></returns>
-        public bool Equals(Dictionary other)
+        public bool Equals(Dictionary? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -340,7 +349,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// 	<c>true</c> if the specified <see cref="System.Object"/> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -367,7 +376,7 @@ namespace Dynamitey.DynamicObjects
         /// </returns>
         public override string ToString()
         {
-            return _dictionary.ToString();
+            return _dictionary.ToString()!;
         }
     }
 }

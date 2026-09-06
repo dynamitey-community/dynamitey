@@ -24,7 +24,7 @@ namespace Dynamitey.Internal.Optimization
     {
    
 
-        protected BinderHash(Type delegateType, String name, Type context, string[] argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
+        protected BinderHash(Type delegateType, String name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
         {
             KnownBinder = knownBinder;
             BinderType = binderType;
@@ -36,11 +36,11 @@ namespace Dynamitey.Internal.Optimization
             Context = context;
             ArgNames = argNames;
             IsEvent = isEvent;
-            
+
 
         }
 
-        protected BinderHash(Type delegateType, InvokeMemberName name, Type context, string[] argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
+        protected BinderHash(Type delegateType, InvokeMemberName name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
         {
             KnownBinder = knownBinder;
             BinderType = binderType;
@@ -66,11 +66,11 @@ namespace Dynamitey.Internal.Optimization
         public Type DelegateType { get; }
         public string Name { get;  }
         public bool IsSpecialName { get; }
-        public Type[] GenericArgs { get;  }
+        public Type[]? GenericArgs { get;  }
         public Type Context { get; }
-        public string[] ArgNames { get; }
+        public string?[]? ArgNames { get; }
 
-        public virtual bool Equals(BinderHash other)
+        public virtual bool Equals(BinderHash? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -92,12 +92,12 @@ namespace Dynamitey.Internal.Optimization
                 && !(other.IsSpecialName ^ IsSpecialName)
                 && !(tOtherGenArgs == null && tGenArgs != null)
                 && !(tGenArgs == null && tOtherGenArgs != null)
-                && (tOtherGenArgs == null || tOtherGenArgs.SequenceEqual(tGenArgs))
-                && (tOtherArgNames == null || tOtherArgNames.SequenceEqual(tArgNames));
+                && (tOtherGenArgs == null || tOtherGenArgs.SequenceEqual(tGenArgs!))
+                && (tOtherArgNames == null || tOtherArgNames.SequenceEqual(tArgNames!));
         }
 
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -125,29 +125,29 @@ namespace Dynamitey.Internal.Optimization
 
     internal class BinderHash<T> : BinderHash where T : class
     {
-        public static BinderHash<T> Create(string name, Type context, string[] argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
+        public static BinderHash<T> Create(string name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
         {
             return new BinderHash<T>(name, context, argNames, binderType, staticContext, isEvent, knownBinder);
         }
 
-        public static BinderHash<T> Create(InvokeMemberName name, Type context, string[] argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
+        public static BinderHash<T> Create(InvokeMemberName name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
         {
             return new BinderHash<T>(name, context, argNames, binderType, staticContext, isEvent, knownBinder);
         }
 
-        protected BinderHash(InvokeMemberName name, Type context, string[] argNames, Type binderType, bool staticContext, bool isEvent,bool knownBinder)
+        protected BinderHash(InvokeMemberName name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent,bool knownBinder)
             : base(typeof(T), name, context, argNames, binderType, staticContext, isEvent,knownBinder)
         {
         }
 
-        protected BinderHash(string name, Type context, string[] argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
+        protected BinderHash(string name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
             : base(typeof(T), name, context, argNames, binderType, staticContext, isEvent, knownBinder)
         {
         }
 
-        public override bool Equals(BinderHash other)
+        public override bool Equals(BinderHash? other)
         {
-           
+
                 if (other is BinderHash<T>)
                 {
                     var tGenArgs = GenericArgs;
@@ -166,8 +166,10 @@ namespace Dynamitey.Internal.Optimization
                            && !(other.IsSpecialName ^ IsSpecialName)
                            && !(tOtherGenArgs == null && tGenArgs != null)
                            && !(tGenArgs == null && tOtherGenArgs != null)
-                           && (tGenArgs == null || tGenArgs.SequenceEqual(tOtherGenArgs))
-                           && (ArgNames == null || other.ArgNames.SequenceEqual(ArgNames));
+                           && (tGenArgs == null || tGenArgs.SequenceEqual(tOtherGenArgs!))
+                           // other.ArgNames' nullness matches ArgNames' by the mutual-null checks
+                           // above (tArgNames/tOtherArgNames are local copies of the same values).
+                           && (ArgNames == null || other.ArgNames!.SequenceEqual(ArgNames));
                 }
                 return false;
             

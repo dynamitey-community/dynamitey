@@ -50,7 +50,7 @@ namespace Dynamitey
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="value">The value.</param>
-        public InvokeArg(string name, object value)
+        public InvokeArg(string name, object? value)
         {
             Name = name;
             Value = value;
@@ -63,10 +63,11 @@ namespace Dynamitey
         public string Name { get; private set; }
 
         /// <summary>
-        /// Gets or sets the argument value.
+        /// Gets or sets the argument value. May be <see langword="null"/> - a named argument's
+        /// value is whatever the caller passed, and <see langword="null"/> is a legitimate argument value.
         /// </summary>
         /// <value>The value.</value>
-        public object Value { get; private set; }
+        public object? Value { get; private set; }
     }
 
     /// <summary>
@@ -80,7 +81,7 @@ namespace Dynamitey
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="value">The value.</param>
-        public InvokeArg(string name, object value):base(name,value){}
+        public InvokeArg(string name, object? value):base(name,value){}
 
         /// <summary>
         /// Performs an explicit conversion from <see cref="KeyValuePair{String,Object}"/> to <see cref="InvokeArg{T}"/>.

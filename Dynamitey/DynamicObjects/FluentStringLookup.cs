@@ -36,7 +36,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="args">The args.</param>
         /// <param name="result">The result.</param>
         /// <returns></returns>
-        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             result = _lookup(binder.Name);
             return true;
@@ -49,12 +49,12 @@ namespace Dynamitey.DynamicObjects
         /// <param name="args">The args.</param>
         /// <param name="result">The result.</param>
         /// <returns></returns>
-        public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
+        public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
         {
             result = null;
-            if (args.Length == 1 && args.First() is String)
+            if (args!.Length == 1 && args.First() is String)
             {
-                result = _lookup(args[0] as String);
+                result = _lookup((args[0] as String)!);
                 return true;
             }
             return false;

@@ -132,14 +132,14 @@ namespace Dynamitey.DynamicObjects
         /// Build factory storage
         /// </summary>
        
-		protected IDictionary<string,Activate> _buildType;
+		protected IDictionary<string,Activate?> _buildType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}"/> class.
         /// </summary>
         [RequiresDynamicCode("Constructing any BaseObject-derived type (and the BuilderTrampoline/SetupTrampoline it wires up) instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
 		public Builder(){
-            _buildType = new Dictionary<string, Activate>();
+            _buildType = new Dictionary<string, Activate?>();
 			Setup = new SetupTrampoline<TObjectProtoType>(this);
 			Object = new BuilderTrampoline<TObjectProtoType>(this);
 		}
@@ -328,12 +328,12 @@ namespace Dynamitey.DynamicObjects
                 "unannotated base member, and the DLR invokes it only after the consumer's own " +
                 "dynamic call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same InvokeHelper call as above; see the IL2026 suppression on this member.")]
-            public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
+            public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
             {
                 if (!_buider._buildType.TryGetValue("Object", out var tBuildType))
                     tBuildType = null;
 
-                result = InvokeHelper(binder.CallInfo, args, tBuildType);
+                result = InvokeHelper(binder.CallInfo, args!, tBuildType);
                 return true;
             }
         }
@@ -369,12 +369,12 @@ namespace Dynamitey.DynamicObjects
                 "itself without mismatching the unannotated base member, and the DLR invokes it " +
                 "only after the consumer's own dynamic call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic'-forced construction as above; see the IL2026 suppression on this member.")]
-            public override bool TryInvoke(InvokeBinder binder, dynamic[] args, out object result)
+            public override bool TryInvoke(InvokeBinder binder, dynamic?[]? args, out object? result)
             {
 				if (binder.CallInfo.ArgumentNames.Count != binder.CallInfo.ArgumentCount)
                		 throw new ArgumentException("Requires argument names for every argument");
-                var tArgs = args.Select(it => it is Type ? new Activate(it) : (Activate) it);
-                foreach (var tKeyPair in binder.CallInfo.ArgumentNames.Zip(tArgs, (n, a) => new KeyValuePair<string, Activate>(n, a)))
+                var tArgs = args!.Select(it => it is Type ? new Activate(it) : (Activate?) it);
+                foreach (var tKeyPair in binder.CallInfo.ArgumentNames.Zip(tArgs, (n, a) => new KeyValuePair<string, Activate?>(n, a)))
                 {
 					_buider._buildType[tKeyPair.Key]=tKeyPair.Value;
 				}
@@ -397,7 +397,7 @@ namespace Dynamitey.DynamicObjects
             "itself without mismatching the unannotated base member, and the DLR invokes it " +
             "only after the consumer's own dynamic member assignment already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic'-forced construction as above; see the IL2026 suppression on this member.")]
-		public override bool TrySetMember(SetMemberBinder binder, dynamic value){
+		public override bool TrySetMember(SetMemberBinder binder, dynamic? value){
             if (value != null)
             {
                 if (value is Type)
@@ -434,7 +434,7 @@ namespace Dynamitey.DynamicObjects
             "itself without mismatching the unannotated base member, and the DLR invokes it " +
             "only after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
-        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             if(!_buildType.TryGetValue(binder.Name, out var tBuildType))
                 tBuildType = null;
@@ -442,11 +442,11 @@ namespace Dynamitey.DynamicObjects
             if (tBuildType == null && !_buildType.TryGetValue("Object", out tBuildType))
                 tBuildType = null;
 
-            result = InvokeHelper(binder.CallInfo, args,tBuildType);
+            result = InvokeHelper(binder.CallInfo, args!,tBuildType);
             if (TryTypeForName(binder.Name, out var tType))
             {
                 var typeInfo = tType.GetTypeInfo();
-                if (Dynamic.Impromptu.IsAvailable && typeInfo.IsInterface && result != null && !typeInfo.IsAssignableFrom(result.GetType()))
+                if (Dynamic.Impromptu.IsAvailable && typeInfo.IsInterface && result != null && !typeInfo.IsAssignableFrom(result!.GetType()))
                 {
                    result = Dynamic.Impromptu.DynamicActLike(result, tType);
                 }
@@ -457,16 +457,16 @@ namespace Dynamitey.DynamicObjects
 
         [RequiresUnreferencedCode("Calls the annotated Activate.Create/Dynamic.InvokeConstructor/Dynamic.InvokeSetAll, and Activator.CreateInstance<TObjectProtoType>(), which requires TObjectProtoType to have a public parameterless constructor for trim analysis.")]
         [RequiresDynamicCode("Dynamic.InvokeConstructor/InvokeSetAll require the DLR's runtime code generation; not supported when AOT-compiled.")]
-        private static object InvokeHelper(CallInfo callinfo, IList<object> args, Activate buildType =null)
+        private static object InvokeHelper(CallInfo callinfo, IList<object?> args, Activate? buildType =null)
         {
            
             bool tSetWithName = true;
-            object tArg = null;
+            object? tArg = null;
             if (callinfo.ArgumentNames.Count == 0 && callinfo.ArgumentCount == 1)
             {
                 tArg =args[0];
                 
-                if (Util.IsAnonymousType(tArg) || tArg is IEnumerable<KeyValuePair<string, object>>)
+                if (Util.IsAnonymousType(tArg!) || tArg is IEnumerable<KeyValuePair<string, object>>)
                 {
                     tSetWithName = false;
                 }
@@ -482,17 +482,17 @@ namespace Dynamitey.DynamicObjects
             else{
                 try
                 {
-                    result = Activator.CreateInstance<TObjectProtoType>();//Try first because faster but doens't work with optional parameters
+                    result = Activator.CreateInstance<TObjectProtoType>()!;//Try first because faster but doens't work with optional parameters
                 }
                 catch (Exception)
                 {
-                    result = Dynamic.InvokeConstructor(typeof (TObjectProtoType));
+                    result = Dynamic.InvokeConstructor(typeof (TObjectProtoType))!;
                 }
 
             }
             if(tSetWithName)
             {
-                tArg = callinfo.ArgumentNames.Zip(args, (n, a) => new KeyValuePair<string, object>(n, a));
+                tArg = callinfo.ArgumentNames.Zip(args, (n, a) => new KeyValuePair<string, object?>(n, a));
             }
 
             return Dynamic.InvokeSetAll(result, tArg);

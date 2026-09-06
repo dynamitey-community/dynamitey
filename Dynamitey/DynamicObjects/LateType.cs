@@ -55,11 +55,11 @@ namespace Dynamitey.DynamicObjects
 
         }
 
-        private readonly string TypeName;
+        private readonly string? TypeName;
 
 
         [RequiresUnreferencedCode("Resolves typeName via Assembly.GetType/Type.GetType, both name-based type lookups the trimmer cannot see; a type this depends on can be removed. Returns null instead of throwing when the type can't be found.")]
-        public static Type FindType(string typeName, Assembly assembly = null)
+        public static Type? FindType(string typeName, Assembly? assembly = null)
         {
             try
             {
@@ -110,7 +110,7 @@ namespace Dynamitey.DynamicObjects
         public dynamic @new
         {
             [RequiresDynamicCode("Constructing the returned ConstructorForward instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-            get => new ConstructorForward((Type)Target);
+            get => new ConstructorForward((Type)Target!);
         }
 
         /// <summary>
@@ -138,9 +138,9 @@ namespace Dynamitey.DynamicObjects
                 "dynamic call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                 "Same Dynamic.InvokeConstructor call as above; see the IL2026 suppression on this member.")]
-            public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
+            public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
             {
-                result = Dynamic.InvokeConstructor(_type, Util.NameArgsIfNecessary(binder.CallInfo, args));
+                result = Dynamic.InvokeConstructor(_type, Util.NameArgsIfNecessary(binder.CallInfo, args!));
                 return true;
             }
 
@@ -167,7 +167,9 @@ namespace Dynamitey.DynamicObjects
             get
             {
                 if(Target ==null)
-                    throw new MissingTypeException(TypeName);
+                    // TypeName is set whenever Target can be null: the (Type type) constructor
+                    // wraps an already-resolved Type and never leaves Target null.
+                    throw new MissingTypeException(TypeName!);
 
                 return InvokeContext.CreateStatic((Type)Target);
             }

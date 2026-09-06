@@ -85,8 +85,8 @@ namespace Dynamitey.DynamicObjects
         /// </returns>
         public override IEnumerable<string> GetDynamicMemberNames()
         {
-            return ((System.Lazy<T>)Target).IsValueCreated 
-                ? base.GetDynamicMemberNames() 
+            return ((System.Lazy<T>)Target!).IsValueCreated
+                ? base.GetDynamicMemberNames()
                 : Enumerable.Empty<string>();
         }
 
@@ -96,6 +96,8 @@ namespace Dynamitey.DynamicObjects
         /// <value>
         /// The call target.
         /// </value>
-        protected override object CallTarget => ((System.Lazy<T>) Target).Value;
+        // T's Value could itself be null for a reference-type T, so this override is nullable
+        // too, matching CallTarget's own base declaration.
+        protected override object? CallTarget => ((System.Lazy<T>) Target!).Value;
     }
 }
