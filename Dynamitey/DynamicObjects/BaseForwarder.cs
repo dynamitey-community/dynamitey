@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  Copyright 2011 Ekon Benefits
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,6 +63,12 @@ namespace Dynamitey.DynamicObjects
             /// <returns>The result of the operator.</returns>
             public static AddRemoveMarker operator +(AddRemoveMarker left, object right)
             {
+                #if NET
+                ArgumentNullException.ThrowIfNull(left);
+                #else
+                if (left is null) throw new ArgumentNullException(nameof(left));
+                #endif
+
                 left.Delegate = right;
                 left.IsAdding = true;
 
@@ -77,6 +83,12 @@ namespace Dynamitey.DynamicObjects
             /// <returns>The result of the operator.</returns>
             public static AddRemoveMarker operator -(AddRemoveMarker left, object right)
             {
+                #if NET
+                ArgumentNullException.ThrowIfNull(left);
+                #else
+                if (left is null) throw new ArgumentNullException(nameof(left));
+                #endif
+
                 left.Delegate = right;
                 left.IsAdding = false;
 
@@ -165,6 +177,8 @@ namespace Dynamitey.DynamicObjects
             "consumer's own dynamic member access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeIsEvent/InvokeGet calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             if (CallTarget == null)
@@ -210,6 +224,8 @@ namespace Dynamitey.DynamicObjects
             "call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.Invoke/InvokeAction calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
         {
             if (CallTarget == null)
@@ -256,6 +272,8 @@ namespace Dynamitey.DynamicObjects
             "after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeGet/InvokeMember/InvokeMemberAction calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             if (CallTarget == null)
@@ -347,6 +365,8 @@ namespace Dynamitey.DynamicObjects
             "triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.* calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
             if (CallTarget == null)
@@ -396,6 +416,8 @@ namespace Dynamitey.DynamicObjects
             "indexer access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeGetIndex call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryGetIndex(GetIndexBinder binder, object?[]? indexes, out object result)
         {
             if (CallTarget == null)
@@ -434,6 +456,8 @@ namespace Dynamitey.DynamicObjects
             "indexer assignment already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeSetIndex call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TrySetIndex(SetIndexBinder binder, object?[]? indexes, object? value)
         {
             if (CallTarget == null)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -101,6 +101,13 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns></returns>
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "This is a user-defined implicit conversion operator. Adding a null guard here to " +
+            "satisfy CA1062 immediately trips SonarAnalyzer's S3877, which flags a conversion " +
+            "operator that throws: a conversion is expected to succeed or fail through the type " +
+            "system, not surprise the caller with an exception. Rather than open a second backlog " +
+            "entry to re-suppress S3877, this stays as the pre-existing NullReferenceException-on-" +
+            "null behavior; CA1062 is suppressed instead of guarded.")]
          public static implicit operator Type(RealType type)
          {
              return type.TargetType;
@@ -180,6 +187,12 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public static AggreType MakeTypeAppendable(IEquivalentType type)
         {
+            #if NET
+            ArgumentNullException.ThrowIfNull(type);
+            #else
+            if (type is null) throw new ArgumentNullException(nameof(type));
+            #endif
+
             if (type.EquivalentType == null)
             {
                 type.EquivalentType = new AggreType();
