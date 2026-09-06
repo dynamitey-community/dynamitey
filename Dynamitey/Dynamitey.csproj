@@ -231,10 +231,11 @@
            and singletons of S101, S907, S927, S1133, S2219, S2223, S2325, S2328,
            S3011, S3218, S3247, S3260, S3265, S3267, S3963, S4019, S4050
 
-         S2234 is listed only until #60 merges. It has exactly one instance - the
-         Replace transposition at List.cs:326 - and that PR fixes it. Remove this
-         entry then, so the rule that caught a real bug is live again. -->
-    <NoWarn>$(NoWarn);S101;S112;S125;S907;S927;S1133;S1144;S1481;S1854;S1871;S2094;S2219;S2223;S2234;S2325;S2328;S2372;S2743;S3011;S3218;S3247;S3260;S3265;S3267;S3897;S3963;S4019;S4035;S4050;S4136;S6608</NoWarn>
+         S2234 is deliberately NOT on the list. It has exactly one instance, the
+         Replace transposition at List.cs:326, and #60 fixed it - so the rule
+         that caught a real bug is live, and a new transposition anywhere in this
+         project fails the build. -->
+    <NoWarn>$(NoWarn);S101;S112;S125;S907;S927;S1133;S1144;S1481;S1854;S1871;S2094;S2219;S2223;S2325;S2328;S2372;S2743;S3011;S3218;S3247;S3260;S3265;S3267;S3897;S3963;S4019;S4035;S4050;S4136;S6608</NoWarn>
 
   </PropertyGroup>
 </Project>
