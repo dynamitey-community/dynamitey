@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -127,6 +128,8 @@ namespace Dynamitey.Internal.Optimization
         }
 
    
+        [RequiresUnreferencedCode("Calls the annotated Dynamic.CoerceConvert/InvokeConstructor to coerce result to the interface type TryTypeForName resolved; trimming can remove the member either resolves.")]
+        [RequiresDynamicCode("Dynamic.CoerceConvert/InvokeConstructor bind through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static bool MassageResultBasedOnInterface(this BaseObject target, string binderName, bool resultFound, ref object result)
         {
             if (result is BaseForwarder.AddRemoveMarker) //Don't massage AddRemove Proxies

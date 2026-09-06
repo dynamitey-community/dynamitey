@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -157,6 +158,8 @@ namespace Dynamitey.Internal.Optimization
         /// back. Emitting the delegate type here removes both the missing-dependency
         /// failure and the circularity (fixes #27).
         /// </remarks>
+        [RequiresUnreferencedCode("Defines the emitted delegate type's constructor and Invoke method via Reflection.Emit, which the trimmer cannot see into.")]
+        [RequiresDynamicCode("Emits a delegate type via System.Reflection.Emit for call sites wider than the 14-argument fast path (issue #27); Reflection.Emit requires runtime code generation and throws PlatformNotSupportedException when AOT-compiled or otherwise unavailable.")]
         internal static Type EmitCallSiteFuncType(IEnumerable<Type> argTypes, Type returnType)
         {
             var tArgTypes = argTypes as Type[] ?? argTypes.ToArray();
@@ -176,6 +179,8 @@ namespace Dynamitey.Internal.Optimization
         }
 
         // Only ever called from inside the _emitLock in EmitCallSiteFuncType.
+        [RequiresUnreferencedCode("Defines the emitted delegate type's constructor and Invoke method via Reflection.Emit, which the trimmer cannot see into.")]
+        [RequiresDynamicCode("Builds the emitted delegate type via AssemblyBuilder/TypeBuilder; Reflection.Emit requires runtime code generation and is not supported when AOT-compiled.")]
         private static Type EmitCallSiteDelegateType(Type[] argTypes, Type returnType)
         {
             try
@@ -314,6 +319,8 @@ namespace Dynamitey.Internal.Optimization
 
    
 
+        [RequiresUnreferencedCode("Invokes tFunc via FastDynamicInvoke, which for a known arg count calls it through a 'dynamic' reference (the DLR); trimming can remove the member the DLR resolves.")]
+        [RequiresDynamicCode("FastDynamicInvoke's DLR path requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeMethodDelegate(this object target, Delegate tFunc, object[] args)
         {
             object result;
@@ -382,6 +389,8 @@ namespace Dynamitey.Internal.Optimization
 
   
 
+        [RequiresUnreferencedCode("Resolves and invokes the generic CreateCallSite<T> for delegateType via the DLR binder (Binder.InvokeMember); trimming can remove that generic method instantiation.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static CallSite CreateCallSite(
             Type delegateType,
             Type specificBinderType,
@@ -455,6 +464,8 @@ namespace Dynamitey.Internal.Optimization
 
 
 
+        [RequiresUnreferencedCode("Calls binder() and CallSite<T>.Create; the binder itself resolves a member by name via Microsoft.CSharp.RuntimeBinder, and trimming can remove that member.")]
+        [RequiresDynamicCode("CallSite<T>.Create requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static CallSite<T> CreateCallSite<T>(
         Type specificBinderType,
         int knownType,
@@ -479,6 +490,8 @@ namespace Dynamitey.Internal.Optimization
             }
         }
 
+        [RequiresUnreferencedCode("Calls binder() and CallSite<T>.Create; the binder itself resolves a member by name via Microsoft.CSharp.RuntimeBinder, and trimming can remove that member.")]
+        [RequiresDynamicCode("CallSite<T>.Create requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static CallSite<T> CreateCallSite<T>(
    Type specificBinderType,
    int knownType,
@@ -520,6 +533,8 @@ namespace Dynamitey.Internal.Optimization
 
         internal static readonly IDictionary<Type, CallSite<DynamicInvokeMemberConstructorValueType>> _dynamicInvokeMemberSite = new Dictionary<Type, CallSite<DynamicInvokeMemberConstructorValueType>>();
 
+        [RequiresUnreferencedCode("Resolves and invokes the generic InvokeMemberTargetType<Type,TReturn> via the DLR binder (Binder.InvokeMember); trimming can remove that generic method instantiation.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static dynamic DynamicInvokeStaticMember(Type tReturn, ref CallSite callsite, Type binderType, int knownType, LazyBinder binder,
                                        InvokeMemberName name,
                                      bool staticContext,
@@ -560,6 +575,8 @@ namespace Dynamitey.Internal.Optimization
         }
 
 
+        [RequiresUnreferencedCode("Calls InvokeMemberTargetType<object,TReturn>, which binds through the DLR and can lose a trimmed member.")]
+        [RequiresDynamicCode("InvokeMemberTargetType binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static TReturn InvokeMember<TReturn>(ref CallSite callsite, Type binderType,int knownType, LazyBinder binder,
                                        InvokeMemberName name,
                                      bool staticContext,
@@ -570,6 +587,8 @@ namespace Dynamitey.Internal.Optimization
             return InvokeMemberTargetType<object, TReturn>(ref callsite, binderType, knownType, binder, name, staticContext, context, argNames, target, args);
         }
 
+        [RequiresUnreferencedCode("Resolves 'name' via Binder.GetMember/Binder.InvokeMember (falling back to reflection only for a static context after the DLR path fails); trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("The primary path binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeGetCallSite(object target, string name, Type context, bool staticContext, ref CallSite callsite)
         {
             if (callsite == null)
@@ -694,6 +713,8 @@ namespace Dynamitey.Internal.Optimization
 
         }
 
+        [RequiresUnreferencedCode("Resolves 'name' via Binder.SetMember/Binder.InvokeMember; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeSetCallSite(object target, string name, object value, Type context, bool staticContext, ref CallSite callSite)
         {
             if (callSite == null)
@@ -762,6 +783,8 @@ namespace Dynamitey.Internal.Optimization
             }
         }
 
+        [RequiresUnreferencedCode("Resolves name.Name via Binder.InvokeMember; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeMemberCallSite(object target,  InvokeMemberName name, object[] args, string[] tArgNames, Type tContext, bool tStaticContext, ref CallSite callSite)
         {
             LazyBinder tBinder = null;
@@ -787,6 +810,8 @@ namespace Dynamitey.Internal.Optimization
             return InvokeMember<object>(ref callSite, tBinderType, KnownMember, tBinder, name, tStaticContext, tContext, tArgNames, target, args);
         }
 
+        [RequiresUnreferencedCode("Resolves target's invoke/call operator via Binder.Invoke; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeDirectCallSite(object target, object[] args, string[] tArgNames, Type tContext, bool tStaticContext, ref CallSite callSite)
         {
             LazyBinder tBinder = null;
@@ -808,6 +833,8 @@ namespace Dynamitey.Internal.Optimization
             return InvokeMember<object>(ref callSite, tBinderType, KnownDirect,tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, args);
         }
 
+        [RequiresUnreferencedCode("Resolves target's indexer via Binder.GetIndex; trimming can remove the indexer being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeGetIndexCallSite(object target, object[] indexes, string[] argNames, Type context, bool tStaticContext,ref CallSite callSite)
         {
             LazyBinder tBinder=null;
@@ -828,6 +855,8 @@ namespace Dynamitey.Internal.Optimization
             return InvokeMember<object>(ref callSite,tBinderType, Unknown, tBinder, Invocation.IndexBinderName, tStaticContext, context, argNames, target, indexes);
         }
 
+        [RequiresUnreferencedCode("Resolves target's indexer setter via Binder.SetIndex; trimming can remove the indexer being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeSetIndexCallSite(object target, object[] indexesThenValue, string[] tArgNames, Type tContext, bool tStaticContext, ref CallSite tCallSite)
         {
             LazyBinder tBinder =null;
@@ -848,6 +877,8 @@ namespace Dynamitey.Internal.Optimization
             return InvokeMember<object>(ref tCallSite, tBinderType, Unknown, tBinder, Invocation.IndexBinderName, tStaticContext, tContext, tArgNames, target, indexesThenValue);
         }
 
+        [RequiresUnreferencedCode("Resolves name.Name via Binder.InvokeMember; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static void InvokeMemberActionCallSite(object target,InvokeMemberName name, object[] args, string[] tArgNames, Type tContext, bool tStaticContext,ref CallSite callSite)
         {
             LazyBinder tBinder =null;
@@ -877,6 +908,8 @@ namespace Dynamitey.Internal.Optimization
         }
 
 
+        [RequiresUnreferencedCode("Resolves target's invoke/call operator via Binder.Invoke; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static void InvokeDirectActionCallSite(object target, object[] args, string[] tArgNames, Type tContext, bool tStaticContext, ref CallSite callSite)
         {
             LazyBinder tBinder = null;
@@ -905,6 +938,8 @@ namespace Dynamitey.Internal.Optimization
         internal class IsEventBinderDummy{
             
         }
+        [RequiresUnreferencedCode("Resolves 'name' via Binder.IsEvent; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static bool InvokeIsEventCallSite(object target, string name, Type tContext, ref CallSite callSite)
         {
             if (callSite == null)
@@ -918,6 +953,8 @@ namespace Dynamitey.Internal.Optimization
             return tCallSite.Target(tCallSite, target);
         }
 
+        [RequiresUnreferencedCode("Calls InvokeIsEventCallSite/InvokeMemberActionCallSite/InvokeGetCallSite/InvokeSetCallSite and a 'dynamic +=' operator, each of which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Every path binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static void InvokeAddAssignCallSite(object target, string name, object[] args, string[] argNames, Type context, bool staticContext, //lgtm [cs/too-many-ref-parameters]
             ref CallSite callSiteIsEvent, ref CallSite callSiteAdd, ref CallSite callSiteGet, ref CallSite callSiteSet) //This is an optimization readability isn't the concern. 
         {
@@ -934,6 +971,8 @@ namespace Dynamitey.Internal.Optimization
             }
         }
 
+        [RequiresUnreferencedCode("Calls InvokeIsEventCallSite/InvokeMemberActionCallSite/InvokeGetCallSite/InvokeSetCallSite and a 'dynamic -=' operator, each of which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Every path binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static void InvokeSubtractAssignCallSite(object target, string name, object[] args, string[] argNames, Type context, bool staticContext, // lgtm [cs/too-many-ref-parameters]
             ref CallSite callSiteIsEvent, ref CallSite callSiteRemove, ref CallSite callSiteGet, ref CallSite callSiteSet) //This is an optimization readability isn't the concern. 
         {
@@ -952,6 +991,8 @@ namespace Dynamitey.Internal.Optimization
         public delegate void DynamicAction(params object[] args);
         public delegate TReturn DynamicFunc<out TReturn>(params object[] args);
 
+        [RequiresUnreferencedCode("Resolves the conversion to type via Binder.Convert; trimming can remove the conversion being resolved.")]
+        [RequiresDynamicCode("MakeGenericType and the Binder.Convert binding both require the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeConvertCallSite(object target, bool explict, Type type, Type context, ref CallSite callSite)
         {
             if (callSite == null) 
@@ -981,6 +1022,8 @@ namespace Dynamitey.Internal.Optimization
 
         internal static InvokeMemberName ConstructorName = new InvokeMemberName(Invocation.ConstructorBinderName);
 
+        [RequiresUnreferencedCode("Resolves type's constructor via Binder.InvokeConstructor; trimming can remove the constructor being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object InvokeConstructorCallSite(Type type, bool isValueType, object[] args, string[] argNames, ref CallSite callSite)
         {
             LazyBinder tBinder = null;
@@ -1021,6 +1064,8 @@ namespace Dynamitey.Internal.Optimization
          int length
          );
 
+        [RequiresUnreferencedCode("Resolves and invokes the generic WrapFuncHelper<TReturn> via the DLR binder (Binder.InvokeMember); trimming can remove that generic method instantiation.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static Delegate WrapFunc(Type returnType, object invokable, int length)
         {
             if (!_dynamicInvokeWrapFunc.TryGetValue(returnType, out var tSite))

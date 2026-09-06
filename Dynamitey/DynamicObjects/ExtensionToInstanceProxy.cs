@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -43,6 +44,8 @@ namespace Dynamitey.DynamicObjects
         /// <param name="staticTypes">The static types.</param>
         /// <param name="instanceHints">The instance hints.</param>
         /// <exception cref="System.ArgumentException">Don't Nest ExtensionToInstance Objects</exception>
+        [RequiresUnreferencedCode("Calls IsExtendedType, which reflects over target's interfaces (GetInterfaces) to check it against extendedType; trimming can remove an interface this depends on. target is also statically 'dynamic', which forces DLR binding on the IsExtendedType calls below even though that method takes a plain object.")]
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public ExtensionToInstanceProxy(dynamic target,  Type extendedType, Type[] staticTypes, Type[] instanceHints = null):base((object)target)
         {
             _staticTypes = staticTypes;
@@ -73,6 +76,16 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a run-time exception is thrown.)
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2075", Justification =
+            "Reflects over the (unwrapped) target's interfaces to build an Invoker for the " +
+            "extended-method binder.Name. This is a DynamicObject.TryGetMember override: it " +
+            "can't carry [RequiresUnreferencedCode] itself without mismatching the unannotated " +
+            "base member, and the DLR invokes it only after the consumer's own dynamic member " +
+            "access already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Constructs the annotated Invoker. Same DynamicObject.TryGetMember override reasoning as the IL2075 suppression above.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Same Invoker construction as above; see the IL2075/IL2026 suppressions on this member.")]
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
 
@@ -113,6 +126,8 @@ namespace Dynamitey.DynamicObjects
             /// </summary>
             protected Type[] GenericMethodParameters;
 
+            [RequiresUnreferencedCode("Reflects over parent.InstanceHints' methods by name (GetMethods/MakeGenericType) to find overloads matching Name; trimming can remove a method this depends on.")]
+            [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
             internal Invoker(string name, Type[] genericParameters, Type[] genericMethodParameters, ExtensionToInstanceProxy parent, Type[] overloadTypes = null)
             {
                 Name = name;
@@ -166,6 +181,8 @@ namespace Dynamitey.DynamicObjects
                     }
             }
 
+            [RequiresUnreferencedCode("Calls Type.MakeGenericType, which the trimmer cannot statically analyze; a required generic instantiation can be removed.")]
+            [RequiresDynamicCode("Type.MakeGenericType can require runtime code generation to construct the closed generic type; not supported when AOT-compiled.")]
             private Type ReplaceGenericTypes(Type type)
             {
                 var typeInfo = type.GetTypeInfo();
@@ -192,6 +209,12 @@ namespace Dynamitey.DynamicObjects
             /// <param name="binder">The binder.</param>
             /// <param name="result">The result.</param>
             /// <returns></returns>
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "Constructs the annotated OverloadInvoker. This is a DynamicObject.TryGetMember " +
+                "override: it can't carry [RequiresUnreferencedCode] itself without mismatching " +
+                "the unannotated base member, and the DLR invokes it only after the consumer's " +
+                "own dynamic member access already triggered the framework's warning.")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same OverloadInvoker construction as above; see the IL2026 suppression on this member.")]
             public override bool TryGetMember(GetMemberBinder binder, out object result)
             {
                 if (binder.Name == "Overloads")
@@ -211,6 +234,12 @@ namespace Dynamitey.DynamicObjects
             /// <param name="args">The args.</param>
             /// <param name="result">The result.</param>
             /// <returns></returns>
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "Calls the annotated Dynamic.InvokeConvert and Parent.InvokeStaticMethod. This is a DynamicObject override: it can't carry " +
+                "[RequiresUnreferencedCode] itself without mismatching the unannotated base " +
+                "member, and the DLR invokes it only after the consumer's own dynamic call " +
+                "site already triggered the framework's warning.")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
             public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
             {
                 object[] tArgs = args;
@@ -234,6 +263,12 @@ namespace Dynamitey.DynamicObjects
             /// <param name="indexes">The indexes.</param>
             /// <param name="result">The result.</param>
             /// <returns></returns>
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "Calls the annotated Dynamic.InvokeConvert and constructs the annotated Invoker. This is a DynamicObject override: it can't carry " +
+                "[RequiresUnreferencedCode] itself without mismatching the unannotated base " +
+                "member, and the DLR invokes it only after the consumer's own dynamic call " +
+                "site already triggered the framework's warning.")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
             public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
             {
                 result = new Invoker(Name, GenericParams, indexes.Select(it => Dynamic.InvokeConvert(it, typeof(Type), @explicit: true)).Cast<Type>().ToArray(), Parent);
@@ -246,6 +281,8 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         public class OverloadInvoker:Invoker
         {
+            [RequiresUnreferencedCode("Calls the annotated Invoker constructor, which reflects over parent.InstanceHints' methods by name.")]
+            [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
             internal OverloadInvoker(string name, Type[] genericParameters, Type[] genericMethodParameters, ExtensionToInstanceProxy parent)
                 : base(name, genericParameters,genericMethodParameters, parent)
             {
@@ -259,6 +296,12 @@ namespace Dynamitey.DynamicObjects
             /// <param name="indexes">The indexes.</param>
             /// <param name="result">The result.</param>
             /// <returns></returns>
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "Calls the annotated Dynamic.InvokeConvert and constructs the annotated Invoker. This is a DynamicObject override: it can't carry " +
+                "[RequiresUnreferencedCode] itself without mismatching the unannotated base " +
+                "member, and the DLR invokes it only after the consumer's own dynamic call " +
+                "site already triggered the framework's warning.")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
             public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
             {
                 result = new Invoker(Name, GenericParams, GenericMethodParameters, Parent, indexes.Select(it => Dynamic.InvokeConvert(it, typeof(Type), @explicit: true)).Cast<Type>().ToArray());
@@ -274,6 +317,13 @@ namespace Dynamitey.DynamicObjects
         /// <param name="args">The args.</param>
         /// <param name="result">The result.</param>
         /// <returns></returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated Dynamic.InvokeGet (to read the binder's own generic-arguments " +
+            "property by name) and the annotated InvokeStaticMethod. This is a " +
+            "DynamicObject.TryInvokeMember override: it can't carry [RequiresUnreferencedCode] " +
+            "itself without mismatching the unannotated base member, and the DLR invokes it " +
+            "only after the consumer's own dynamic call site already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
         public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object[] args, out object result)
         {
             if (!base.TryInvokeMember(binder, args, out result))
@@ -323,6 +373,8 @@ namespace Dynamitey.DynamicObjects
         /// <param name="name">The name.</param>
         /// <param name="args">The args.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Reflects over target's interfaces (GetInterfaces) for generic-argument resolution and calls the annotated Dynamic.InvokeMember/CreateSelf; trimming can remove a member either depends on.")]
+        [RequiresDynamicCode("Dynamic.InvokeMember binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         protected object InvokeStaticMethod(String_OR_InvokeMemberName name, object[] args)
         {
             var staticType = InvokeContext.CreateStatic;
@@ -415,11 +467,14 @@ namespace Dynamitey.DynamicObjects
         /// <param name="staticTypes">The static types.</param>
         /// <param name="instanceHints">The instance hints.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Constructs the annotated ExtensionToInstanceProxy.")]
+        [RequiresDynamicCode("Constructs the annotated ExtensionToInstanceProxy, which requires the DLR's runtime code generation.")]
         protected virtual ExtensionToInstanceProxy CreateSelf(object target, Type extendedType, Type[] staticTypes, Type[] instanceHints)
         {
             return  new ExtensionToInstanceProxy(target,extendedType,staticTypes, instanceHints);
         }
 
+        [RequiresUnreferencedCode("Reflects over target's interfaces (GetInterfaces) to compare against _extendedType; trimming can remove an interface this depends on.")]
         private bool IsExtendedType(object target)
         {
 

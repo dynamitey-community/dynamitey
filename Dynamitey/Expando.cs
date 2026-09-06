@@ -13,6 +13,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using Dynamitey.DynamicObjects;
 
@@ -21,13 +22,18 @@ namespace Dynamitey
     public class Expando : Builder<ExpandoObject>
     {
         // ReSharper disable StaticFieldInGenericType
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Constructing a Builder<ExpandoObject> (a BaseObject-derived type) requires the DLR " +
+            "regardless of whether Expando.New is ever used. This field initializer has no caller " +
+            "to warn at; the actionable warning lives on New itself.")]
         private static readonly dynamic _expandoBuilder = new Builder<ExpandoObject>().Object;
-        // ReSharper restore StaticFieldInGenericType        
+        // ReSharper restore StaticFieldInGenericType
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Expando"/> class.
         /// This constructor is shorthand for new Builder&lt;ExpandoObject>();
         /// </summary>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public Expando()
         {
         }

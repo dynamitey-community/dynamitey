@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -36,6 +37,7 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="Get"/> class.
         /// </summary>
         /// <param name="target">The target.</param>
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public Get(object target):base(target)
         {
             
@@ -48,6 +50,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="target">The target.</param>
         /// <returns></returns>
+        [RequiresDynamicCode("Constructs a Get, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static dynamic Create(object target)
         {
             return new Get(target);
@@ -60,6 +63,12 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a run-time exception is thrown.)
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated base.TryGetMember/MassageResultBasedOnInterface. This is a DynamicObject.TryGetMember override: it can't carry " +
+            "[RequiresUnreferencedCode] itself without mismatching the unannotated base " +
+            "member, and the DLR invokes it only after the consumer's own dynamic call site " +
+            "already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
         public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object result)
         {
             if (base.TryGetMember(binder, out result))
@@ -79,6 +88,12 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated base.TryInvokeMember/Dynamic.InvokeGet/InvokeMethodDelegate/Dynamic.Invoke/MassageResultBasedOnInterface. This is a DynamicObject.TryInvokeMember override: it can't carry " +
+            "[RequiresUnreferencedCode] itself without mismatching the unannotated base " +
+            "member, and the DLR invokes it only after the consumer's own dynamic call site " +
+            "already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
         public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object[] args, out object result)
         {
 
@@ -131,6 +146,12 @@ namespace Dynamitey.DynamicObjects
         /// <param name="indexes">The indexes.</param>
         /// <param name="result">The result.</param>
         /// <returns></returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated base.TryGetIndex/MassageResultBasedOnInterface. This is a DynamicObject.TryGetIndex override: it can't carry " +
+            "[RequiresUnreferencedCode] itself without mismatching the unannotated base " +
+            "member, and the DLR invokes it only after the consumer's own dynamic call site " +
+            "already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
         public override bool TryGetIndex(System.Dynamic.GetIndexBinder binder, object[] indexes, out object result)
         {
             if (base.TryGetIndex(binder, indexes, out result))

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -220,6 +221,8 @@ namespace Dynamitey
         /// <returns></returns>
         /// <exception cref="System.ArgumentException">CacheableInvocation can't change conversion type on invoke.;args</exception>
         /// <exception cref="System.InvalidOperationException">Unknown Invocation Kind: </exception>
+        [RequiresUnreferencedCode("Builds/reuses a cached DLR CallSite per Kind via InvokeHelper, which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Every Kind binds through the DLR (directly or via InvokeHelper's cached CallSite), which requires runtime code generation; not supported when AOT-compiled.")]
         public override object Invoke(object target, params object[] args)
         {
             if (target is InvokeContext tIContext)

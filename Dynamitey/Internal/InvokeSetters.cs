@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using Dynamitey.Internal.Optimization;
@@ -15,6 +16,7 @@ namespace Dynamitey.Internal
     /// </summary>
     public class InvokeSetters : DynamicObject
     {
+        [RequiresDynamicCode("Constructing an InvokeSetters instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal InvokeSetters()
         {
 
@@ -29,6 +31,19 @@ namespace Dynamitey.Internal
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2075", Justification =
+            "Reflects over a caller-supplied enumerable's element type (GetInterfaces) and an " +
+            "anonymous-typed argument's properties (GetProperties) to build the property/value " +
+            "dictionary that Dynamic.InvokeSetChain then applies; both are on this method's own " +
+            "runtime-typed arguments, whose members trimming may already have removed.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Reads Tuple<,>.Item1/Item2 via 'dynamic' and calls the annotated Dynamic.InvokeGet/ " +
+            "InvokeSetChain. This is a DynamicObject.TryInvoke override: it can't carry " +
+            "[RequiresUnreferencedCode] itself without mismatching the unannotated base member, and " +
+            "the DLR invokes it only after the consumer's own dynamic call to Dynamic.InvokeSetAll " +
+            "already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Same 'dynamic'/Dynamic.InvokeGet/InvokeSetChain calls as above; see the IL2026 suppression on this member.")]
         public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
         {
             IEnumerable<KeyValuePair<string, object>> tDict = null;

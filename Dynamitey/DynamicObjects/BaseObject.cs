@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -51,9 +52,10 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseObject"/> class.
         /// </summary>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         protected BaseObject()
         {
-            
+
         }
 
 
@@ -64,6 +66,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="binderName">Name of the binder.</param>
         /// <param name="type">The type.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls the annotated FauxType.GetMember, which for a RealType reflects over its target's members by name; trimming can remove the member being resolved.")]
         public bool TryTypeForName(string binderName, out Type type)
         {
            var eqType = (IEquivalentType) this;

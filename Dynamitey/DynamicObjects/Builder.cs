@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
@@ -36,6 +37,8 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="contents">The contents.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls the annotated Activate.Create and, on the returned 'dynamic' list, Add(item) through the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("The 'dynamic' Add(item) call and constructing a List both require the DLR's runtime code generation; not supported when AOT-compiled.")]
         dynamic List(params dynamic[] contents);
 
         /// <summary>
@@ -87,6 +90,8 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="contents">The contents.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Forwards to List, which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Forwards to List, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         dynamic Array(params dynamic[] contents);
 
         /// <summary>
@@ -132,6 +137,7 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}"/> class.
         /// </summary>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type (and the BuilderTrampoline/SetupTrampoline it wires up) instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
 		public Builder(){
             _buildType = new Dictionary<string, Activate>();
 			Setup = new SetupTrampoline<TObjectProtoType>(this);
@@ -143,6 +149,8 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="contents">The contents.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls the annotated Activate.Create and, on the returned 'dynamic' list, Add(item) through the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("The 'dynamic' Add(item) call and constructing a List both require the DLR's runtime code generation; not supported when AOT-compiled.")]
         public dynamic List(params dynamic[] contents)
         {
             if (!_buildType.TryGetValue("List", out var tBuildType))
@@ -250,6 +258,8 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="contents">The contents.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Forwards to List, which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Forwards to List, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public dynamic Array(params dynamic[] contents)
         {
             return List(contents);
@@ -299,6 +309,7 @@ namespace Dynamitey.DynamicObjects
             /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}.BuilderTrampoline"/> class.
             /// </summary>
             /// <param name="builder">The builder.</param>
+            [RequiresDynamicCode("Constructing any DynamicObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
             public BuilderTrampoline(Builder<TInnerObjectProtoType> builder)
             {
 				_buider = builder;
@@ -311,6 +322,12 @@ namespace Dynamitey.DynamicObjects
             /// <param name="args">The args.</param>
             /// <param name="result">The result.</param>
             /// <returns></returns>
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "Calls the annotated InvokeHelper. This is a DynamicObject.TryInvoke override: " +
+                "it can't carry [RequiresUnreferencedCode] itself without mismatching the " +
+                "unannotated base member, and the DLR invokes it only after the consumer's own " +
+                "dynamic call site already triggered the framework's warning.")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same InvokeHelper call as above; see the IL2026 suppression on this member.")]
             public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
             {
                 if (!_buider._buildType.TryGetValue("Object", out var tBuildType))
@@ -332,6 +349,7 @@ namespace Dynamitey.DynamicObjects
             /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}.SetupTrampoline"/> class.
             /// </summary>
             /// <param name="builder">The builder.</param>
+            [RequiresDynamicCode("Constructing any DynamicObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
 			public SetupTrampoline(Builder<TInnerObjectProtoType> builder){
 				_buider = builder;
 			}
@@ -344,6 +362,13 @@ namespace Dynamitey.DynamicObjects
             /// <param name="result">The result.</param>
             /// <returns></returns>
             /// <exception cref="System.ArgumentException">Requires argument names for every argument</exception>
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "args is statically typed 'dynamic[]', so 'new Activate(it)' below binds through " +
+                "the DLR binder even though Activate's constructor takes a plain Type. This is a " +
+                "DynamicObject.TryInvoke override: it can't carry [RequiresUnreferencedCode] " +
+                "itself without mismatching the unannotated base member, and the DLR invokes it " +
+                "only after the consumer's own dynamic call site already triggered the framework's warning.")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic'-forced construction as above; see the IL2026 suppression on this member.")]
             public override bool TryInvoke(InvokeBinder binder, dynamic[] args, out object result)
             {
 				if (binder.CallInfo.ArgumentNames.Count != binder.CallInfo.ArgumentCount)
@@ -365,6 +390,13 @@ namespace Dynamitey.DynamicObjects
         /// <param name="binder">The binder.</param>
         /// <param name="value">The value.</param>
         /// <returns></returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "value is statically typed 'dynamic', so 'new Activate(value)' below binds through " +
+            "the DLR binder even though Activate's constructor takes a plain Type. This is a " +
+            "DynamicObject.TrySetMember override: it can't carry [RequiresUnreferencedCode] " +
+            "itself without mismatching the unannotated base member, and the DLR invokes it " +
+            "only after the consumer's own dynamic member assignment already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic'-forced construction as above; see the IL2026 suppression on this member.")]
 		public override bool TrySetMember(SetMemberBinder binder, dynamic value){
             if (value != null)
             {
@@ -395,6 +427,13 @@ namespace Dynamitey.DynamicObjects
         /// <param name="args">The args.</param>
         /// <param name="result">The result.</param>
         /// <returns></returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated InvokeHelper/TryTypeForName, and the late-bound " +
+            "Dynamic.Impromptu.IsAvailable/DynamicActLike (dynamic field access). This is a " +
+            "DynamicObject.TryInvokeMember override: it can't carry [RequiresUnreferencedCode] " +
+            "itself without mismatching the unannotated base member, and the DLR invokes it " +
+            "only after the consumer's own dynamic call site already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
             if(!_buildType.TryGetValue(binder.Name, out var tBuildType))
@@ -416,6 +455,8 @@ namespace Dynamitey.DynamicObjects
 
         }
 
+        [RequiresUnreferencedCode("Calls the annotated Activate.Create/Dynamic.InvokeConstructor/Dynamic.InvokeSetAll, and Activator.CreateInstance<TObjectProtoType>(), which requires TObjectProtoType to have a public parameterless constructor for trim analysis.")]
+        [RequiresDynamicCode("Dynamic.InvokeConstructor/InvokeSetAll require the DLR's runtime code generation; not supported when AOT-compiled.")]
         private static object InvokeHelper(CallInfo callinfo, IList<object> args, Activate buildType =null)
         {
            

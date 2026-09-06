@@ -114,9 +114,40 @@ is always accessible.
 
 This library is built on the DLR. It resolves calls at runtime that cannot be
 seen statically, so it is not trim-safe and not AOT-compatible, and it never
-will be. Annotating the public surface so consumers get build-time warnings
-instead of runtime failures is
-[#4](https://github.com/dynamitey-community/dynamitey/issues/4).
+will be — that is a property of the DLR, not a defect in Dynamitey.
+
+Trimming or NativeAOT-publishing an app that references Dynamitey now produces
+build-time `IL2026`/`IL3050` warnings naming the specific Dynamitey API you
+called (`Dynamic.InvokeMember`, `Dynamic.InvokeGet`, `Dynamic.InvokeConstructor`,
+the `DynamicObjects` types, and so on), instead of publishing cleanly and
+failing at runtime with no warning at all
+([#4](https://github.com/dynamitey-community/dynamitey/issues/4)).
+
+Take the warnings seriously: under trimming or AOT, the *runtime* failure a
+member's `RuntimeBinderException` reports is not just "unsupported" but
+actively misleading, because trimming and the DLR disagree about what
+"unreachable" means. Trimming removes a member it cannot prove is used
+statically; the DLR then looks for that member by name at runtime and reports
+it as never having existed at all — even when the untrimmed source plainly
+declares it:
+
+```
+InvokeGet on a public 'Name' property   -> RuntimeBinderException:
+    'Simple' does not contain a definition for 'Name'
+InvokeConstructor on a type with a ctor -> RuntimeBinderException:
+    The type 'Poco' has no constructors defined
+```
+
+Only the >14-argument call-site path (added in #27) reports an honest,
+specific failure — `PlatformNotSupportedException` naming
+`System.Reflection.Emit` as the missing capability — because that path fails
+on missing runtime capability rather than on a trimmed-away member. The other
+two are not edge cases: a plain `InvokeGet` on an ordinary public property
+fails exactly the same way. Do not rely on trimming/AOT + Dynamitey working
+just because your target member "looks safe"; treat every `IL2026`/`IL3050`
+on a Dynamitey call as a real, load-bearing warning, and keep argument counts
+at 14 or fewer regardless (Reflection.Emit is unavailable on every AOT/trimmed
+runtime, not just occasionally).
 
 ---
 
