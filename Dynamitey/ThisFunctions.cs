@@ -1,4 +1,4 @@
-﻿
+
 //  Copyright 2010  Ekon Benefits
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -220,6 +220,12 @@ namespace Dynamitey
         /// 	<c>true</c> if [is special this delegate] [the specified del]; otherwise, <c>false</c>.
         /// </returns>
 		public static bool IsSpecialThisDelegate(this Delegate del){
+				#if NET
+				ArgumentNullException.ThrowIfNull(del);
+				#else
+				if (del is null) throw new ArgumentNullException(nameof(del));
+				#endif
+
 				var tType =del.GetType();
 				if(!tType.GetTypeInfo().IsGenericType) return false;
 				var tGenDel =del.GetType().GetGenericTypeDefinition();

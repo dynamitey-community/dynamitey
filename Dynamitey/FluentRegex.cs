@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -32,6 +33,12 @@ namespace Dynamitey
         [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static IEnumerable<dynamic> Matches(string inputString, Regex regex)
         {
+            #if NET
+            ArgumentNullException.ThrowIfNull(regex);
+            #else
+            if (regex is null) throw new ArgumentNullException(nameof(regex));
+            #endif
+
             var tMatches = regex.Matches(inputString);
 
             return tMatches.Cast<Match>().Where(it => it.Success).Select(it => new DynamicObjects.RegexMatch(it, regex)).Cast<dynamic>();
@@ -46,6 +53,12 @@ namespace Dynamitey
         [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static dynamic? Match(string inputString, Regex regex)
         {
+            #if NET
+            ArgumentNullException.ThrowIfNull(regex);
+            #else
+            if (regex is null) throw new ArgumentNullException(nameof(regex));
+            #endif
+
             var tMatch = regex.Match(inputString);
             return tMatch.Success ? new DynamicObjects.RegexMatch(tMatch, regex) : null;
         }
@@ -59,6 +72,12 @@ namespace Dynamitey
         [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static dynamic? FluentMatch(this Regex regex, string inputString)
         {
+            #if NET
+            ArgumentNullException.ThrowIfNull(regex);
+            #else
+            if (regex is null) throw new ArgumentNullException(nameof(regex));
+            #endif
+
             var tMatch = regex.Match(inputString);
             return tMatch.Success ? new DynamicObjects.RegexMatch(tMatch, regex) : null;
         }
