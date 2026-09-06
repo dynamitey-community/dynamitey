@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!-- Archival artifact, not a current result. This is an NUnit result file from a run
+     against net462 on 2017-08-17, produced by the AppVeyor build removed in #2.
+     Nothing in this repository regenerates it, and net462 has not been a target
+     framework here since #1. Kept because it is the source of the historical
+     "182 passing" figure cited in docs/dynamitey-migration-handover.md. See #23. -->
 <test-run id="2" testcasecount="214" result="Passed" total="182" passed="182" failed="0" inconclusive="0" skipped="0" asserts="385" engine-version="3.7.0.0" clr-version="4.0.30319.42000" start-time="2017-08-18 02:57:59Z" end-time="2017-08-18 02:58:04Z" duration="4.993157">
   <command-line><![CDATA[/Users/jay/github/dynamitey/packages/nunit.consolerunner/3.7.0/tools/nunit3-console.exe --labels=All "--where=cat != Performance" ./Tests/bin/Release/net462/Tests.exe]]></command-line>
   <filter>

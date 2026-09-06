@@ -316,11 +316,7 @@ namespace Dynamitey.DynamicObjects
             if (PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(key));
-#if SILVERLIGHT
-                 PropertyChanged(this, new PropertyChangedEventArgs("Item["+key+"]"));  //Indexers are Updated on Dictionarys as well
-#else
                   PropertyChanged(this, new PropertyChangedEventArgs("Item[]"));  //Indexers are Updated on Dictionarys as well WPF does not support Item[key] syntax
-#endif
 
             }
         }
