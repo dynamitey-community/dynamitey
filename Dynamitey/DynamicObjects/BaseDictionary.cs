@@ -316,7 +316,7 @@ namespace Dynamitey.DynamicObjects
             if (PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(key));
-                  PropertyChanged(this, new PropertyChangedEventArgs("Item[]"));  //Indexers are Updated on Dictionarys as well WPF does not support Item[key] syntax
+                PropertyChanged(this, new PropertyChangedEventArgs("Item[]"));  // Indexers are updated on dictionaries too; WPF does not support Item[key] syntax
 
             }
         }
