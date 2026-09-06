@@ -146,7 +146,7 @@ namespace Dynamitey
         /// <value>The kind of the invocation.</value>
         public InvocationKind InvocationKind => _invocationKind;
 
-        private IDictionary<int, CacheableInvocation> _cacheableInvocation = new Dictionary<int, CacheableInvocation>();
+        private readonly IDictionary<int, CacheableInvocation> _cacheableInvocation = new Dictionary<int, CacheableInvocation>();
 #pragma warning disable 1734
         /// <summary>
         /// Provides the implementation for operations that invoke an object. Classes derived from the <see cref="T:System.Dynamic.DynamicObject"/> class can override this method to specify dynamic behavior for operations such as invoking an object or a delegate.
