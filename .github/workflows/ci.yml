@@ -48,13 +48,56 @@ jobs:
 
       # The full suite. There is no category filter: the wall-clock benchmarks
       # that used to require one now live in Benchmarks/ and assert nothing.
+      # shell: bash, and an explicit pipefail, because the pipeline's exit status
+      # would otherwise be tee's - always 0 - and a failing suite would sail past
+      # this step. GitHub's bash shell already runs with -eo pipefail, so the
+      # `set` line is belt and braces: it keeps the guarantee local to the script
+      # rather than resting on a runner default that is not visible here.
       - name: Test
-        run: >
-          dotnet test Tests/Tests.csproj
-          --configuration Release
-          --no-build
-          --logger "trx;LogFileName=tests-${{ matrix.os }}.trx"
-          --results-directory TestResults
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet test Tests/Tests.csproj \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=tests-${{ matrix.os }}.trx" \
+            --results-directory TestResults \
+            | tee test-output.txt
+
+      # Puts the executed count on the job summary page rather than leaving it
+      # buried in the log. The count is deliberately not pinned to a number
+      # anywhere: the bar is 0 failed and 0 skipped, which survives new tests.
+      - name: Report test counts
+        if: always()
+        shell: bash
+        run: |
+          tLine=$(grep -oE 'Failed: +[0-9]+, Passed: +[0-9]+, Skipped: +[0-9]+, Total: +[0-9]+' test-output.txt | tail -1)
+          if [ -z "$tLine" ]; then
+            echo "::error::Could not find a test summary line in the test output."
+            exit 1
+          fi
+
+          tFailed=$(echo "$tLine"  | sed -E 's/.*Failed: +([0-9]+).*/\1/')
+          tPassed=$(echo "$tLine"  | sed -E 's/.*Passed: +([0-9]+).*/\1/')
+          tSkipped=$(echo "$tLine" | sed -E 's/.*Skipped: +([0-9]+).*/\1/')
+          tTotal=$(echo "$tLine"   | sed -E 's/.*Total: +([0-9]+).*/\1/')
+
+          {
+            echo "### Tests (${{ matrix.os }})"
+            echo
+            echo "| Total | Passed | Failed | Skipped |"
+            echo "| ---: | ---: | ---: | ---: |"
+            echo "| $tTotal | $tPassed | $tFailed | $tSkipped |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # A skipped test is a test that is not telling you anything. The suite
+          # runs with no category filter precisely so this stays at zero; a
+          # filter creeping back into the test command is the thing worth
+          # catching, and it shows up here as a changed total.
+          if [ "$tSkipped" -ne 0 ]; then
+            echo "::error::$tSkipped test(s) skipped. The bar is 0 failed and 0 skipped, with no category filter."
+            exit 1
+          fi
 
       - name: Upload test results
         if: always()
@@ -62,6 +105,121 @@ jobs:
         with:
           name: test-results-${{ matrix.os }}
           path: TestResults/*.trx
+          retention-days: 14
+
+  coverage:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # GitVersion derives the version from history and tags. The default
+          # shallow clone has neither, and it fails rather than guessing.
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release -warnaserror
+
+      # coverlet.runsettings restricts the report to the Dynamitey assembly.
+      # Without it the figure also covers SupportLibrary, a fixture that exists
+      # only to be called from tests, so the number would describe the fixtures
+      # rather than the library being shipped.
+      - name: Test with coverage
+        run: >
+          dotnet test Tests/Tests.csproj
+          --configuration Release
+          --no-build
+          --settings coverlet.runsettings
+          --collect:"XPlat Code Coverage"
+          --results-directory TestResults
+
+      # ReportGenerator as a local tool rather than a third-party action: one
+      # fewer external action in the supply chain. The explicit --version is the
+      # point of doing it this way - without it `dotnet tool install` takes
+      # whatever is newest at the moment the job runs, which is neither
+      # reproducible nor reviewable.
+      - name: Install ReportGenerator
+        run: dotnet tool install --tool-path ./tools --version 5.5.11 dotnet-reportgenerator-globaltool
+
+      - name: Generate report
+        run: >
+          ./tools/reportgenerator
+          -reports:TestResults/**/coverage.cobertura.xml
+          -targetdir:CoverageReport
+          -reporttypes:"MarkdownSummaryGithub;HtmlInline;Cobertura"
+
+      - name: Publish coverage to the job summary
+        shell: bash
+        run: cat CoverageReport/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      # A floor, not a target. Set just under the figures at the time it was
+      # introduced so it ratchets rather than trapping: a change that lowers
+      # coverage fails, while the day-to-day noise of a few lines moving does
+      # not. Raise the floor when the real number moves up and stays there.
+      #
+      # Both numbers are checked because they answer different questions. Line
+      # coverage says which code ran; branch coverage says whether both sides of
+      # a decision ran. For this library the gap between them is the point -
+      # dispatch code is mostly branches, so a high line figure can hide a lot
+      # of untested decisions.
+      - name: Enforce coverage floors
+        shell: bash
+        env:
+          MIN_LINE: '70'
+          MIN_BRANCH: '56'
+        run: |
+          tReport=$(find TestResults -name coverage.cobertura.xml | head -1)
+          if [ -z "$tReport" ]; then
+            echo "::error::No cobertura report was produced."
+            exit 1
+          fi
+
+          tHeader=$(grep -oE '^<coverage[^>]*' "$tReport")
+          tLineRate=$(echo "$tHeader"   | grep -oE 'line-rate="[0-9.]+"'   | grep -oE '[0-9.]+')
+          tBranchRate=$(echo "$tHeader" | grep -oE 'branch-rate="[0-9.]+"' | grep -oE '[0-9.]+')
+
+          tLinePct=$(awk -v r="$tLineRate"   'BEGIN { printf "%.1f", r * 100 }')
+          tBranchPct=$(awk -v r="$tBranchRate" 'BEGIN { printf "%.1f", r * 100 }')
+
+          tLinesCovered=$(echo "$tHeader"    | grep -oE 'lines-covered="[0-9]+"'    | grep -oE '[0-9]+')
+          tLinesValid=$(echo "$tHeader"      | grep -oE 'lines-valid="[0-9]+"'      | grep -oE '[0-9]+')
+          tBranchesCovered=$(echo "$tHeader" | grep -oE 'branches-covered="[0-9]+"' | grep -oE '[0-9]+')
+          tBranchesValid=$(echo "$tHeader"   | grep -oE 'branches-valid="[0-9]+"'   | grep -oE '[0-9]+')
+
+          {
+            echo "### Coverage floors"
+            echo
+            echo "| Metric | Covered | Total | Percent | Floor |"
+            echo "| --- | ---: | ---: | ---: | ---: |"
+            echo "| Lines | $tLinesCovered | $tLinesValid | ${tLinePct}% | ${MIN_LINE}% |"
+            echo "| Branches | $tBranchesCovered | $tBranchesValid | ${tBranchPct}% | ${MIN_BRANCH}% |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          tFailed=0
+          if awk -v p="$tLinePct" -v m="$MIN_LINE" 'BEGIN { exit !(p < m) }'; then
+            echo "::error::Line coverage ${tLinePct}% is below the ${MIN_LINE}% floor."
+            tFailed=1
+          fi
+          if awk -v p="$tBranchPct" -v m="$MIN_BRANCH" 'BEGIN { exit !(p < m) }'; then
+            echo "::error::Branch coverage ${tBranchPct}% is below the ${MIN_BRANCH}% floor."
+            tFailed=1
+          fi
+          exit $tFailed
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: CoverageReport
           retention-days: 14
 
   benchmarks-smoke:
