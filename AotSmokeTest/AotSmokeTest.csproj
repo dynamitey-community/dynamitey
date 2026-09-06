@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Dynamitey.AotSmokeTest</AssemblyName>
+    <RootNamespace>Dynamitey.AotSmokeTest</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- The whole point of this project is to observe IL2026/IL3050. Do not
+         promote them to errors here; the CI job inspects the log instead. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dynamitey\Dynamitey.csproj" />
+  </ItemGroup>
+
+</Project>
