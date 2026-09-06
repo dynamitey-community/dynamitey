@@ -47,6 +47,27 @@ namespace Dynamitey.Tests
             return createMethod.Invoke(null, new object[] { name, context, argNames, binderType, staticContext, isEvent, knownBinder });
         }
 
+        // BinderHash has a second Create overload taking an InvokeMemberName rather than a string.
+        // It is the only way to get a non-null GenericArgs onto a hash, because the string
+        // constructor hardcodes GenericArgs to null.
+        private static object Create<T>(
+            InvokeMemberName name,
+            Type context,
+            string[] argNames,
+            Type binderType,
+            bool staticContext = false,
+            bool isEvent = false,
+            bool knownBinder = false) where T : class
+        {
+            var closedType = BinderHashOpenGeneric.MakeGenericType(typeof(T));
+            var createMethod = closedType.GetMethod("Create", BindingFlags.Public | BindingFlags.Static,
+                null,
+                new[] { typeof(InvokeMemberName), typeof(Type), typeof(string[]), typeof(Type), typeof(bool), typeof(bool), typeof(bool) },
+                null);
+
+            return createMethod.Invoke(null, new object[] { name, context, argNames, binderType, staticContext, isEvent, knownBinder });
+        }
+
         [Test]
         public void EqualBinderHashesAreEqualAndShareHashCode()
         {
@@ -112,6 +133,58 @@ namespace Dynamitey.Tests
             // on which instance happened to be the lookup key.
             Assert.That(tNull.Equals(tNamed), Is.False);
             Assert.That(tNamed.Equals(tNull), Is.False);
+        }
+
+        // GenericArgs had no coverage at all until these. Every other case in this fixture builds
+        // its hash from a string name, and that constructor sets GenericArgs to null
+        // unconditionally - so the whole GenericArgs comparison was unreachable from the tests, in
+        // any form. Reaching it needs the InvokeMemberName constructor, which is where a call
+        // site's generic arguments actually come from. A binder cached for Foo<string> must never
+        // be handed back for Foo<int>.
+        private static object CreateGeneric<T>(string name, params Type[] genericArgs) where T : class =>
+            Create<T>(new InvokeMemberName(name, genericArgs), typeof(string), new[] { "a" }, DummyBinderType);
+
+        [Test]
+        public void DifferentGenericArgsAreNeverEqual()
+        {
+            var tOfString = CreateGeneric<Func<object>>("Foo", typeof(string));
+            var tOfInt = CreateGeneric<Func<object>>("Foo", typeof(int));
+
+            Assert.That(tOfString.Equals(tOfInt), Is.False);
+            Assert.That(tOfInt.Equals(tOfString), Is.False);
+        }
+
+        [Test]
+        public void EqualGenericArgsAreEqual()
+        {
+            var tOne = CreateGeneric<Func<object>>("Foo", typeof(string), typeof(int));
+            var tTwo = CreateGeneric<Func<object>>("Foo", typeof(string), typeof(int));
+
+            Assert.That(tOne, Is.Not.SameAs(tTwo), "the two instances must be distinct objects, not the same reference.");
+            Assert.That(tOne.Equals(tTwo), Is.True);
+            Assert.That(tTwo.Equals(tOne), Is.True);
+        }
+
+        [Test]
+        public void NullAndNonNullGenericArgsAreNeverEqual()
+        {
+            var tNone = CreateGeneric<Func<object>>("Foo", null);
+            var tGeneric = CreateGeneric<Func<object>>("Foo", typeof(string));
+
+            Assert.That(tNone.Equals(tGeneric), Is.False);
+            Assert.That(tGeneric.Equals(tNone), Is.False);
+        }
+
+        // An arity difference must be caught by the contents comparison, not by a length shortcut
+        // that a refactor could drop: Foo<string> and Foo<string, int> are different call shapes.
+        [Test]
+        public void DifferentGenericArityIsNeverEqual()
+        {
+            var tOne = CreateGeneric<Func<object>>("Foo", typeof(string));
+            var tTwo = CreateGeneric<Func<object>>("Foo", typeof(string), typeof(int));
+
+            Assert.That(tOne.Equals(tTwo), Is.False);
+            Assert.That(tTwo.Equals(tOne), Is.False);
         }
 
         [Test]
