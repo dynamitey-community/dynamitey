@@ -15,6 +15,10 @@
     <PackageReference Include="NUnit.Console" Version="3.22.0" />
     <PackageReference Include="IronPython" Version="3.4.2" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.11" />
+    <!-- Runtime-compiles a throwaway assembly in TestRoslynLateTypeBind, the
+         Roslyn replacement for the CodeDom-based late-bind coverage removed
+         under #23 item 3. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
 
   </ItemGroup>
 

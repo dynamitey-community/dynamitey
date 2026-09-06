@@ -1,15 +1,17 @@
 ﻿using System;
-using System.CodeDom.Compiler;
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 using Dynamitey.SupportLibrary;
-using Microsoft.CSharp;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
 namespace Dynamitey.Tests
@@ -585,12 +587,13 @@ namespace Dynamitey.Tests
         }
 
 
-#if NETFRAMEWORK
-
         [Test]
-        public void TestCodeDomLateTypeBind()
-        {  
-            // http://stackoverflow.com/questions/16918612/dynamically-use-runtime-compiled-assemlby/16920438#16920438
+        public void TestRoslynLateTypeBind()
+        {
+            // Runtime-compiles an assembly, then late-binds to a type in it - the same
+            // scenario the old CodeDom/CSharpCodeProvider version of this test covered
+            // (see #23 item 3). CodeDom's runtime compilation is .NET Framework only and
+            // has no modern equivalent, so this uses Roslyn instead.
             string code = @"
                 namespace CodeInjection
                 {
@@ -601,22 +604,31 @@ namespace Dynamitey.Tests
                         }
                     }
                 }";
-   
-            var codeProvider = new CSharpCodeProvider();
- 
-            var parameters = new CompilerParameters {GenerateExecutable = false, GenerateInMemory = true};
 
-            CompilerResults cr = codeProvider.CompileAssemblyFromSource(parameters,code);
+            var syntaxTree = CSharpSyntaxTree.ParseText(code);
 
+            var references = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location))
+                .Select(a => (MetadataReference)MetadataReference.CreateFromFile(a.Location));
 
-            dynamic DynConcatenateString = new DynamicObjects.LateType(cr.CompiledAssembly, "CodeInjection.DynConcatenateString");
+            var compilation = CSharpCompilation.Create(
+                "DynamiteyTestCodeInjection_" + Guid.NewGuid().ToString("N"),
+                new[] { syntaxTree },
+                references,
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
+            using var assemblyStream = new MemoryStream();
+            var emitResult = compilation.Emit(assemblyStream);
+
+            Assert.That(emitResult.Success, Is.True,
+                () => string.Join(Environment.NewLine, emitResult.Diagnostics));
+
+            var compiledAssembly = Assembly.Load(assemblyStream.ToArray());
+
+            dynamic DynConcatenateString = new DynamicObjects.LateType(compiledAssembly, "CodeInjection.DynConcatenateString");
 
             Assert.That(DynConcatenateString.Concatenate("1","2"), Is.EqualTo("1 ! 2"));
-
         }
-    
-#endif
 
 
     [Test]
