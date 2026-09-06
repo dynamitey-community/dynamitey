@@ -157,7 +157,9 @@ namespace Dynamitey
         {
             unchecked
             {
-                return (GenericArgs != null ? GenericArgs.Length.GetHashCode() * 397 : 0) ^ (Name.GetHashCode());
+                // int.GetHashCode() is the identity transform (cs/useless-gethashcode-call); using
+                // Length directly is the same value without the redundant call.
+                return (GenericArgs != null ? GenericArgs.Length * 397 : 0) ^ (Name.GetHashCode());
             }
         }
     }

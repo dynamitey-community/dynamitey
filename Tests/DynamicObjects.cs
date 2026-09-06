@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -182,6 +183,50 @@ namespace Dynamitey.Tests
             Assert.That((object)tNew.Action3(), Is.EqualTo("test"));
 
             Assert.That((object)tNew.Action4(4), Is.EqualTo("test4"));
+        }
+
+        // Issue #50 (cs/reference-equality-with-object). BaseDictionary.SetProperty used to decide
+        // whether a set actually changed the value with `!=`, which on `object` is reference
+        // equality: re-assigning a property to an independently-boxed value with the same content
+        // (not the same box) would still look "changed" and fire a spurious PropertyChanged.
+        [Test]
+        public void SetPropertyDoesNotRaiseChangeForContentEqualDifferentReferenceValue()
+        {
+            dynamic tNew = new DynamicObjects.Dictionary();
+            var tChanges = new List<string>();
+            ((INotifyPropertyChanged)tNew).PropertyChanged += (s, e) => tChanges.Add(e.PropertyName!);
+
+            tNew.Value = 5;
+            tChanges.Clear();
+
+            object tStoredValue = tNew.Value;
+            object tSameContentDifferentBox = 5;
+            // Sanity check on the premise: boxing always allocates, so these are genuinely two
+            // different objects with the same content, not the same reference.
+            Assert.That(ReferenceEquals(tStoredValue, tSameContentDifferentBox), Is.False);
+
+            tNew.Value = tSameContentDifferentBox;
+            Assert.That(tChanges, Is.Empty, "Setting an equal-by-value, different-reference value must not raise PropertyChanged.");
+
+            tNew.Value = 6;
+            Assert.That(tChanges, Is.EqualTo(new[] { "Value", "Item[]" }), "Setting a genuinely different value must still raise PropertyChanged.");
+        }
+
+        // Issue #50 (cs/reference-equality-with-object). BaseDictionary.Remove(KeyValuePair) used
+        // `==` on the value, which on `object` is reference equality: removing by a
+        // content-equal-but-differently-boxed value would silently leave the entry in place.
+        [Test]
+        public void RemoveKeyValuePairUsesValueEquality()
+        {
+            IDictionary<string, object> tDict = new DynamicObjects.Dictionary();
+            tDict["Test"] = 5;
+
+            object tSameContentDifferentBox = 5;
+            Assert.That(ReferenceEquals(tDict["Test"], tSameContentDifferentBox), Is.False);
+
+            tDict.Remove(new KeyValuePair<string, object>("Test", tSameContentDifferentBox));
+
+            Assert.That(tDict.ContainsKey("Test"), Is.False);
         }
 
         [Test]
@@ -433,6 +478,80 @@ namespace Dynamitey.Tests
 
             Assert.That(tExpandoNamedTest.LeftArm, Is.EqualTo("Rise"));
             Assert.That(tExpandoNamedTest.RightArm, Is.EqualTo("Clamp"));
+        }
+
+        // Test-only type for the two catch-narrowing tests below: its parameterless constructor
+        // always throws, so it can prove a genuine constructor failure is neither swallowed nor
+        // (via a stray fallback re-invocation) run twice.
+        public class ThrowingParameterlessCtorPoco
+        {
+            public static int ConstructAttempts;
+
+            public ThrowingParameterlessCtorPoco()
+            {
+                ConstructAttempts++;
+                throw new InvalidOperationException("boom");
+            }
+        }
+
+        // Issue #50 (cs/catch-of-all-exceptions). Activate<T>.Create() used to catch(Exception)
+        // around Activator.CreateInstance<T>(), narrowed to catch(MissingMethodException) - the one
+        // documented failure of that call, and exactly the "optional-parameter constructor" case the
+        // fallback exists for (see PocoOptConstructor: only a (string,string,string) ctor, all
+        // defaulted).
+        [Test]
+        public void ActivateStillFallsBackForOptionalParameterConstructor()
+        {
+            PocoOptConstructor tResult = new Activate<PocoOptConstructor>().Create();
+
+            Assert.That(tResult.One, Is.EqualTo("-1"));
+            Assert.That(tResult.Two, Is.EqualTo("-2"));
+            Assert.That(tResult.Three, Is.EqualTo("-3"));
+        }
+
+        [Test]
+        public void ActivateDoesNotDoubleInvokeConstructorOnUnrelatedException()
+        {
+            ThrowingParameterlessCtorPoco.ConstructAttempts = 0;
+
+            // Activator.CreateInstance<T>() wraps a throwing constructor's exception in a
+            // TargetInvocationException, which is not a MissingMethodException, so the narrowed
+            // catch must let it propagate rather than treat it as "no parameterless constructor".
+            Assert.That(() => new Activate<ThrowingParameterlessCtorPoco>().Create(),
+                Throws.InstanceOf<TargetInvocationException>()
+                    .With.InnerException.InstanceOf<InvalidOperationException>());
+
+            // Before the fix, catch(Exception) would swallow that exception and retry via
+            // Dynamic.InvokeConstructor, running the (still-failing) constructor a second time - a
+            // real problem for any constructor with side effects.
+            Assert.That(ThrowingParameterlessCtorPoco.ConstructAttempts, Is.EqualTo(1));
+        }
+
+        // Same two cases again for DynamicObjects.Builder<T>.InvokeHelper, which has the identical
+        // catch(Exception)-around-Activator.CreateInstance<T>() pattern.
+        [Test]
+        public void DynamicBuilderStillFallsBackForOptionalParameterConstructor()
+        {
+            dynamic tNewD = new DynamicObjects.Builder<PocoOptConstructor>();
+
+            PocoOptConstructor tResult = tNewD.Object();
+
+            Assert.That(tResult.One, Is.EqualTo("-1"));
+            Assert.That(tResult.Two, Is.EqualTo("-2"));
+            Assert.That(tResult.Three, Is.EqualTo("-3"));
+        }
+
+        [Test]
+        public void DynamicBuilderDoesNotDoubleInvokeConstructorOnUnrelatedException()
+        {
+            ThrowingParameterlessCtorPoco.ConstructAttempts = 0;
+            dynamic tNewD = new DynamicObjects.Builder<ThrowingParameterlessCtorPoco>();
+
+            Assert.That(() => tNewD.Object(),
+                Throws.InstanceOf<TargetInvocationException>()
+                    .With.InnerException.InstanceOf<InvalidOperationException>());
+
+            Assert.That(ThrowingParameterlessCtorPoco.ConstructAttempts, Is.EqualTo(1));
         }
 
         [Test]

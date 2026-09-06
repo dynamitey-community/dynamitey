@@ -226,8 +226,14 @@ namespace Dynamitey
             {
                 tObjectPrototype = Activator.CreateInstance<TObjectPrototype>();//Try first because it's really fast, but won't work with optional parameters
             }
-            catch (Exception)
+            catch (MissingMethodException)
             {
+                // The one documented failure mode of Activator.CreateInstance<T>() is exactly the
+                // "no parameterless constructor" case this method exists to work around (e.g. a
+                // constructor with only optional parameters); Dynamitey's own binder can bind that.
+                // Catching Exception here would also swallow a genuine failure from inside a real
+                // parameterless constructor and silently invoke it a second time via the DLR path
+                // (cs/catch-of-all-exceptions).
                 tObjectPrototype = Dynamic.InvokeConstructor(typeof(TObjectPrototype))!;
             }
             return tObjectPrototype!;

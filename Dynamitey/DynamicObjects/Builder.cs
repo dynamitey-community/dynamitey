@@ -484,8 +484,14 @@ namespace Dynamitey.DynamicObjects
                 {
                     result = Activator.CreateInstance<TObjectProtoType>()!;//Try first because faster but doens't work with optional parameters
                 }
-                catch (Exception)
+                catch (MissingMethodException)
                 {
+                    // Same reasoning as Builder.cs's Activate<T>.Create(): MissingMethodException is
+                    // the one documented failure Activator.CreateInstance<T>() has (no parameterless
+                    // constructor - e.g. one with only optional parameters), which Dynamitey's own
+                    // binder can bind instead. Catching Exception here would also swallow a genuine
+                    // failure from inside a real parameterless constructor and silently invoke it a
+                    // second time via the DLR path (cs/catch-of-all-exceptions).
                     result = Dynamic.InvokeConstructor(typeof (TObjectProtoType))!;
                 }
 

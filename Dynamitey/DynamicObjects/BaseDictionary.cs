@@ -233,7 +233,11 @@ namespace Dynamitey.DynamicObjects
         {
             if (TryGetValue(item.Key, out var tValue))
             {
-                if (item.Value == tValue)
+                // Value comparison, not the key's: object's own == is reference equality, which
+                // would almost never match a boxed value type or an independently-built string
+                // with equal content (cs/reference-equality-with-object). ICollection<KVP>.Remove
+                // is documented to compare values structurally.
+                if (Equals(item.Value, tValue))
                 {
                     Remove(item.Key);
                 }
@@ -297,7 +301,11 @@ namespace Dynamitey.DynamicObjects
         /// <param name="value">The value.</param>
         protected void SetProperty(string key, object? value)
         {
-            if (!_dictionary.TryGetValue(key, out var tOldValue) || value != tOldValue)
+            // Equals, not !=: object's own != is reference equality, which would treat two
+            // independently-built but content-equal values (a re-boxed int, a concatenated
+            // string) as "changed" and fire a spurious PropertyChanged on every set
+            // (cs/reference-equality-with-object).
+            if (!_dictionary.TryGetValue(key, out var tOldValue) || !Equals(value, tOldValue))
             {
                 // _dictionary's value type is non-null to match Dictionary's public
                 // IDictionary<string, object>, but the DLR can hand TrySetMember a null value;
