@@ -1,0 +1,735 @@
+abstract Dynamitey.DynamicObjects.FauxType.GetContainedTypes() -> System.Type![]!
+abstract Dynamitey.DynamicObjects.FauxType.GetMember(string! binderName) -> System.Collections.Generic.IEnumerable<System.Reflection.MemberInfo!>!
+abstract Dynamitey.DynamicObjects.FauxType.GetMemberNames() -> System.Collections.Generic.IEnumerable<string!>!
+Dynamitey.Activate
+Dynamitey.Activate.Activate(System.Type! type, params object![]! args) -> void
+Dynamitey.Activate.Activate(System.Type! type, System.Func<object![]!>! args) -> void
+Dynamitey.Activate<TObjectPrototype>
+Dynamitey.Activate<TObjectPrototype>.Activate(params object![]! args) -> void
+Dynamitey.Activate<TObjectPrototype>.Activate(System.Func<object![]!>! args) -> void
+Dynamitey.AwaitableResult
+Dynamitey.AwaitableResult.AwaitableResult(System.Threading.Tasks.Task! task) -> void
+Dynamitey.AwaitableResult.Awaiter
+Dynamitey.AwaitableResult.Awaiter.GetResult() -> object?
+Dynamitey.AwaitableResult.Awaiter.IsCompleted.get -> bool
+Dynamitey.AwaitableResult.Awaiter.OnCompleted(System.Action! continuation) -> void
+Dynamitey.AwaitableResult.Awaiter.UnsafeOnCompleted(System.Action! continuation) -> void
+Dynamitey.AwaitableResult.GetAwaiter() -> Dynamitey.AwaitableResult.Awaiter!
+Dynamitey.AwaitableResult.Task.get -> System.Threading.Tasks.Task!
+Dynamitey.Build
+Dynamitey.Build<TObjectPrototype>
+Dynamitey.Builder
+Dynamitey.CacheableInvocation
+Dynamitey.CacheableInvocation.CacheableInvocation(Dynamitey.InvocationKind kind, Dynamitey.String_OR_InvokeMemberName? name = null, int argCount = 0, string?[]? argNames = null, object? context = null, System.Type? convertType = null, bool convertExplicit = false, object?[]? storedArgs = null) -> void
+Dynamitey.CacheableInvocation.Equals(Dynamitey.CacheableInvocation? other) -> bool
+Dynamitey.Dynamic
+Dynamitey.DynamicObjects.AggreType
+Dynamitey.DynamicObjects.AggreType.AddType(Dynamitey.DynamicObjects.FauxType! type) -> void
+Dynamitey.DynamicObjects.AggreType.AddType(System.Type! type) -> void
+Dynamitey.DynamicObjects.AggreType.AggreType(params Dynamitey.DynamicObjects.FauxType![]! types) -> void
+Dynamitey.DynamicObjects.AggreType.GetInterfaceTypes() -> System.Type![]!
+Dynamitey.DynamicObjects.BaseDictionary
+Dynamitey.DynamicObjects.BaseDictionary.Add(string! key, object! value) -> void
+Dynamitey.DynamicObjects.BaseDictionary.Add(System.Collections.Generic.KeyValuePair<string!, object!> item) -> void
+Dynamitey.DynamicObjects.BaseDictionary.BaseDictionary(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object!>>? dict = null) -> void
+Dynamitey.DynamicObjects.BaseDictionary.Contains(System.Collections.Generic.KeyValuePair<string!, object!> item) -> bool
+Dynamitey.DynamicObjects.BaseDictionary.ContainsKey(string! key) -> bool
+Dynamitey.DynamicObjects.BaseDictionary.CopyTo(System.Collections.Generic.KeyValuePair<string!, object!>[]! array, int arrayIndex) -> void
+Dynamitey.DynamicObjects.BaseDictionary.Equals(Dynamitey.DynamicObjects.Dictionary? other) -> bool
+Dynamitey.DynamicObjects.BaseDictionary.Keys.get -> System.Collections.Generic.ICollection<string!>!
+Dynamitey.DynamicObjects.BaseDictionary.PropertyChanged -> System.ComponentModel.PropertyChangedEventHandler?
+Dynamitey.DynamicObjects.BaseDictionary.Remove(string! key) -> bool
+Dynamitey.DynamicObjects.BaseDictionary.Remove(System.Collections.Generic.KeyValuePair<string!, object!> item) -> bool
+Dynamitey.DynamicObjects.BaseDictionary.SetProperty(string! key, object? value) -> void
+Dynamitey.DynamicObjects.BaseDictionary.TryGetValue(string! key, out object! value) -> bool
+Dynamitey.DynamicObjects.BaseDictionary.Values.get -> System.Collections.Generic.ICollection<object!>!
+Dynamitey.DynamicObjects.BaseDictionary._dictionary -> System.Collections.Generic.IDictionary<string!, object!>!
+Dynamitey.DynamicObjects.BaseFactory
+Dynamitey.DynamicObjects.BaseFactory.BaseFactory() -> void
+Dynamitey.DynamicObjects.BaseForwarder
+Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker
+Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker.AddRemoveMarker() -> void
+Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker.Delegate.get -> object?
+Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker.Delegate.set -> void
+Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker.IsAdding.get -> bool
+Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker.IsAdding.set -> void
+Dynamitey.DynamicObjects.BaseForwarder.BaseForwarder(object? target) -> void
+Dynamitey.DynamicObjects.BaseForwarder.Equals(Dynamitey.DynamicObjects.BaseForwarder? other) -> bool
+Dynamitey.DynamicObjects.BaseForwarder.Target.get -> object?
+Dynamitey.DynamicObjects.BaseForwarder.Target.set -> void
+Dynamitey.DynamicObjects.BaseObject
+Dynamitey.DynamicObjects.BaseObject.BaseObject() -> void
+Dynamitey.DynamicObjects.BaseObject.TryTypeForName(string! binderName, out System.Type? type) -> bool
+Dynamitey.DynamicObjects.BaseSingleInstancesFactory
+Dynamitey.DynamicObjects.BaseSingleInstancesFactory.BaseSingleInstancesFactory() -> void
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.Array(params dynamic![]! contents) -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.ArraySetup(params dynamic![]! constructorArgs) -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.ArraySetup(System.Func<object![]!>! constructorArgsFactory) -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.ArraySetup<TList>() -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.Builder() -> void
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.BuilderTrampoline<TInnerObjectProtoType>
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.BuilderTrampoline<TInnerObjectProtoType>.BuilderTrampoline(Dynamitey.DynamicObjects.Builder<TInnerObjectProtoType>! builder) -> void
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.List(params dynamic![]! contents) -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.ListSetup(params dynamic![]! constructorArgs) -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.ListSetup(System.Func<object![]!>! constructorArgsFactory) -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.ListSetup<TList>() -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.Object.get -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.ObjectSetup(params dynamic![]! constructorArgs) -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.ObjectSetup(System.Func<object![]!>! constructorArgsFactory) -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.Setup.get -> dynamic!
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.SetupTrampoline<TInnerObjectProtoType>
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>.SetupTrampoline<TInnerObjectProtoType>.SetupTrampoline(Dynamitey.DynamicObjects.Builder<TInnerObjectProtoType>! builder) -> void
+Dynamitey.DynamicObjects.Builder<TObjectProtoType>._buildType -> System.Collections.Generic.IDictionary<string!, Dynamitey.Activate?>!
+Dynamitey.DynamicObjects.ChainableDictionary
+Dynamitey.DynamicObjects.ChainableDictionary.ChainableDictionary() -> void
+Dynamitey.DynamicObjects.ChainableDictionary.ChainableDictionary(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object!>>! dict) -> void
+Dynamitey.DynamicObjects.Dictionary
+Dynamitey.DynamicObjects.Dictionary.Clear() -> void
+Dynamitey.DynamicObjects.Dictionary.Count.get -> int
+Dynamitey.DynamicObjects.Dictionary.Dictionary() -> void
+Dynamitey.DynamicObjects.Dictionary.Dictionary(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object!>>! dict) -> void
+Dynamitey.DynamicObjects.Dictionary.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<string!, object!>>!
+Dynamitey.DynamicObjects.Dictionary.this[string! key].get -> object!
+Dynamitey.DynamicObjects.Dictionary.this[string! key].set -> void
+Dynamitey.DynamicObjects.Dummy
+Dynamitey.DynamicObjects.Dummy.Dummy() -> void
+Dynamitey.DynamicObjects.ExtensionToInstanceProxy
+Dynamitey.DynamicObjects.ExtensionToInstanceProxy.ExtensionToInstanceProxy(dynamic! target, System.Type! extendedType, System.Type![]! staticTypes, System.Type![]? instanceHints = null) -> void
+Dynamitey.DynamicObjects.ExtensionToInstanceProxy.InstanceHints.get -> System.Collections.Generic.IEnumerable<System.Type!>?
+Dynamitey.DynamicObjects.ExtensionToInstanceProxy.Invoker
+Dynamitey.DynamicObjects.ExtensionToInstanceProxy.InvokeStaticMethod(Dynamitey.String_OR_InvokeMemberName! name, object?[]! args) -> object?
+Dynamitey.DynamicObjects.ExtensionToInstanceProxy.OverloadInvoker
+Dynamitey.DynamicObjects.FauxType
+Dynamitey.DynamicObjects.FauxType.FauxType() -> void
+Dynamitey.DynamicObjects.FluentStringLookup
+Dynamitey.DynamicObjects.FluentStringLookup.FluentStringLookup(System.Func<string!, dynamic!>! lookup) -> void
+Dynamitey.DynamicObjects.Get
+Dynamitey.DynamicObjects.Get.Get(object! target) -> void
+Dynamitey.DynamicObjects.IBuilder
+Dynamitey.DynamicObjects.IBuilder.Array(params dynamic![]! contents) -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.ArraySetup(params dynamic![]! constructorArgs) -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.ArraySetup(System.Func<object![]!>! constructorArgsFactory) -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.ArraySetup<TList>() -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.List(params dynamic![]! contents) -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.ListSetup(params dynamic![]! constructorArgs) -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.ListSetup(System.Func<object![]!>! constructorArgsFactory) -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.ListSetup<TList>() -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.Object.get -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.ObjectSetup(params dynamic![]! constructorArgs) -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.ObjectSetup(System.Func<object![]!>! constructorArgsFactory) -> dynamic!
+Dynamitey.DynamicObjects.IBuilder.Setup.get -> dynamic!
+Dynamitey.DynamicObjects.IEquivalentType
+Dynamitey.DynamicObjects.IEquivalentType.EquivalentType.get -> Dynamitey.DynamicObjects.FauxType?
+Dynamitey.DynamicObjects.IEquivalentType.EquivalentType.set -> void
+Dynamitey.DynamicObjects.IForwarder
+Dynamitey.DynamicObjects.IForwarder.Target.get -> object?
+Dynamitey.DynamicObjects.ILinq<TSource>
+Dynamitey.DynamicObjects.ILinq<TSource>.Aggregate(System.Func<TSource, TSource, TSource>! func) -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.Aggregate<TAccumulate, TResult>(TAccumulate seed, System.Func<TAccumulate, TSource, TAccumulate>! func, System.Func<TAccumulate, TResult>! resultSelector) -> TResult
+Dynamitey.DynamicObjects.ILinq<TSource>.Aggregate<TAccumulate>(TAccumulate seed, System.Func<TAccumulate, TSource, TAccumulate>! func) -> TAccumulate
+Dynamitey.DynamicObjects.ILinq<TSource>.All(System.Func<TSource, bool>! predicate) -> bool
+Dynamitey.DynamicObjects.ILinq<TSource>.Any() -> bool
+Dynamitey.DynamicObjects.ILinq<TSource>.Any(System.Func<TSource, bool>! predicate) -> bool
+Dynamitey.DynamicObjects.ILinq<TSource>.AsEnumerable() -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, decimal>! selector) -> decimal
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, decimal?>! selector) -> decimal?
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, double>! selector) -> double
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, double?>! selector) -> double?
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, float>! selector) -> float
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, float?>! selector) -> float?
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, int>! selector) -> double
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, int?>! selector) -> double?
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, long>! selector) -> double
+Dynamitey.DynamicObjects.ILinq<TSource>.Average(System.Func<TSource, long?>! selector) -> double?
+Dynamitey.DynamicObjects.ILinq<TSource>.Cast<TResult>() -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Concat(System.Collections.Generic.IEnumerable<TSource>! second) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Contains(TSource value) -> bool
+Dynamitey.DynamicObjects.ILinq<TSource>.Contains(TSource value, System.Collections.Generic.IEqualityComparer<TSource>! comparer) -> bool
+Dynamitey.DynamicObjects.ILinq<TSource>.Count() -> int
+Dynamitey.DynamicObjects.ILinq<TSource>.Count(System.Func<TSource, bool>! predicate) -> int
+Dynamitey.DynamicObjects.ILinq<TSource>.DefaultIfEmpty() -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.DefaultIfEmpty(TSource defaultValue) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Distinct() -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Distinct(System.Collections.Generic.IEqualityComparer<TSource>! comparer) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ElementAt(int index) -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.ElementAtOrDefault(int index) -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.Except(System.Collections.Generic.IEnumerable<TSource>! second) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Except(System.Collections.Generic.IEnumerable<TSource>! second, System.Collections.Generic.IEqualityComparer<TSource>! comparer) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.First() -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.First(System.Func<TSource, bool>! predicate) -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.FirstOrDefault() -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.FirstOrDefault(System.Func<TSource, bool>! predicate) -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupBy<TKey, TElement, TResult>(System.Func<TSource, TKey>! keySelector, System.Func<TSource, TElement>! elementSelector, System.Func<TKey, System.Collections.Generic.IEnumerable<TElement>!, TResult>! resultSelector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupBy<TKey, TElement, TResult>(System.Func<TSource, TKey>! keySelector, System.Func<TSource, TElement>! elementSelector, System.Func<TKey, System.Collections.Generic.IEnumerable<TElement>!, TResult>! resultSelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupBy<TKey, TElement>(System.Func<TSource, TKey>! keySelector, System.Func<TSource, TElement>! elementSelector) -> Dynamitey.DynamicObjects.ILinq<System.Linq.IGrouping<TKey, TElement>!>!
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupBy<TKey, TElement>(System.Func<TSource, TKey>! keySelector, System.Func<TSource, TElement>! elementSelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.ILinq<System.Linq.IGrouping<TKey, TElement>!>!
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupBy<TKey, TResult>(System.Func<TSource, TKey>! keySelector, System.Func<TKey, System.Collections.Generic.IEnumerable<TSource>!, TResult>! resultSelector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupBy<TKey, TResult>(System.Func<TSource, TKey>! keySelector, System.Func<TKey, System.Collections.Generic.IEnumerable<TSource>!, TResult>! resultSelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupBy<TKey>(System.Func<TSource, TKey>! keySelector) -> Dynamitey.DynamicObjects.ILinq<System.Linq.IGrouping<TKey, TSource>!>!
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupBy<TKey>(System.Func<TSource, TKey>! keySelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.ILinq<System.Linq.IGrouping<TKey, TSource>!>!
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupJoin<TInner, TKey, TResult>(System.Collections.Generic.IEnumerable<TInner>! inner, System.Func<TSource, TKey>! outerKeySelector, System.Func<TInner, TKey>! innerKeySelector, System.Func<TSource, System.Collections.Generic.IEnumerable<TInner>!, TResult>! resultSelector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.GroupJoin<TInner, TKey, TResult>(System.Collections.Generic.IEnumerable<TInner>! inner, System.Func<TSource, TKey>! outerKeySelector, System.Func<TInner, TKey>! innerKeySelector, System.Func<TSource, System.Collections.Generic.IEnumerable<TInner>!, TResult>! resultSelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Intersect(System.Collections.Generic.IEnumerable<TSource>! second) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Intersect(System.Collections.Generic.IEnumerable<TSource>! second, System.Collections.Generic.IEqualityComparer<TSource>! comparer) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Join<TInner, TKey, TResult>(System.Collections.Generic.IEnumerable<TInner>! inner, System.Func<TSource, TKey>! outerKeySelector, System.Func<TInner, TKey>! innerKeySelector, System.Func<TSource, TInner, TResult>! resultSelector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Join<TInner, TKey, TResult>(System.Collections.Generic.IEnumerable<TInner>! inner, System.Func<TSource, TKey>! outerKeySelector, System.Func<TInner, TKey>! innerKeySelector, System.Func<TSource, TInner, TResult>! resultSelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Last() -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.Last(System.Func<TSource, bool>! predicate) -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.LastOrDefault() -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.LastOrDefault(System.Func<TSource, bool>! predicate) -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.LongCount() -> long
+Dynamitey.DynamicObjects.ILinq<TSource>.LongCount(System.Func<TSource, bool>! predicate) -> long
+Dynamitey.DynamicObjects.ILinq<TSource>.Max() -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, decimal>! selector) -> decimal
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, decimal?>! selector) -> decimal?
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, double>! selector) -> double
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, double?>! selector) -> double?
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, float>! selector) -> float
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, float?>! selector) -> float?
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, int>! selector) -> int
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, int?>! selector) -> int?
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, long>! selector) -> long
+Dynamitey.DynamicObjects.ILinq<TSource>.Max(System.Func<TSource, long?>! selector) -> long?
+Dynamitey.DynamicObjects.ILinq<TSource>.Max<TResult>(System.Func<TSource, TResult>! selector) -> TResult
+Dynamitey.DynamicObjects.ILinq<TSource>.Min() -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, decimal>! selector) -> decimal
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, decimal?>! selector) -> decimal?
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, double>! selector) -> double
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, double?>! selector) -> double?
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, float>! selector) -> float
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, float?>! selector) -> float?
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, int>! selector) -> int
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, int?>! selector) -> int?
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, long>! selector) -> long
+Dynamitey.DynamicObjects.ILinq<TSource>.Min(System.Func<TSource, long?>! selector) -> long?
+Dynamitey.DynamicObjects.ILinq<TSource>.Min<TResult>(System.Func<TSource, TResult>! selector) -> TResult
+Dynamitey.DynamicObjects.ILinq<TSource>.OfType<TResult>() -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.OrderBy<TKey>(System.Func<TSource, TKey>! keySelector) -> Dynamitey.DynamicObjects.IOrderedLinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.OrderBy<TKey>(System.Func<TSource, TKey>! keySelector, System.Collections.Generic.IComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.IOrderedLinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.OrderByDescending<TKey>(System.Func<TSource, TKey>! keySelector) -> Dynamitey.DynamicObjects.IOrderedLinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.OrderByDescending<TKey>(System.Func<TSource, TKey>! keySelector, System.Collections.Generic.IComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.IOrderedLinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Reverse() -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Select<TResult>(System.Func<TSource, int, TResult>! selector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Select<TResult>(System.Func<TSource, TResult>! selector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.SelectMany<TCollection, TResult>(System.Func<TSource, int, System.Collections.Generic.IEnumerable<TCollection>!>! collectionSelector, System.Func<TSource, TCollection, TResult>! resultSelector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.SelectMany<TCollection, TResult>(System.Func<TSource, System.Collections.Generic.IEnumerable<TCollection>!>! collectionSelector, System.Func<TSource, TCollection, TResult>! resultSelector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.SelectMany<TResult>(System.Func<TSource, int, System.Collections.Generic.IEnumerable<TResult>!>! selector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.SelectMany<TResult>(System.Func<TSource, System.Collections.Generic.IEnumerable<TResult>!>! selector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.ILinq<TSource>.SequenceEqual(System.Collections.Generic.IEnumerable<TSource>! second) -> bool
+Dynamitey.DynamicObjects.ILinq<TSource>.SequenceEqual(System.Collections.Generic.IEnumerable<TSource>! second, System.Collections.Generic.IEqualityComparer<TSource>! comparer) -> bool
+Dynamitey.DynamicObjects.ILinq<TSource>.Single() -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.Single(System.Func<TSource, bool>! predicate) -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.SingleOrDefault() -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.SingleOrDefault(System.Func<TSource, bool>! predicate) -> TSource
+Dynamitey.DynamicObjects.ILinq<TSource>.Skip(int count) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.SkipWhile(System.Func<TSource, bool>! predicate) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.SkipWhile(System.Func<TSource, int, bool>! predicate) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, decimal>! selector) -> decimal
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, decimal?>! selector) -> decimal?
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, double>! selector) -> double
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, double?>! selector) -> double?
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, float>! selector) -> float
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, float?>! selector) -> float?
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, int>! selector) -> int
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, int?>! selector) -> int?
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, long>! selector) -> long
+Dynamitey.DynamicObjects.ILinq<TSource>.Sum(System.Func<TSource, long?>! selector) -> long?
+Dynamitey.DynamicObjects.ILinq<TSource>.Take(int count) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.TakeWhile(System.Func<TSource, bool>! predicate) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.TakeWhile(System.Func<TSource, int, bool>! predicate) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToArray() -> TSource[]!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToDictionary<TKey, TElement>(System.Func<TSource, TKey>! keySelector, System.Func<TSource, TElement>! elementSelector) -> System.Collections.Generic.Dictionary<TKey, TElement>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToDictionary<TKey, TElement>(System.Func<TSource, TKey>! keySelector, System.Func<TSource, TElement>! elementSelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> System.Collections.Generic.Dictionary<TKey, TElement>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToDictionary<TKey>(System.Func<TSource, TKey>! keySelector) -> System.Collections.Generic.Dictionary<TKey, TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToDictionary<TKey>(System.Func<TSource, TKey>! keySelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> System.Collections.Generic.Dictionary<TKey, TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToList() -> System.Collections.Generic.List<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToLookup<TKey, TElement>(System.Func<TSource, TKey>! keySelector, System.Func<TSource, TElement>! elementSelector) -> System.Linq.ILookup<TKey, TElement>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToLookup<TKey, TElement>(System.Func<TSource, TKey>! keySelector, System.Func<TSource, TElement>! elementSelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> System.Linq.ILookup<TKey, TElement>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToLookup<TKey>(System.Func<TSource, TKey>! keySelector) -> System.Linq.ILookup<TKey, TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.ToLookup<TKey>(System.Func<TSource, TKey>! keySelector, System.Collections.Generic.IEqualityComparer<TKey>! comparer) -> System.Linq.ILookup<TKey, TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Union(System.Collections.Generic.IEnumerable<TSource>! second) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Union(System.Collections.Generic.IEnumerable<TSource>! second, System.Collections.Generic.IEqualityComparer<TSource>! comparer) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Where(System.Func<TSource, bool>! predicate) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Where(System.Func<TSource, int, bool>! predicate) -> Dynamitey.DynamicObjects.ILinq<TSource>!
+Dynamitey.DynamicObjects.ILinq<TSource>.Zip<TSecond, TResult>(System.Collections.Generic.IEnumerable<TSecond>! second, System.Func<TSource, TSecond, TResult>! resultSelector) -> Dynamitey.DynamicObjects.ILinq<TResult>!
+Dynamitey.DynamicObjects.IOrderedLinq<TSource>
+Dynamitey.DynamicObjects.IOrderedLinq<TSource>.ThenBy<TKey>(System.Func<TSource, TKey>! keySelector) -> Dynamitey.DynamicObjects.IOrderedLinq<TSource>!
+Dynamitey.DynamicObjects.IOrderedLinq<TSource>.ThenBy<TKey>(System.Func<TSource, TKey>! keySelector, System.Collections.Generic.IComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.IOrderedLinq<TSource>!
+Dynamitey.DynamicObjects.IOrderedLinq<TSource>.ThenByDescending<TKey>(System.Func<TSource, TKey>! keySelector) -> Dynamitey.DynamicObjects.IOrderedLinq<TSource>!
+Dynamitey.DynamicObjects.IOrderedLinq<TSource>.ThenByDescending<TKey>(System.Func<TSource, TKey>! keySelector, System.Collections.Generic.IComparer<TKey>! comparer) -> Dynamitey.DynamicObjects.IOrderedLinq<TSource>!
+Dynamitey.DynamicObjects.IRegexMatch
+Dynamitey.DynamicObjects.IRegexMatch.Value.get -> string!
+Dynamitey.DynamicObjects.LateType
+Dynamitey.DynamicObjects.LateType.ConstructorForward
+Dynamitey.DynamicObjects.LateType.IsAvailable.get -> bool
+Dynamitey.DynamicObjects.LateType.LateType(string! typeName) -> void
+Dynamitey.DynamicObjects.LateType.LateType(System.Reflection.Assembly! assembly, string! typeName) -> void
+Dynamitey.DynamicObjects.LateType.LateType(System.Type! type) -> void
+Dynamitey.DynamicObjects.LateType.MissingTypeException
+Dynamitey.DynamicObjects.LateType.MissingTypeException.MissingTypeException(string! message, System.Exception! innerException) -> void
+Dynamitey.DynamicObjects.LateType.MissingTypeException.MissingTypeException(string! typename) -> void
+Dynamitey.DynamicObjects.LateType.new.get -> dynamic!
+Dynamitey.DynamicObjects.Lazy
+Dynamitey.DynamicObjects.Lazy.Lazy(object! target) -> void
+Dynamitey.DynamicObjects.Lazy<T>
+Dynamitey.DynamicObjects.Lazy<T>.Lazy(System.Func<T>! valueFactory) -> void
+Dynamitey.DynamicObjects.Lazy<T>.Lazy(System.Lazy<T>! target) -> void
+Dynamitey.DynamicObjects.LinqInstanceProxy
+Dynamitey.DynamicObjects.LinqInstanceProxy.GetEnumerator() -> System.Collections.Generic.IEnumerator<object!>!
+Dynamitey.DynamicObjects.LinqInstanceProxy.LinqInstanceProxy(dynamic! target) -> void
+Dynamitey.DynamicObjects.List
+Dynamitey.DynamicObjects.List.Add(dynamic! item) -> void
+Dynamitey.DynamicObjects.List.Clear() -> void
+Dynamitey.DynamicObjects.List.CollectionChanged -> System.Collections.Specialized.NotifyCollectionChangedEventHandler?
+Dynamitey.DynamicObjects.List.Contains(dynamic? item) -> bool
+Dynamitey.DynamicObjects.List.CopyTo(object![]! array, int arrayIndex) -> void
+Dynamitey.DynamicObjects.List.CopyTo(System.Array! array, int index) -> void
+Dynamitey.DynamicObjects.List.Count.get -> int
+Dynamitey.DynamicObjects.List.Equals(Dynamitey.DynamicObjects.List? other) -> bool
+Dynamitey.DynamicObjects.List.GetEnumerator() -> System.Collections.Generic.IEnumerator<dynamic!>!
+Dynamitey.DynamicObjects.List.IndexOf(dynamic? item) -> int
+Dynamitey.DynamicObjects.List.Insert(int index, dynamic? item) -> void
+Dynamitey.DynamicObjects.List.IsFixedSize.get -> bool
+Dynamitey.DynamicObjects.List.IsSynchronized.get -> bool
+Dynamitey.DynamicObjects.List.List(System.Collections.Generic.IEnumerable<object!>? contents = null, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object!>>? members = null) -> void
+Dynamitey.DynamicObjects.List.OverrideGettingItemMethodNames.get -> System.Func<System.Collections.Generic.IEnumerable<object!>!, System.Collections.Generic.IEnumerable<string!>!>?
+Dynamitey.DynamicObjects.List.OverrideGettingItemMethodNames.set -> void
+Dynamitey.DynamicObjects.List.Remove(dynamic! item) -> bool
+Dynamitey.DynamicObjects.List.RemoveAt(int index) -> void
+Dynamitey.DynamicObjects.List.SyncRoot.get -> object!
+Dynamitey.DynamicObjects.List.this[int index].get -> dynamic!
+Dynamitey.DynamicObjects.List.this[int index].set -> void
+Dynamitey.DynamicObjects.List._list -> System.Collections.Generic.IList<object!>!
+Dynamitey.DynamicObjects.Mimic
+Dynamitey.DynamicObjects.Mimic.Mimic() -> void
+Dynamitey.DynamicObjects.PropretySpecType
+Dynamitey.DynamicObjects.PropretySpecType.PropertySpec.get -> System.Collections.Generic.IDictionary<string!, System.Type!>!
+Dynamitey.DynamicObjects.PropretySpecType.PropretySpecType(System.Collections.Generic.IDictionary<string!, System.Type!>! propertySpec) -> void
+Dynamitey.DynamicObjects.RealType
+Dynamitey.DynamicObjects.RealType.RealType(System.Type! type) -> void
+Dynamitey.DynamicObjects.Recorder
+Dynamitey.DynamicObjects.Recorder.Recorder() -> void
+Dynamitey.DynamicObjects.Recorder.Recorder(object! target) -> void
+Dynamitey.DynamicObjects.Recorder.Recording.get -> System.Collections.Generic.IList<Dynamitey.Invocation!>!
+Dynamitey.DynamicObjects.Recorder.Recording.set -> void
+Dynamitey.DynamicObjects.Recorder.ReplayOn<T>(T target) -> T
+Dynamitey.DynamicObjects.RegexMatch
+Dynamitey.DynamicObjects.RegexMatch.RegexMatch(System.Text.RegularExpressions.Match! match, System.Text.RegularExpressions.Regex? regex = null) -> void
+Dynamitey.DynamicObjects.RegexMatch.this[int value].get -> string?
+Dynamitey.DynamicObjects.RegexMatch.this[string! value].get -> string?
+Dynamitey.Expando
+Dynamitey.Expando.Expando() -> void
+Dynamitey.FluentRegex
+Dynamitey.Internal.Compat.Net40
+Dynamitey.Internal.Curry
+Dynamitey.Internal.InvokeSetters
+Dynamitey.Internal.Optimization.Util
+Dynamitey.Invocation
+Dynamitey.Invocation.Args.get -> object?[]?
+Dynamitey.Invocation.Args.set -> void
+Dynamitey.Invocation.Equals(Dynamitey.Invocation? other) -> bool
+Dynamitey.Invocation.Invocation(Dynamitey.InvocationKind kind, Dynamitey.String_OR_InvokeMemberName? name, params object?[]? storedArgs) -> void
+Dynamitey.Invocation.Kind.get -> Dynamitey.InvocationKind
+Dynamitey.Invocation.Kind.set -> void
+Dynamitey.Invocation.Name.get -> Dynamitey.String_OR_InvokeMemberName?
+Dynamitey.Invocation.Name.set -> void
+Dynamitey.InvocationKind
+Dynamitey.InvocationKind.AddAssign = 10 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.Constructor = 9 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.Convert = 1 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.Get = 2 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.GetIndex = 4 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.Invoke = 13 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.InvokeAction = 14 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.InvokeMember = 6 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.InvokeMemberAction = 7 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.InvokeMemberUnknown = 8 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.InvokeUnknown = 15 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.IsEvent = 12 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.NotSet = 0 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.Set = 3 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.SetIndex = 5 -> Dynamitey.InvocationKind
+Dynamitey.InvocationKind.SubtractAssign = 11 -> Dynamitey.InvocationKind
+Dynamitey.InvokeArg
+Dynamitey.InvokeArg.InvokeArg(string! name, object? value) -> void
+Dynamitey.InvokeArg.Name.get -> string!
+Dynamitey.InvokeArg.Value.get -> object?
+Dynamitey.InvokeArg<T>
+Dynamitey.InvokeArg<T>.InvokeArg(string! name, object? value) -> void
+Dynamitey.InvokeContext
+Dynamitey.InvokeContext.Context.get -> System.Type!
+Dynamitey.InvokeContext.Context.set -> void
+Dynamitey.InvokeContext.InvokeContext(object! target, object? context) -> void
+Dynamitey.InvokeContext.InvokeContext(System.Type! target, bool staticContext, object? context) -> void
+Dynamitey.InvokeContext.StaticContext.get -> bool
+Dynamitey.InvokeContext.StaticContext.set -> void
+Dynamitey.InvokeContext.Target.get -> object!
+Dynamitey.InvokeContext.Target.set -> void
+Dynamitey.InvokeMemberName
+Dynamitey.InvokeMemberName.Equals(Dynamitey.InvokeMemberName? other) -> bool
+Dynamitey.InvokeMemberName.InvokeMemberName(string! name, bool isSpecialName) -> void
+Dynamitey.InvokeMemberName.InvokeMemberName(string! name, params System.Type![]? genericArgs) -> void
+Dynamitey.IPartialApply
+Dynamitey.PartialApply
+Dynamitey.PartialApply.Args.get -> object?[]!
+Dynamitey.PartialApply.InvocationKind.get -> Dynamitey.InvocationKind
+Dynamitey.PartialApply.MemberName.get -> string?
+Dynamitey.PartialApply.PartialApply(object! target, object?[]! args, string? memberName = null, int? totalCount = null, Dynamitey.InvocationKind? invocationKind = null) -> void
+Dynamitey.PartialApply.Target.get -> object!
+Dynamitey.PartialApply.TotalArgCount.get -> int?
+Dynamitey.Return<TR>
+Dynamitey.ReturnVoid
+Dynamitey.StaticContext
+Dynamitey.StaticContext.StaticContext(System.Type! target) -> void
+Dynamitey.String_OR_InvokeMemberName
+Dynamitey.String_OR_InvokeMemberName.GenericArgs.get -> System.Type![]?
+Dynamitey.String_OR_InvokeMemberName.GenericArgs.set -> void
+Dynamitey.String_OR_InvokeMemberName.IsSpecialName.get -> bool
+Dynamitey.String_OR_InvokeMemberName.IsSpecialName.set -> void
+Dynamitey.String_OR_InvokeMemberName.Name.get -> string!
+Dynamitey.String_OR_InvokeMemberName.Name.set -> void
+Dynamitey.String_OR_InvokeMemberName.String_OR_InvokeMemberName() -> void
+Dynamitey.ThisAction
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6>
+Dynamitey.ThisAction<T1, T2, T3, T4, T5>
+Dynamitey.ThisAction<T1, T2, T3, T4>
+Dynamitey.ThisAction<T1, T2, T3>
+Dynamitey.ThisAction<T1, T2>
+Dynamitey.ThisAction<T1>
+Dynamitey.ThisDelegate
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, T5, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, T4, TResult>
+Dynamitey.ThisFunc<T1, T2, T3, TResult>
+Dynamitey.ThisFunc<T1, T2, TResult>
+Dynamitey.ThisFunc<T1, TResult>
+Dynamitey.ThisFunc<TResult>
+Dynamitey.Tupler
+override Dynamitey.Activate<TObjectPrototype>.Create() -> dynamic!
+override Dynamitey.CacheableInvocation.Equals(object? obj) -> bool
+override Dynamitey.CacheableInvocation.GetHashCode() -> int
+override Dynamitey.CacheableInvocation.Invoke(object! target, params object?[]? args) -> object?
+override Dynamitey.DynamicObjects.AggreType.GetContainedTypes() -> System.Type![]!
+override Dynamitey.DynamicObjects.AggreType.GetMember(string! binderName) -> System.Collections.Generic.IEnumerable<System.Reflection.MemberInfo!>!
+override Dynamitey.DynamicObjects.AggreType.GetMemberNames() -> System.Collections.Generic.IEnumerable<string!>!
+override Dynamitey.DynamicObjects.BaseDictionary.Equals(object? obj) -> bool
+override Dynamitey.DynamicObjects.BaseDictionary.GetDynamicMemberNames() -> System.Collections.Generic.IEnumerable<string!>!
+override Dynamitey.DynamicObjects.BaseDictionary.GetHashCode() -> int
+override Dynamitey.DynamicObjects.BaseDictionary.ToString() -> string!
+override Dynamitey.DynamicObjects.BaseDictionary.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.BaseDictionary.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.BaseDictionary.TrySetMember(System.Dynamic.SetMemberBinder! binder, object? value) -> bool
+override Dynamitey.DynamicObjects.BaseFactory.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.BaseFactory.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.BaseForwarder.Equals(object? obj) -> bool
+override Dynamitey.DynamicObjects.BaseForwarder.GetDynamicMemberNames() -> System.Collections.Generic.IEnumerable<string!>!
+override Dynamitey.DynamicObjects.BaseForwarder.GetHashCode() -> int
+override Dynamitey.DynamicObjects.BaseForwarder.TryGetIndex(System.Dynamic.GetIndexBinder! binder, object?[]? indexes, out object! result) -> bool
+override Dynamitey.DynamicObjects.BaseForwarder.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.BaseForwarder.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.BaseForwarder.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.BaseForwarder.TrySetIndex(System.Dynamic.SetIndexBinder! binder, object?[]? indexes, object? value) -> bool
+override Dynamitey.DynamicObjects.BaseForwarder.TrySetMember(System.Dynamic.SetMemberBinder! binder, object? value) -> bool
+override Dynamitey.DynamicObjects.BaseSingleInstancesFactory.GetInstanceForDynamicMember(string! memberName, params object?[]! args) -> object?
+override Dynamitey.DynamicObjects.Builder<TObjectProtoType>.BuilderTrampoline<TInnerObjectProtoType>.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Builder<TObjectProtoType>.SetupTrampoline<TInnerObjectProtoType>.TryInvoke(System.Dynamic.InvokeBinder! binder, dynamic?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Builder<TObjectProtoType>.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Builder<TObjectProtoType>.TrySetMember(System.Dynamic.SetMemberBinder! binder, dynamic? value) -> bool
+override Dynamitey.DynamicObjects.ChainableDictionary.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Dummy.TryGetIndex(System.Dynamic.GetIndexBinder! binder, object?[]? indexes, out object! result) -> bool
+override Dynamitey.DynamicObjects.Dummy.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.Dummy.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Dummy.TrySetIndex(System.Dynamic.SetIndexBinder! binder, object?[]? indexes, object? value) -> bool
+override Dynamitey.DynamicObjects.Dummy.TrySetMember(System.Dynamic.SetMemberBinder! binder, object? value) -> bool
+override Dynamitey.DynamicObjects.ExtensionToInstanceProxy.Invoker.TryGetIndex(System.Dynamic.GetIndexBinder! binder, object?[]? indexes, out object! result) -> bool
+override Dynamitey.DynamicObjects.ExtensionToInstanceProxy.Invoker.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.ExtensionToInstanceProxy.Invoker.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.ExtensionToInstanceProxy.OverloadInvoker.TryGetIndex(System.Dynamic.GetIndexBinder! binder, object?[]? indexes, out object! result) -> bool
+override Dynamitey.DynamicObjects.ExtensionToInstanceProxy.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.ExtensionToInstanceProxy.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.FluentStringLookup.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.FluentStringLookup.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Get.TryGetIndex(System.Dynamic.GetIndexBinder! binder, object?[]? indexes, out object! result) -> bool
+override Dynamitey.DynamicObjects.Get.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.Get.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.LateType.CallTarget.get -> object!
+override Dynamitey.DynamicObjects.LateType.ConstructorForward.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Lazy<T>.CallTarget.get -> object?
+override Dynamitey.DynamicObjects.Lazy<T>.GetDynamicMemberNames() -> System.Collections.Generic.IEnumerable<string!>!
+override Dynamitey.DynamicObjects.LinqInstanceProxy.CreateSelf(object! target, System.Type! extendedType, System.Type![]! staticTypes, System.Type![]? instanceHints) -> Dynamitey.DynamicObjects.ExtensionToInstanceProxy!
+override Dynamitey.DynamicObjects.List.Equals(object? obj) -> bool
+override Dynamitey.DynamicObjects.List.GetHashCode() -> int
+override Dynamitey.DynamicObjects.Mimic.TryBinaryOperation(System.Dynamic.BinaryOperationBinder! binder, object! arg, out object? result) -> bool
+override Dynamitey.DynamicObjects.Mimic.TryConvert(System.Dynamic.ConvertBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.Mimic.TryCreateInstance(System.Dynamic.CreateInstanceBinder! binder, object?[]? args, out object! result) -> bool
+override Dynamitey.DynamicObjects.Mimic.TryDeleteIndex(System.Dynamic.DeleteIndexBinder! binder, object?[]? indexes) -> bool
+override Dynamitey.DynamicObjects.Mimic.TryDeleteMember(System.Dynamic.DeleteMemberBinder! binder) -> bool
+override Dynamitey.DynamicObjects.Mimic.TryGetIndex(System.Dynamic.GetIndexBinder! binder, object?[]? indexes, out object! result) -> bool
+override Dynamitey.DynamicObjects.Mimic.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.Mimic.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Mimic.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Mimic.TrySetIndex(System.Dynamic.SetIndexBinder! binder, object?[]? indexes, object? value) -> bool
+override Dynamitey.DynamicObjects.Mimic.TrySetMember(System.Dynamic.SetMemberBinder! binder, object? value) -> bool
+override Dynamitey.DynamicObjects.Mimic.TryUnaryOperation(System.Dynamic.UnaryOperationBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.PropretySpecType.GetContainedTypes() -> System.Type![]!
+override Dynamitey.DynamicObjects.PropretySpecType.GetMember(string! binderName) -> System.Collections.Generic.IEnumerable<System.Reflection.MemberInfo!>!
+override Dynamitey.DynamicObjects.PropretySpecType.GetMemberNames() -> System.Collections.Generic.IEnumerable<string!>!
+override Dynamitey.DynamicObjects.RealType.GetContainedTypes() -> System.Type![]!
+override Dynamitey.DynamicObjects.RealType.GetMember(string! binderName) -> System.Collections.Generic.IEnumerable<System.Reflection.MemberInfo!>!
+override Dynamitey.DynamicObjects.RealType.GetMemberNames() -> System.Collections.Generic.IEnumerable<string!>!
+override Dynamitey.DynamicObjects.Recorder.TryGetIndex(System.Dynamic.GetIndexBinder! binder, object?[]? indexes, out object! result) -> bool
+override Dynamitey.DynamicObjects.Recorder.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.DynamicObjects.Recorder.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.DynamicObjects.Recorder.TrySetIndex(System.Dynamic.SetIndexBinder! binder, object?[]? indexes, object? value) -> bool
+override Dynamitey.DynamicObjects.Recorder.TrySetMember(System.Dynamic.SetMemberBinder! binder, object? value) -> bool
+override Dynamitey.DynamicObjects.RegexMatch.GetDynamicMemberNames() -> System.Collections.Generic.IEnumerable<string!>!
+override Dynamitey.DynamicObjects.RegexMatch.ToString() -> string!
+override Dynamitey.DynamicObjects.RegexMatch.TryGetMember(System.Dynamic.GetMemberBinder! binder, out object? result) -> bool
+override Dynamitey.Internal.Curry.TryBinaryOperation(System.Dynamic.BinaryOperationBinder! binder, object! arg, out object? result) -> bool
+override Dynamitey.Internal.Curry.TryConvert(System.Dynamic.ConvertBinder! binder, out object? result) -> bool
+override Dynamitey.Internal.Curry.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.Internal.Curry.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
+override Dynamitey.Internal.InvokeSetters.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? rawArgs, out object? result) -> bool
+override Dynamitey.Invocation.Equals(object? obj) -> bool
+override Dynamitey.Invocation.GetHashCode() -> int
+override Dynamitey.InvokeMemberName.Equals(object? obj) -> bool
+override Dynamitey.InvokeMemberName.GetHashCode() -> int
+override Dynamitey.PartialApply.TryBinaryOperation(System.Dynamic.BinaryOperationBinder! binder, object! arg, out object? result) -> bool
+override Dynamitey.PartialApply.TryConvert(System.Dynamic.ConvertBinder! binder, out object? result) -> bool
+override Dynamitey.PartialApply.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
+readonly Dynamitey.DynamicObjects.BaseSingleInstancesFactory._hashFactoryTypes -> System.Collections.Generic.Dictionary<string!, dynamic!>!
+readonly Dynamitey.DynamicObjects.BaseSingleInstancesFactory._lockTable -> object!
+readonly Dynamitey.DynamicObjects.RealType.TargetType -> System.Type!
+static Dynamitey.Build.NewList.get -> dynamic!
+static Dynamitey.Build.NewObject.get -> dynamic!
+static Dynamitey.Build<TObjectPrototype>.NewList.get -> dynamic!
+static Dynamitey.Build<TObjectPrototype>.NewObject.get -> dynamic!
+static Dynamitey.Builder.New() -> Dynamitey.DynamicObjects.IBuilder!
+static Dynamitey.Builder.New<TObjectPrototype>() -> Dynamitey.DynamicObjects.IBuilder!
+static Dynamitey.CacheableInvocation.CreateCall(Dynamitey.InvocationKind kind, Dynamitey.String_OR_InvokeMemberName? name = null, System.Dynamic.CallInfo? callInfo = null, object? context = null) -> Dynamitey.CacheableInvocation!
+static Dynamitey.CacheableInvocation.CreateConvert(System.Type! convertType, bool convertExplicit = false) -> Dynamitey.CacheableInvocation!
+static Dynamitey.Dynamic.ApplyEquivalentType(Dynamitey.DynamicObjects.IEquivalentType! target, params System.Type![]! types) -> void
+static Dynamitey.Dynamic.AwaitResult(object? task) -> System.Threading.Tasks.Task<object?>!
+static Dynamitey.Dynamic.ClearCaches() -> void
+static Dynamitey.Dynamic.CoerceConvert(object? target, System.Type! type) -> dynamic?
+static Dynamitey.Dynamic.CoerceToDelegate(object! invokeableObject, System.Type! delegateType) -> dynamic?
+static Dynamitey.Dynamic.ConvertAll<T>(this System.Collections.IEnumerable! enumerable, bool explict = false) -> System.Collections.Generic.IEnumerable<T>!
+static Dynamitey.Dynamic.ConvertEach<T>(this System.Collections.IEnumerable! enumerable, bool explicit = false) -> System.Collections.Generic.IEnumerable<T>!
+static Dynamitey.Dynamic.CreateCallSite(System.Type! delegateType, System.Runtime.CompilerServices.CallSiteBinder! binder, Dynamitey.String_OR_InvokeMemberName! name, System.Type! context, string?[]? argNames = null, bool staticContext = false, bool isEvent = false) -> System.Runtime.CompilerServices.CallSite!
+static Dynamitey.Dynamic.CreateCallSite<T>(System.Runtime.CompilerServices.CallSiteBinder! binder, Dynamitey.String_OR_InvokeMemberName! name, System.Type! context, string?[]? argNames = null, bool staticContext = false, bool isEvent = false) -> System.Runtime.CompilerServices.CallSite<T!>!
+static Dynamitey.Dynamic.Curry(object! target, int? totalArgCount = null) -> dynamic!
+static Dynamitey.Dynamic.Curry(System.Delegate! target) -> dynamic!
+static Dynamitey.Dynamic.FastDynamicInvoke(this System.Delegate! del, params object?[]! args) -> object?
+static Dynamitey.Dynamic.GenericDelegateType(int paramCount, bool returnVoid = false) -> System.Type!
+static Dynamitey.Dynamic.GetMemberNames(object! target, bool dynamicOnly = false) -> System.Collections.Generic.IEnumerable<string!>!
+static Dynamitey.Dynamic.Invoke(object! target, params object?[]! args) -> dynamic?
+static Dynamitey.Dynamic.InvokeAction(object! target, params object?[]! args) -> void
+static Dynamitey.Dynamic.InvokeAddAssignMember(object! target, string! name, object? value) -> void
+static Dynamitey.Dynamic.InvokeBinaryOperator(dynamic! leftArg, System.Linq.Expressions.ExpressionType op, dynamic! rightArg) -> dynamic!
+static Dynamitey.Dynamic.InvokeCallSite(System.Runtime.CompilerServices.CallSite! callSite, object! target, params object?[]! args) -> dynamic?
+static Dynamitey.Dynamic.InvokeConstructor(System.Type! type, params object?[]! args) -> dynamic?
+static Dynamitey.Dynamic.InvokeConvert(object! target, System.Type! type, bool explicit = false) -> dynamic?
+static Dynamitey.Dynamic.InvokeGet(object! target, string! name) -> dynamic?
+static Dynamitey.Dynamic.InvokeGetChain(object! target, string! propertyChain) -> dynamic?
+static Dynamitey.Dynamic.InvokeGetIndex(object! target, params object?[]! indexes) -> dynamic?
+static Dynamitey.Dynamic.InvokeIsEvent(object! target, string! name) -> bool
+static Dynamitey.Dynamic.InvokeMember(object! target, Dynamitey.String_OR_InvokeMemberName! name, params object?[]! args) -> dynamic?
+static Dynamitey.Dynamic.InvokeMemberAction(object! target, Dynamitey.String_OR_InvokeMemberName! name, params object?[]! args) -> void
+static Dynamitey.Dynamic.InvokeMemberAsync(object! target, Dynamitey.String_OR_InvokeMemberName! name, params object?[]! args) -> System.Threading.Tasks.Task<object?>!
+static Dynamitey.Dynamic.InvokeSet(object! target, string! name, object? value) -> object?
+static Dynamitey.Dynamic.InvokeSetAll.get -> dynamic!
+static Dynamitey.Dynamic.InvokeSetChain(object! target, string! propertyChain, object! value) -> object!
+static Dynamitey.Dynamic.InvokeSetIndex(object! target, params object?[]! indexesThenValue) -> object?
+static Dynamitey.Dynamic.InvokeSetValueOnIndexes(object! target, object? value, params object?[]! indexes) -> object?
+static Dynamitey.Dynamic.InvokeSubtractAssignMember(object! target, string! name, object? value) -> void
+static Dynamitey.Dynamic.InvokeUnaryOpartor(System.Linq.Expressions.ExpressionType op, dynamic! arg) -> dynamic!
+static Dynamitey.Dynamic.InvokeUnaryOperator(System.Linq.Expressions.ExpressionType op, dynamic! arg) -> dynamic!
+static Dynamitey.Dynamic.IsDBNull(object? value) -> bool
+static Dynamitey.Dynamic.Linq(object! enumerable) -> dynamic!
+static Dynamitey.DynamicObjects.AggreType.MakeTypeAppendable(Dynamitey.DynamicObjects.IEquivalentType! type) -> Dynamitey.DynamicObjects.AggreType!
+static Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker.operator +(Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker! left, object! right) -> Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker!
+static Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker.operator -(Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker! left, object! right) -> Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker!
+static Dynamitey.DynamicObjects.FauxType.implicit operator Dynamitey.DynamicObjects.FauxType!(System.Type! type) -> Dynamitey.DynamicObjects.FauxType!
+static Dynamitey.DynamicObjects.Get.Create(object! target) -> dynamic!
+static Dynamitey.DynamicObjects.LateType.FindType(string! typeName, System.Reflection.Assembly? assembly = null) -> System.Type?
+static Dynamitey.DynamicObjects.Lazy.Create<T>(System.Func<T>! valueFactory) -> dynamic!
+static Dynamitey.DynamicObjects.Lazy.Create<T>(System.Lazy<T>! target) -> dynamic!
+static Dynamitey.DynamicObjects.RealType.implicit operator Dynamitey.DynamicObjects.RealType!(System.Type! type) -> Dynamitey.DynamicObjects.RealType!
+static Dynamitey.DynamicObjects.RealType.implicit operator System.Type!(Dynamitey.DynamicObjects.RealType! type) -> System.Type!
+static Dynamitey.Expando.New.get -> dynamic!
+static Dynamitey.FluentRegex.FluentFilter(this System.Collections.Generic.IEnumerable<string!>! list, System.Text.RegularExpressions.Regex! regex) -> System.Collections.Generic.IEnumerable<dynamic!>!
+static Dynamitey.FluentRegex.FluentMatch(this System.Text.RegularExpressions.Regex! regex, string! inputString) -> dynamic?
+static Dynamitey.FluentRegex.FluentMatches(this System.Text.RegularExpressions.Regex! regex, string! inputString) -> System.Collections.Generic.IEnumerable<dynamic!>!
+static Dynamitey.FluentRegex.Match(string! inputString, System.Text.RegularExpressions.Regex! regex) -> dynamic?
+static Dynamitey.FluentRegex.Matches(string! inputString, System.Text.RegularExpressions.Regex! regex) -> System.Collections.Generic.IEnumerable<dynamic!>!
+static Dynamitey.Internal.Compat.Net40.GetDefaultThreadCurrentCulture() -> System.Globalization.CultureInfo?
+static Dynamitey.Internal.Curry.operator |(dynamic! argument, Dynamitey.Internal.Curry! function) -> dynamic!
+static Dynamitey.Internal.Optimization.Util.FixContext(this System.Type! context) -> System.Type!
+static Dynamitey.Internal.Optimization.Util.GetTargetContext(this object! target, out System.Type! context, out bool staticContext) -> object!
+static Dynamitey.Internal.Optimization.Util.IsAnonymousType(object! target) -> bool
+static Dynamitey.Internal.Optimization.Util.NameArgsIfNecessary(System.Dynamic.CallInfo! callInfo, object?[]! args) -> object?[]!
+static Dynamitey.Invocation.Create(Dynamitey.InvocationKind kind, Dynamitey.String_OR_InvokeMemberName? name, params object?[]? storedArgs) -> Dynamitey.Invocation!
+static Dynamitey.InvokeArg.explicit operator Dynamitey.InvokeArg!(System.Collections.Generic.KeyValuePair<string!, object!> pair) -> Dynamitey.InvokeArg!
+static Dynamitey.InvokeArg<T>.explicit operator Dynamitey.InvokeArg<T>!(System.Collections.Generic.KeyValuePair<string!, T> pair) -> Dynamitey.InvokeArg<T>!
+static Dynamitey.InvokeMemberName.implicit operator Dynamitey.InvokeMemberName!(string! name) -> Dynamitey.InvokeMemberName!
+static Dynamitey.PartialApply.operator |(dynamic! argument, Dynamitey.PartialApply! function) -> dynamic!
+static Dynamitey.Return<TR>.Arguments(System.Func<TR>! del) -> System.Func<TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7, T8>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, T8, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6, T7>(System.Func<T1, T2, T3, T4, T5, T6, T7, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, T7, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5, T6>(System.Func<T1, T2, T3, T4, T5, T6, TR>! del) -> System.Func<T1, T2, T3, T4, T5, T6, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4, T5>(System.Func<T1, T2, T3, T4, T5, TR>! del) -> System.Func<T1, T2, T3, T4, T5, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3, T4>(System.Func<T1, T2, T3, T4, TR>! del) -> System.Func<T1, T2, T3, T4, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2, T3>(System.Func<T1, T2, T3, TR>! del) -> System.Func<T1, T2, T3, TR>!
+static Dynamitey.Return<TR>.Arguments<T1, T2>(System.Func<T1, T2, TR>! del) -> System.Func<T1, T2, TR>!
+static Dynamitey.Return<TR>.Arguments<T1>(System.Func<T1, TR>! del) -> System.Func<T1, TR>!
+static Dynamitey.Return<TR>.ThisAndArguments(Dynamitey.ThisFunc<TR>! del) -> Dynamitey.ThisFunc<TR>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8, T9>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7, T8>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6, T7>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5, T6>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5, T6>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4, T5>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4, T5>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3, T4>(Dynamitey.ThisFunc<TR, T1, T2, T3, T4>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3, T4>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2, T3>(Dynamitey.ThisFunc<TR, T1, T2, T3>! del) -> Dynamitey.ThisFunc<TR, T1, T2, T3>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1, T2>(Dynamitey.ThisFunc<TR, T1, T2>! del) -> Dynamitey.ThisFunc<TR, T1, T2>!
+static Dynamitey.Return<TR>.ThisAndArguments<T1>(Dynamitey.ThisFunc<TR, T1>! del) -> Dynamitey.ThisFunc<TR, T1>!
+static Dynamitey.ReturnVoid.Arguments(System.Action! del) -> System.Action!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7, T8, T9>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7, T8>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7, T8>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6, T7>(System.Action<T1, T2, T3, T4, T5, T6, T7>! del) -> System.Action<T1, T2, T3, T4, T5, T6, T7>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5, T6>(System.Action<T1, T2, T3, T4, T5, T6>! del) -> System.Action<T1, T2, T3, T4, T5, T6>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4, T5>(System.Action<T1, T2, T3, T4, T5>! del) -> System.Action<T1, T2, T3, T4, T5>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3, T4>(System.Action<T1, T2, T3, T4>! del) -> System.Action<T1, T2, T3, T4>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2, T3>(System.Action<T1, T2, T3>! del) -> System.Action<T1, T2, T3>!
+static Dynamitey.ReturnVoid.Arguments<T1, T2>(System.Action<T1, T2>! del) -> System.Action<T1, T2>!
+static Dynamitey.ReturnVoid.Arguments<T1>(System.Action<T1>! del) -> System.Action<T1>!
+static Dynamitey.ReturnVoid.ThisAndArguments(Dynamitey.ThisAction! del) -> Dynamitey.ThisAction!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8, T9>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7, T8>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6, T7>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5, T6>(Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4, T5>(Dynamitey.ThisAction<T1, T2, T3, T4, T5>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4, T5>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4>(Dynamitey.ThisAction<T1, T2, T3, T4>! del) -> Dynamitey.ThisAction<T1, T2, T3, T4>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3>(Dynamitey.ThisAction<T1, T2, T3>! del) -> Dynamitey.ThisAction<T1, T2, T3>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2>(Dynamitey.ThisAction<T1, T2>! del) -> Dynamitey.ThisAction<T1, T2>!
+static Dynamitey.ReturnVoid.ThisAndArguments<T1>(Dynamitey.ThisAction<T1>! del) -> Dynamitey.ThisAction<T1>!
+static Dynamitey.StaticContext.explicit operator Dynamitey.StaticContext!(System.Type! type) -> Dynamitey.StaticContext!
+static Dynamitey.String_OR_InvokeMemberName.implicit operator Dynamitey.String_OR_InvokeMemberName!(string? name) -> Dynamitey.String_OR_InvokeMemberName!
+static Dynamitey.ThisDelegate.IsSpecialThisDelegate(this System.Delegate! del) -> bool
+static Dynamitey.Tupler.Create(params object![]! args) -> dynamic!
+static Dynamitey.Tupler.First(object! tuple) -> dynamic!
+static Dynamitey.Tupler.Index(object! tuple, int index) -> dynamic!
+static Dynamitey.Tupler.IsTuple(object? target) -> bool
+static Dynamitey.Tupler.Last(object! tuple) -> dynamic!
+static Dynamitey.Tupler.Second(object! tuple) -> dynamic!
+static Dynamitey.Tupler.Size(object! tuple) -> int
+static Dynamitey.Tupler.ToList(object! tuple) -> System.Collections.Generic.IList<dynamic!>!
+static Dynamitey.Tupler.ToTuple(this System.Collections.IEnumerable! enumerable) -> dynamic!
+static readonly Dynamitey.Internal.Optimization.Util.IsMono -> bool
+static readonly Dynamitey.Invocation.ConstructorBinderName -> string!
+static readonly Dynamitey.Invocation.ExplicitConvertBinderName -> string!
+static readonly Dynamitey.Invocation.ImplicitConvertBinderName -> string!
+static readonly Dynamitey.Invocation.IndexBinderName -> string!
+static readonly Dynamitey.InvokeArg.Create -> System.Func<string!, object!, Dynamitey.InvokeArg!>!
+static readonly Dynamitey.InvokeContext.CreateContext -> System.Func<object!, object?, Dynamitey.InvokeContext!>!
+static readonly Dynamitey.InvokeContext.CreateStatic -> System.Func<System.Type!, Dynamitey.InvokeContext!>!
+static readonly Dynamitey.InvokeContext.CreateStaticWithContext -> System.Func<System.Type!, object?, Dynamitey.InvokeContext!>!
+static readonly Dynamitey.InvokeMemberName.Create -> System.Func<string!, System.Type![]?, Dynamitey.InvokeMemberName!>!
+static readonly Dynamitey.InvokeMemberName.CreateSpecialName -> System.Func<string!, Dynamitey.InvokeMemberName!>!
+virtual Dynamitey.Activate.Arguments.get -> System.Func<object![]!>!
+virtual Dynamitey.Activate.Create() -> dynamic!
+virtual Dynamitey.Activate.Type.get -> System.Type!
+virtual Dynamitey.DynamicObjects.BaseDictionary.IsReadOnly.get -> bool
+virtual Dynamitey.DynamicObjects.BaseDictionary.OnPropertyChanged(string! key) -> void
+virtual Dynamitey.DynamicObjects.BaseFactory.CreateType(System.Type! type, params object?[]! args) -> object?
+virtual Dynamitey.DynamicObjects.BaseFactory.GetInstanceForDynamicMember(string! memberName, params object?[]! args) -> object?
+virtual Dynamitey.DynamicObjects.BaseForwarder.CallTarget.get -> object?
+virtual Dynamitey.DynamicObjects.ExtensionToInstanceProxy.CreateSelf(object! target, System.Type! extendedType, System.Type![]! staticTypes, System.Type![]? instanceHints) -> Dynamitey.DynamicObjects.ExtensionToInstanceProxy!
+virtual Dynamitey.DynamicObjects.FauxType.ContainsType(System.Type! type) -> bool
+virtual Dynamitey.DynamicObjects.List.GetRepresentedItem() -> dynamic?
+virtual Dynamitey.DynamicObjects.List.OnCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedAction action, object? oldItem = null, object? newItem = null, int? oldIndex = null, int? newIndex = null) -> void
+virtual Dynamitey.Invocation.Invoke(object! target, params object?[]? args) -> object?
+virtual Dynamitey.Invocation.InvokeWithStoredArgs(object! target) -> object?
+virtual Dynamitey.ThisAction.Invoke(dynamic! this) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7, T8>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6, T7>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5, T6>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4, T5>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3, T4>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> void
+virtual Dynamitey.ThisAction<T1, T2, T3>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3) -> void
+virtual Dynamitey.ThisAction<T1, T2>.Invoke(dynamic! this, T1 arg1, T2 arg2) -> void
+virtual Dynamitey.ThisAction<T1>.Invoke(dynamic! this, T1 arg1) -> void
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, T8, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, T7, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, T6, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, T5, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, T4, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, T3, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2, T3 arg3) -> TResult
+virtual Dynamitey.ThisFunc<T1, T2, TResult>.Invoke(dynamic! this, T1 arg1, T2 arg2) -> TResult
+virtual Dynamitey.ThisFunc<T1, TResult>.Invoke(dynamic! this, T1 arg1) -> TResult
+virtual Dynamitey.ThisFunc<TResult>.Invoke(dynamic! this) -> TResult
