@@ -508,6 +508,146 @@ namespace Dynamitey.SupportLibrary
         bool Func<T>(out T result);
     }
 
+    /// <summary>
+    /// For issue #14's investigation matrix. A base class used as a generic
+    /// constraint (<c>where T : GenericConstraintBase</c>) below.
+    /// </summary>
+    public class GenericConstraintBase
+    {
+        public virtual string Describe()
+        {
+            return "base";
+        }
+    }
+
+    /// <summary>
+    /// For issue #14's investigation matrix - a concrete subclass to satisfy
+    /// <c>where T : GenericConstraintBase</c>.
+    /// </summary>
+    public class GenericConstraintDerived : GenericConstraintBase
+    {
+        public override string Describe()
+        {
+            return "derived";
+        }
+    }
+
+    /// <summary>
+    /// For issue #14: upstream #31 reported that invoking a generic method threw,
+    /// and that raw reflection's MakeGenericMethod worked around it. The reporter
+    /// never sent a repro. The maintainer's reply said inference from argument
+    /// types works, which by omission suggests the untested case is explicit
+    /// generic arguments supplied via <see cref="InvokeMemberName"/> - especially
+    /// where inference cannot determine the type argument at all (e.g. a method
+    /// generic only in its return type). This class and
+    /// <see cref="GenericMethodsGenericTypeTestClass{T}"/> below cover that matrix:
+    /// return-type-only generics, uninferable generics, multiple type parameters
+    /// where only some are inferable, constrained type parameters, value vs.
+    /// reference type arguments, and a generic method with params.
+    /// </summary>
+    public class GenericMethodsTestClass
+    {
+        // Reaches InternalGenericMethodsTestClass across the assembly boundary
+        // without widening its accessibility - same pattern as
+        // PublicType.InternalInstance in Tests/PrivateTest.cs's coverage.
+        public static object InternalGenericInstance => new InternalGenericMethodsTestClass();
+
+        // Generic only in the return type - inference is impossible; the type
+        // argument MUST be supplied explicitly.
+        public T Create<T>() where T : new()
+        {
+            return new T();
+        }
+
+        public static T StaticCreate<T>() where T : new()
+        {
+            return new T();
+        }
+
+        // No arguments at all to infer from.
+        public T Default<T>()
+        {
+            return default(T);
+        }
+
+        // Inference CAN determine T from the argument - the "works" case the
+        // maintainer described - but the type argument can also be supplied
+        // explicitly, which should agree with inference.
+        public T Echo<T>(T arg)
+        {
+            return arg;
+        }
+
+        // Two type parameters: T1 is inferable from the argument, TR is not
+        // (return-type only) and must be supplied explicitly.
+        public TR Combine<T1, TR>(T1 arg) where TR : new()
+        {
+            return new TR();
+        }
+
+        // where T : class
+        public T EchoClass<T>(T arg) where T : class
+        {
+            return arg;
+        }
+
+        // where T : new()
+        public T CreateNew<T>() where T : new()
+        {
+            return new T();
+        }
+
+        // where T : SomeBase
+        public string DescribeConstrained<T>() where T : GenericConstraintBase, new()
+        {
+            return new T().Describe();
+        }
+
+        // Generic method with params.
+        public string Join<T>(params T[] items)
+        {
+            return string.Join(",", items);
+        }
+
+        // Void-returning, generic only in a type parameter that appears nowhere
+        // in the arguments - exercises InvokeMemberActionCallSite's own copy of
+        // the GenericArgs plumbing (Dynamitey/Internal/Optimization/InvokeHelper-
+        // Regular.cs), a separate binder call site from InvokeMemberCallSite's.
+        public string LastSetValue;
+
+        public void SetDefault<T>()
+        {
+            LastSetValue = typeof(T).Name;
+        }
+    }
+
+    /// <summary>
+    /// For issue #14's investigation matrix: a generic method on a generic type.
+    /// </summary>
+    public class GenericMethodsGenericTypeTestClass<T>
+    {
+        public T Value { get; set; }
+
+        public T2 Cast<T2>() where T2 : new()
+        {
+            return new T2();
+        }
+    }
+
+    /// <summary>
+    /// For issue #14's investigation matrix: a generic method on a non-public
+    /// type, reached the same way <c>Tests/PrivateTest.cs</c> reaches
+    /// <see cref="InternalType"/> - across the assembly boundary, without
+    /// widening the type's accessibility.
+    /// </summary>
+    internal class InternalGenericMethodsTestClass
+    {
+        public T Create<T>() where T : new()
+        {
+            return new T();
+        }
+    }
+
     public interface IMethodOut2
     {
         bool Func(out int result);
