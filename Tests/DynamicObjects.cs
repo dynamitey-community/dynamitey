@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using Dynamitey.SupportLibrary;
 using Microsoft.CSharp;
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
 
 namespace Dynamitey.Tests
 {
@@ -29,9 +28,9 @@ namespace Dynamitey.Tests
 
             dynamic tTest = new DynamicObjects.Get(tAnon);
 
-            ClassicAssert.AreEqual(tAnon.Prop1, tTest.Prop1);
-            ClassicAssert.AreEqual(tAnon.Prop2, tTest.Prop2);
-            ClassicAssert.AreEqual(tAnon.Prop3, tTest.Prop3);
+            Assert.That(tTest.Prop1, Is.EqualTo(tAnon.Prop1));
+            Assert.That(tTest.Prop2, Is.EqualTo(tAnon.Prop2));
+            Assert.That(tTest.Prop3, Is.EqualTo(tAnon.Prop3));
         }
 
         [Test]
@@ -54,7 +53,7 @@ namespace Dynamitey.Tests
             dynamic tTest = new DynamicObjects.Get(tArray);
             Dynamic.ApplyEquivalentType(tTest, typeof (IStringIntIndexer));
 
-            ClassicAssert.AreEqual(tArray[2].ToString(), tTest[2]);
+            Assert.That(tTest[2], Is.EqualTo(tArray[2].ToString()));
         }
 
         [Test]
@@ -67,7 +66,7 @@ namespace Dynamitey.Tests
             dynEvent.Event += tActsLikeOnEvent;
 
             dynEvent.OnEvent(null, null);
-            ClassicAssert.AreEqual(true, tSet);
+            Assert.That(tSet, Is.EqualTo(true));
 
         }
 
@@ -82,7 +81,7 @@ namespace Dynamitey.Tests
             dynEvent.Event += tActsLikeOnEvent;
             dynEvent.Event -= tActsLikeOnEvent;
             dynEvent.OnEvent(null, null);
-            ClassicAssert.AreEqual(false, tSet);
+            Assert.That(tSet, Is.EqualTo(false));
 
         }
 
@@ -98,9 +97,9 @@ namespace Dynamitey.Tests
             dynamic tTest = new DynamicObjects.Get(tNew);
 
 
-            ClassicAssert.AreEqual(tNew.Prop1, tTest.Prop1);
-            ClassicAssert.AreEqual(tNew.Prop2, tTest.Prop2);
-            ClassicAssert.AreEqual(tNew.Prop3, tTest.Prop3);
+            Assert.That(tTest.Prop1, Is.EqualTo(tNew.Prop1));
+            Assert.That(tTest.Prop2, Is.EqualTo(tNew.Prop2));
+            Assert.That(tTest.Prop3, Is.EqualTo(tNew.Prop3));
         }
 
         public class TestForwarder : Dynamitey.DynamicObjects.BaseForwarder
@@ -118,9 +117,9 @@ namespace Dynamitey.Tests
 
             dynamic tTest = new TestForwarder(tAnon);
 
-            ClassicAssert.AreEqual(tAnon.Prop1, tTest.Prop1);
-            ClassicAssert.AreEqual(tAnon.Prop2, tTest.Prop2);
-            ClassicAssert.AreEqual(tAnon.Prop3, tTest.Prop3);
+            Assert.That(tTest.Prop1, Is.EqualTo(tAnon.Prop1));
+            Assert.That(tTest.Prop2, Is.EqualTo(tAnon.Prop2));
+            Assert.That(tTest.Prop3, Is.EqualTo(tAnon.Prop3));
         }
 
         [Test]
@@ -141,7 +140,7 @@ namespace Dynamitey.Tests
 
             dynamic tFwd = new TestForwarder(tNew);
 
-            ClassicAssert.AreEqual("test99", tFwd.Create<ForwardGenericMethodsTestClass>(99).Value);
+            Assert.That(tFwd.Create<ForwardGenericMethodsTestClass>(99).Value, Is.EqualTo("test99"));
         }
 
 
@@ -156,9 +155,9 @@ namespace Dynamitey.Tests
             dynamic tTest = new TestForwarder(tNew);
 
 
-            ClassicAssert.AreEqual(tNew.Prop1, tTest.Prop1);
-            ClassicAssert.AreEqual(tNew.Prop2, tTest.Prop2);
-            ClassicAssert.AreEqual(tNew.Prop3, tTest.Prop3);
+            Assert.That(tTest.Prop1, Is.EqualTo(tNew.Prop1));
+            Assert.That(tTest.Prop2, Is.EqualTo(tNew.Prop2));
+            Assert.That(tTest.Prop3, Is.EqualTo(tNew.Prop3));
         }
 
         [Test]
@@ -167,7 +166,7 @@ namespace Dynamitey.Tests
 
             dynamic tNew = new DynamicObjects.Dictionary();
             tNew.Action1 = new Action(Assert.Fail);
-            tNew.Action2 = new Action<bool>(ClassicAssert.IsFalse);
+            tNew.Action2 = new Action<bool>(actual => Assert.That(actual, Is.False));
             tNew.Action3 = new Func<string>(() => "test");
             tNew.Action4 = new Func<int, string>(arg => "test" + arg);
 
@@ -189,7 +188,7 @@ namespace Dynamitey.Tests
 
             dynamic tNew = new DynamicObjects.Dictionary();
             tNew.Action1 = new Action(Assert.Fail);
-            tNew.Action2 = new Action<bool>(ClassicAssert.IsFalse);
+            tNew.Action2 = new Action<bool>(actual => Assert.That(actual, Is.False));
             tNew.Action3 = new Func<string>(() => "test");
             tNew.Action4 = new Func<int, string>(arg => "test" + arg);
 
@@ -213,11 +212,11 @@ namespace Dynamitey.Tests
             dynamic tNew = new DynamicObjects.Dictionary();
             tNew.Func = new DynamicTryString(TestOut);
 
-            ClassicAssert.AreEqual(true, tNew.Func(null, "Test", out string tOut));
-            ClassicAssert.AreEqual("Test", tOut);
+            Assert.That(tNew.Func(null, "Test", out string tOut), Is.EqualTo(true));
+            Assert.That(tOut, Is.EqualTo("Test"));
 
-            ClassicAssert.AreEqual(false, tNew.Func(null, 1, out string tOut2));
-            ClassicAssert.AreEqual(null, tOut2);
+            Assert.That(tNew.Func(null, 1, out string tOut2), Is.EqualTo(false));
+            Assert.That(tOut2, Is.EqualTo(null));
         }
 
         private static object TestOut(CallSite dummy, object @in, out string @out)
@@ -235,7 +234,7 @@ namespace Dynamitey.Tests
             dynamic tNew = new DynamicObjects.Dictionary();
             tNew.PropCat = "Cat-";
             tNew.Action1 = new Action(Assert.Fail);
-            tNew.Action2 = new Action<bool>(ClassicAssert.IsFalse);
+            tNew.Action2 = new Action<bool>(actual => Assert.That(actual, Is.False));
             tNew.Action3 = new ThisFunc<string>(@this => @this.PropCat + "test");
 
 
@@ -243,7 +242,7 @@ namespace Dynamitey.Tests
             Assert.That(() => tNew.Action1(), Throws.InstanceOf<AssertionException>());
             Assert.That(() => tNew.Action2(true), Throws.InstanceOf<AssertionException>());
 
-            ClassicAssert.AreEqual("Cat-test", tNew.Action3());
+            Assert.That(tNew.Action3(), Is.EqualTo("Cat-test"));
 
 
         }
@@ -281,10 +280,10 @@ namespace Dynamitey.Tests
 
             dynamic tNew = new DynamicObjects.Dictionary(tDictionary);
 
-            ClassicAssert.AreEqual(1, tNew.Test1);
-            ClassicAssert.AreEqual(2, tNew.Test2);
-            ClassicAssert.AreEqual("A", tNew.TestD.TestA);
-            ClassicAssert.AreEqual("B", tNew.TestD.TestB);
+            Assert.That(tNew.Test1, Is.EqualTo(1));
+            Assert.That(tNew.Test2, Is.EqualTo(2));
+            Assert.That(tNew.TestD.TestA, Is.EqualTo("A"));
+            Assert.That(tNew.TestD.TestB, Is.EqualTo("B"));
         }
 
         [Test]
@@ -314,23 +313,23 @@ namespace Dynamitey.Tests
             Dynamic.ApplyEquivalentType(tNotDynamic, typeof (INonDynamicDict));
 
 
-            ClassicAssert.AreEqual(tDynamic, tNotDynamic);
+            Assert.That(tNotDynamic, Is.EqualTo(tDynamic));
 
-            ClassicAssert.AreEqual(1, tDynamic.Test1);
-            ClassicAssert.AreEqual(2L, tDynamic.Test2);
-            ClassicAssert.AreEqual(TestEnum.One, tDynamic.Test3);
-            ClassicAssert.AreEqual(TestEnum.Two, tDynamic.Test4);
+            Assert.That(tDynamic.Test1, Is.EqualTo(1));
+            Assert.That(tDynamic.Test2, Is.EqualTo(2L));
+            Assert.That(tDynamic.Test3, Is.EqualTo(TestEnum.One));
+            Assert.That(tDynamic.Test4, Is.EqualTo(TestEnum.Two));
 
-            ClassicAssert.AreEqual("A", tDynamic.TestD.TestA);
-            ClassicAssert.AreEqual("B", tDynamic.TestD.TestB);
+            Assert.That(tDynamic.TestD.TestA, Is.EqualTo("A"));
+            Assert.That(tDynamic.TestD.TestB, Is.EqualTo("B"));
 
-            ClassicAssert.AreEqual(1, tNotDynamic.Test1);
-            ClassicAssert.AreEqual(2L, tNotDynamic.Test2);
-            ClassicAssert.AreEqual(TestEnum.One, tNotDynamic.Test3);
-            ClassicAssert.AreEqual(TestEnum.Two, tNotDynamic.Test4);
+            Assert.That(tNotDynamic.Test1, Is.EqualTo(1));
+            Assert.That(tNotDynamic.Test2, Is.EqualTo(2L));
+            Assert.That(tNotDynamic.Test3, Is.EqualTo(TestEnum.One));
+            Assert.That(tNotDynamic.Test4, Is.EqualTo(TestEnum.Two));
 
-            ClassicAssert.AreEqual(typeof (Dictionary<string, object>), tNotDynamic.TestD.GetType());
-            ClassicAssert.AreEqual(typeof (DynamicObjects.Dictionary), tDynamic.TestD.GetType());
+            Assert.That(tNotDynamic.TestD.GetType(), Is.EqualTo(typeof (Dictionary<string, object>)));
+            Assert.That(tDynamic.TestD.GetType(), Is.EqualTo(typeof (DynamicObjects.Dictionary)));
         }
 
         [Test]
@@ -356,11 +355,11 @@ namespace Dynamitey.Tests
             Dynamic.ApplyEquivalentType(tDynamic, typeof (IDynamicDict));
             Dynamic.ApplyEquivalentType(tNotDynamic, typeof (INonDynamicDict));
 
-            ClassicAssert.AreEqual(tDynamic, tNotDynamic);
+            Assert.That(tNotDynamic, Is.EqualTo(tDynamic));
 
-            ClassicAssert.AreEqual(tDynamic, tDictionary);
+            Assert.That(tDictionary, Is.EqualTo(tDynamic));
 
-            ClassicAssert.AreEqual(tNotDynamic, tDictionary);
+            Assert.That(tDictionary, Is.EqualTo(tNotDynamic));
         }
 
         [Test]
@@ -375,14 +374,14 @@ namespace Dynamitey.Tests
                                                          ClearData = ReturnVoid.Arguments(() => tData.Clear())
                                                      });
 
-            ClassicAssert.AreEqual(1, tDyn.Test1);
-            ClassicAssert.AreEqual("2", tDyn.Test2);
-            ClassicAssert.AreEqual(true, tDyn.IsGreaterThan5(6));
-            ClassicAssert.AreEqual(false, tDyn.IsGreaterThan5(4));
+            Assert.That(tDyn.Test1, Is.EqualTo(1));
+            Assert.That(tDyn.Test2, Is.EqualTo("2"));
+            Assert.That(tDyn.IsGreaterThan5(6), Is.EqualTo(true));
+            Assert.That(tDyn.IsGreaterThan5(4), Is.EqualTo(false));
 
-            ClassicAssert.AreEqual(1, tData.Count);
+            Assert.That(tData.Count, Is.EqualTo(1));
             tDyn.ClearData();
-            ClassicAssert.AreEqual(0, tData.Count);
+            Assert.That(tData.Count, Is.EqualTo(0));
 
         }
 
@@ -404,9 +403,9 @@ namespace Dynamitey.Tests
 
             Dynamic.ApplyEquivalentType(tInterface, typeof (ICollection), typeof (IEnumerable));
 
-            ClassicAssert.AreEqual(10, tInterface.Count);
-            ClassicAssert.AreEqual(false, tInterface.IsSynchronized);
-            ClassicAssert.AreEqual(this, tInterface.SyncRoot);
+            Assert.That(tInterface.Count, Is.EqualTo(10));
+            Assert.That(tInterface.IsSynchronized, Is.EqualTo(false));
+            Assert.That(tInterface.SyncRoot, Is.EqualTo(this));
             Assert.That((object)tInterface.GetEnumerator(), Is.InstanceOf<IEnumerator>());
         }
 
@@ -419,8 +418,8 @@ namespace Dynamitey.Tests
                 Test: "test1",
                 Test2: "Test 2nd"
                 );
-            ClassicAssert.AreEqual("test1", tExpando.Test);
-            ClassicAssert.AreEqual("Test 2nd", tExpando.Test2);
+            Assert.That(tExpando.Test, Is.EqualTo("test1"));
+            Assert.That(tExpando.Test2, Is.EqualTo("Test 2nd"));
 
             dynamic NewD = new DynamicObjects.Builder<ExpandoObject>();
 
@@ -430,8 +429,8 @@ namespace Dynamitey.Tests
                 RightArm: "Clamp"
                 );
 
-            ClassicAssert.AreEqual("Rise", tExpandoNamedTest.LeftArm);
-            ClassicAssert.AreEqual("Clamp", tExpandoNamedTest.RightArm);
+            Assert.That(tExpandoNamedTest.LeftArm, Is.EqualTo("Rise"));
+            Assert.That(tExpandoNamedTest.RightArm, Is.EqualTo("Clamp"));
         }
 
         [Test]
@@ -452,13 +451,13 @@ namespace Dynamitey.Tests
                 RightArm: "ClampD"
                 );
 
-            ClassicAssert.AreEqual("Rise", tExpando.LeftArm);
-            ClassicAssert.AreEqual("Clamp", tExpando.RightArm);
-            ClassicAssert.AreEqual(typeof (ExpandoObject), tExpando.GetType());
+            Assert.That(tExpando.LeftArm, Is.EqualTo("Rise"));
+            Assert.That(tExpando.RightArm, Is.EqualTo("Clamp"));
+            Assert.That(tExpando.GetType(), Is.EqualTo(typeof (ExpandoObject)));
 
-            ClassicAssert.AreEqual("RiseD", tDict.LeftArm);
-            ClassicAssert.AreEqual("ClampD", tDict.RightArm);
-            ClassicAssert.AreEqual(typeof (DynamicObjects.Dictionary), tDict.GetType());
+            Assert.That(tDict.LeftArm, Is.EqualTo("RiseD"));
+            Assert.That(tDict.RightArm, Is.EqualTo("ClampD"));
+            Assert.That(tDict.GetType(), Is.EqualTo(typeof (DynamicObjects.Dictionary)));
 
         }
 
@@ -473,15 +472,15 @@ namespace Dynamitey.Tests
                 var person = New.Person();
                 person.FirstName = "Louis";
                 person.LastName = "Dejardin";
-                ClassicAssert.AreEqual("Louis", person.FirstName);
-                ClassicAssert.AreEqual("Dejardin", person.LastName);
+                Assert.That(person.FirstName, Is.EqualTo("Louis"));
+                Assert.That(person.LastName, Is.EqualTo("Dejardin"));
             }
             {
                 var person = New.Person();
                 person["FirstName"] = "Louis";
                 person["LastName"] = "Dejardin";
-                ClassicAssert.AreEqual("Louis", person.FirstName);
-                ClassicAssert.AreEqual("Dejardin", person.LastName);
+                Assert.That(person.FirstName, Is.EqualTo("Louis"));
+                Assert.That(person.LastName, Is.EqualTo("Dejardin"));
             }
             {
                 var person = New.Person(
@@ -489,9 +488,9 @@ namespace Dynamitey.Tests
                     LastName: "Le Roy"
                     ).Aliases("bleroy", "boudin");
 
-                ClassicAssert.AreEqual("Bertrand", person.FirstName);
-                ClassicAssert.AreEqual("Le Roy", person.LastName);
-                ClassicAssert.AreEqual("boudin", person.Aliases[1]);
+                Assert.That(person.FirstName, Is.EqualTo("Bertrand"));
+                Assert.That(person.LastName, Is.EqualTo("Le Roy"));
+                Assert.That(person.Aliases[1], Is.EqualTo("boudin"));
             }
 
             {
@@ -500,8 +499,8 @@ namespace Dynamitey.Tests
                                 .LastName("Dejardin")
                                 .Aliases(new[] {"Lou"});
 
-                ClassicAssert.AreEqual(person.FirstName, "Louis");
-                ClassicAssert.AreEqual(person.Aliases[0], "Lou");
+                Assert.That("Louis", Is.EqualTo(person.FirstName));
+                Assert.That("Lou", Is.EqualTo(person.Aliases[0]));
             }
 
             {
@@ -510,8 +509,8 @@ namespace Dynamitey.Tests
                                                 FirstName = "Louis",
                                                 LastName = "Dejardin"
                                             });
-                ClassicAssert.AreEqual(person.FirstName, "Louis");
-                ClassicAssert.AreEqual(person.LastName, "Dejardin");
+                Assert.That("Louis", Is.EqualTo(person.FirstName));
+                Assert.That("Dejardin", Is.EqualTo(person.LastName));
             }
 
         }
@@ -532,8 +531,8 @@ namespace Dynamitey.Tests
                 New.Person().FirstName("Bertrand").LastName("Le Roy")
                 );
 
-            ClassicAssert.AreEqual("Dejardin", people[0].LastName);
-            ClassicAssert.AreEqual("Le Roy", people[1].LastName);
+            Assert.That(people[0].LastName, Is.EqualTo("Dejardin"));
+            Assert.That(people[1].LastName, Is.EqualTo("Le Roy"));
 
             var people2 = new DynamicObjects.List()
                               {
@@ -542,8 +541,8 @@ namespace Dynamitey.Tests
                               };
 
 
-            ClassicAssert.AreEqual("Bender", people2[0].Name);
-            ClassicAssert.AreEqual("RobotDevil", people2[1].Name);
+            Assert.That(people2[0].Name, Is.EqualTo("Bender"));
+            Assert.That(people2[1].Name, Is.EqualTo("RobotDevil"));
 
         }
 
@@ -551,10 +550,10 @@ namespace Dynamitey.Tests
         public void TestQuicListSyntax()
         {
             var tList = Build.NewList("test", "one", "two");
-            ClassicAssert.AreEqual("one", tList[1]);
+            Assert.That(tList[1], Is.EqualTo("one"));
 
             var tList2 = Build.NewList("test", "one", "two", "three");
-            ClassicAssert.AreEqual("three", tList2[3]);
+            Assert.That(tList2[3], Is.EqualTo("three"));
         }
 
 
@@ -568,9 +567,9 @@ namespace Dynamitey.Tests
 
             dynamic tVar = tRecording.ReplayOn(new ExpandoObject());
 
-            ClassicAssert.AreEqual("One", tVar.Test);
-            ClassicAssert.AreEqual(2, tVar.Test2);
-            ClassicAssert.AreEqual("Watson", tVar.NameLast);
+            Assert.That(tVar.Test, Is.EqualTo("One"));
+            Assert.That(tVar.Test2, Is.EqualTo(2));
+            Assert.That(tVar.NameLast, Is.EqualTo("Watson"));
         }
 
 
@@ -622,12 +621,12 @@ namespace Dynamitey.Tests
                 var one = tBigIntType.@new(1);
                 var two = tBigIntType.@new(2);
 
-                ClassicAssert.IsFalse(one.IsEven);
-                ClassicAssert.AreEqual(true, two.IsEven);
+                Assert.That(one.IsEven, Is.False);
+                Assert.That(two.IsEven, Is.EqualTo(true));
 
                 var tParsed = tBigIntType.Parse("4");
 
-                ClassicAssert.AreEqual(true, tParsed.IsEven);
+                Assert.That(tParsed.IsEven, Is.EqualTo(true));
 
 
 
