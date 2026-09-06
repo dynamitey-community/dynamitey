@@ -127,15 +127,20 @@ namespace Dynamitey
             }
             catch
             {
+                // Deliberately broad (cs/catch-of-all-exceptions): this is a name-based probe for an
+                // optional type, and Assembly.GetType/Type.GetType can throw several different
+                // exceptions (ArgumentException, FileNotFoundException, BadImageFormatException, ...)
+                // for "can't resolve this", not just "not found" - any of them means "treat as absent".
                 ComObjectType = null;
             }
             try
             {
                 TypeConverterAttributeSL
-                    = Type.GetType("System.ComponentModel.TypeConverter, System, Version=5.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", false);  
+                    = Type.GetType("System.ComponentModel.TypeConverter, System, Version=5.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", false);
             }
             catch
             {
+                // Same reasoning as the ComObjectType probe above.
                 TypeConverterAttributeSL = null;
             }
         }
@@ -991,6 +996,10 @@ namespace Dynamitey
             }
             catch
             {
+                // Deliberately broad (cs/catch-of-all-exceptions): the expected failure is
+                // RuntimeBinderException when trimming has removed Convert.IsDBNull (see the
+                // [RequiresUnreferencedCode] above), but this is a boolean probe with a safe
+                // default either way - "can't tell" and "not DBNull" collapse to the same false.
                 return false;
             }
         }

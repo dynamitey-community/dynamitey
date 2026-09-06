@@ -71,6 +71,11 @@ namespace Dynamitey.DynamicObjects
             }
             catch
             {
+                // Deliberately broad (cs/catch-of-all-exceptions): throwOnError:false only
+                // suppresses the "not found" case. Assembly.GetType/Type.GetType can still throw
+                // ArgumentException, FileNotFoundException, FileLoadException, or
+                // BadImageFormatException for other resolution failures; this method's contract
+                // (see the summary above) is to return null for any of them, not just the one.
                 return null;
             }
         }

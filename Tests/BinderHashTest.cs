@@ -1,0 +1,146 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using NUnit.Framework;
+
+namespace Dynamitey.Tests
+{
+    // Issue #50, cs/wrong-equals-signature cluster on BinderHash<T>
+    // (Internal/Optimization/BinderHash.cs). BinderHash<T> is the key type for Dynamitey's
+    // call-site cache (Dictionary<BinderHash<T>, CallSite<T>> in InvokeHelper.cs); a wrong
+    // equality contract there can make the cache return a binder for the wrong call shape.
+    // Nothing exercised this contract directly before, so this fixture does.
+    //
+    // BinderHash<T> is internal, and Tests.csproj has no InternalsVisibleTo grant to it (adding
+    // one would widen accessibility - see the reasoning already recorded for EmitCallSiteFuncType
+    // in Invoke.cs). Instances are built through reflection instead; once held as `object`,
+    // Equals(object) and GetHashCode() are public members inherited from object and need no
+    // special access to call directly.
+    [TestFixture]
+    public class BinderHashTest : Helper
+    {
+        private static readonly Type BinderHashOpenGeneric =
+            typeof(Dynamic).Assembly.GetType("Dynamitey.Internal.Optimization.BinderHash`1")!;
+
+        // BinderType only needs to be *some* distinct, stable Type for these tests - Equals
+        // compares it with plain reference equality (see BinderHash.cs) - so any two unrelated
+        // BCL types stand in for the real DLR CSharpInvokeBinder/CSharpInvokeMemberBinder etc.
+        private static readonly Type DummyBinderType = typeof(int);
+
+        private static readonly Type OtherDummyBinderType = typeof(long);
+
+        private static object Create<T>(
+            string name,
+            Type context,
+            string[] argNames,
+            Type binderType,
+            bool staticContext = false,
+            bool isEvent = false,
+            bool knownBinder = false) where T : class
+        {
+            var closedType = BinderHashOpenGeneric.MakeGenericType(typeof(T));
+            var createMethod = closedType.GetMethod("Create", BindingFlags.Public | BindingFlags.Static,
+                null,
+                new[] { typeof(string), typeof(Type), typeof(string[]), typeof(Type), typeof(bool), typeof(bool), typeof(bool) },
+                null);
+
+            return createMethod.Invoke(null, new object[] { name, context, argNames, binderType, staticContext, isEvent, knownBinder });
+        }
+
+        [Test]
+        public void EqualBinderHashesAreEqualAndShareHashCode()
+        {
+            var tArgNames = new[] { "a", "b" };
+            var tOne = Create<Func<object>>("Foo", typeof(string), tArgNames, DummyBinderType, staticContext: true, isEvent: false, knownBinder: false);
+            var tTwo = Create<Func<object>>("Foo", typeof(string), (string[])tArgNames.Clone(), DummyBinderType, staticContext: true, isEvent: false, knownBinder: false);
+
+            Assert.That(tOne, Is.Not.SameAs(tTwo), "the two instances must be distinct objects, not the same reference.");
+            Assert.That(tOne.Equals(tTwo), Is.True);
+            Assert.That(tTwo.Equals(tOne), Is.True);
+            Assert.That(tOne.GetHashCode(), Is.EqualTo(tTwo.GetHashCode()));
+        }
+
+        [TestCase("Name")]
+        [TestCase("ArgNames")]
+        [TestCase("Context")]
+        [TestCase("IsEvent")]
+        [TestCase("StaticContext")]
+        [TestCase("BinderType")]
+        public void DifferingFieldMakesBinderHashesUnequal(string tVaryingField)
+        {
+            var tBase = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType, staticContext: true, isEvent: false, knownBinder: false);
+
+            object tVaried = tVaryingField switch
+            {
+                "Name" => Create<Func<object>>("Bar", typeof(string), new[] { "a" }, DummyBinderType, staticContext: true, isEvent: false, knownBinder: false),
+                "ArgNames" => Create<Func<object>>("Foo", typeof(string), new[] { "b" }, DummyBinderType, staticContext: true, isEvent: false, knownBinder: false),
+                "Context" => Create<Func<object>>("Foo", typeof(int), new[] { "a" }, DummyBinderType, staticContext: true, isEvent: false, knownBinder: false),
+                "IsEvent" => Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType, staticContext: true, isEvent: true, knownBinder: false),
+                "StaticContext" => Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType, staticContext: false, isEvent: false, knownBinder: false),
+                "BinderType" => Create<Func<object>>("Foo", typeof(string), new[] { "a" }, OtherDummyBinderType, staticContext: true, isEvent: false, knownBinder: false),
+                _ => throw new ArgumentOutOfRangeException(nameof(tVaryingField))
+            };
+
+            Assert.That(tBase.Equals(tVaried), Is.False);
+            Assert.That(tVaried.Equals(tBase), Is.False);
+        }
+
+        [Test]
+        public void KnownBinderIgnoresBinderTypeDifference()
+        {
+            // Equals: "(KnownBinder || other.BinderType == BinderType)" - once the binder is
+            // known, a BinderType mismatch should no longer matter.
+            var tOne = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType, knownBinder: true);
+            var tTwo = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, OtherDummyBinderType, knownBinder: true);
+
+            Assert.That(tOne.Equals(tTwo), Is.True);
+            Assert.That(tTwo.Equals(tOne), Is.True);
+        }
+
+        [Test]
+        public void DifferentGenericDelegateTypeIsNeverEqual()
+        {
+            // BinderHash<T1> and BinderHash<T2> are unrelated closed generic types; the derived
+            // Equals(BinderHash) narrows with "other is BinderHash<T>", which must reject a
+            // same-shaped hash built for a different T even though every other field matches.
+            // This is what lets InvokeHelper<T>'s per-T Dictionary<BinderHash<T>, CallSite<T>>
+            // omit T (DelegateType) from GetHashCode without risking cross-T collisions leaking
+            // through Equals.
+            var tForFuncOfObject = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType);
+            var tForAction = Create<Action>("Foo", typeof(string), new[] { "a" }, DummyBinderType);
+
+            Assert.That(tForFuncOfObject.Equals(tForAction), Is.False);
+            Assert.That(tForAction.Equals(tForFuncOfObject), Is.False);
+            // Object.Equals(object), inherited (not overridden) by BinderHash<T> - the exact
+            // dispatch path cs/wrong-equals-signature flags - must agree with the above.
+            Assert.That(((object)tForFuncOfObject).Equals((object)tForAction), Is.False);
+        }
+
+        [Test]
+        public void DictionaryKeyedByBinderHashLooksUpByValueEquality()
+        {
+            // Reproduces InvokeHelper.cs's actual cache shape - Dictionary<BinderHash<T>,
+            // CallSite<T>> - via reflection (BinderHash<T> can't be named directly without
+            // InternalsVisibleTo). BinderHash<T> implements no IEquatable<T>, so
+            // EqualityComparer<T>.Default resolves to the ObjectEqualityComparer path: this
+            // dictionary lookup exercises exactly the Equals(object)/GetHashCode() pair that
+            // cs/wrong-equals-signature is concerned with, end to end.
+            var tClosedBinderHashType = BinderHashOpenGeneric.MakeGenericType(typeof(Func<object>));
+            var tDictType = typeof(Dictionary<,>).MakeGenericType(tClosedBinderHashType, typeof(int));
+            var tDict = Activator.CreateInstance(tDictType)!;
+            var tAdd = tDictType.GetMethod("Add")!;
+            var tContainsKey = tDictType.GetMethod("ContainsKey")!;
+
+            var tCached = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType, staticContext: true);
+            tAdd.Invoke(tDict, new object[] { tCached, 42 });
+
+            var tSameShapeDifferentInstance = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType, staticContext: true);
+            var tDifferentName = Create<Func<object>>("Bar", typeof(string), new[] { "a" }, DummyBinderType, staticContext: true);
+
+            Assert.That((bool)tContainsKey.Invoke(tDict, new object[] { tSameShapeDifferentInstance })!, Is.True,
+                "a same-shaped, distinct BinderHash<T> instance must hit the cache entry.");
+            Assert.That((bool)tContainsKey.Invoke(tDict, new object[] { tDifferentName })!, Is.False,
+                "a different call shape must miss the cache entry.");
+        }
+    }
+}
