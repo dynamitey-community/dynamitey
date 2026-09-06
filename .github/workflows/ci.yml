@@ -106,7 +106,13 @@ jobs:
       # ILCompiler package, and nothing else in the repository should pay that on an
       # ordinary build. This job is therefore the only thing that compiles it, which
       # is also what stops it rotting.
+      # shell: bash is load-bearing, not decoration. The default run shell is
+      # `bash -e`, which does not set pipefail, so the exit status of a pipeline is
+      # tee's — always 0. A failed publish would sail past this step and surface
+      # later as a confusing missing-binary error. `shell: bash` runs with
+      # `-eo pipefail`, so the publish failure fails this step, where it belongs.
       - name: Publish NativeAOT
+        shell: bash
         run: dotnet publish AotSmokeTest -c Release -r linux-x64 2>&1 | tee aot-publish.log
 
       # The value of the annotations added in #4 is that a consumer's warnings NAME
