@@ -158,7 +158,7 @@ that the issue can be reopened.
 > What was tried: genuinely-async versus precompleted `ValueTask<T>`, `Task<T>`
 > for comparison, awaiting directly versus assigning to a typed local first —
 > against both current code and a from-scratch build of the original 3.0.3-era
-> source, loaded into net8.0 and net10.0 hosts. Every combination worked.
+> source, loaded into `net8.0` and `net10.0` hosts. Every combination worked.
 >
 > The error implies the *static* type was `System.ValueType`, and current
 > binding does not produce that: the boxed result keeps its `ValueTask<T>`
