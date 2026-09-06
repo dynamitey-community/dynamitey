@@ -77,11 +77,7 @@ namespace Dynamitey.Internal.Optimization
         /// <returns></returns>
         public static object?[] NameArgsIfNecessary(CallInfo callInfo, object?[] args)
         {
-            #if NET
-            ArgumentNullException.ThrowIfNull(callInfo);
-            #else
-            if (callInfo is null) throw new ArgumentNullException(nameof(callInfo));
-            #endif
+            Guard.NotNull(callInfo);
 
             object?[] tArgs;
             if (callInfo.ArgumentNames.Count == 0)
@@ -126,11 +122,7 @@ namespace Dynamitey.Internal.Optimization
         /// <returns></returns>
         public static Type FixContext(this Type context)
         {
-            #if NET
-            ArgumentNullException.ThrowIfNull(context);
-            #else
-            if (context is null) throw new ArgumentNullException(nameof(context));
-            #endif
+            Guard.NotNull(context);
 
             if (context.IsArray)
             {

@@ -23,6 +23,7 @@ using System.Text;
 using Dynamitey.Internal.Optimization;
 using Microsoft.CSharp;
 using Microsoft.CSharp.RuntimeBinder;
+using Dynamitey.Internal;
 
 namespace Dynamitey.DynamicObjects
 {
@@ -63,11 +64,7 @@ namespace Dynamitey.DynamicObjects
             /// <returns>The result of the operator.</returns>
             public static AddRemoveMarker operator +(AddRemoveMarker left, object right)
             {
-                #if NET
-                ArgumentNullException.ThrowIfNull(left);
-                #else
-                if (left is null) throw new ArgumentNullException(nameof(left));
-                #endif
+                Guard.NotNull(left);
 
                 left.Delegate = right;
                 left.IsAdding = true;
@@ -83,11 +80,7 @@ namespace Dynamitey.DynamicObjects
             /// <returns>The result of the operator.</returns>
             public static AddRemoveMarker operator -(AddRemoveMarker left, object right)
             {
-                #if NET
-                ArgumentNullException.ThrowIfNull(left);
-                #else
-                if (left is null) throw new ArgumentNullException(nameof(left));
-                #endif
+                Guard.NotNull(left);
 
                 left.Delegate = right;
                 left.IsAdding = false;

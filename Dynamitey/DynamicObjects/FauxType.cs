@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Dynamitey.Internal.Compat;
+using Dynamitey.Internal;
 
 namespace Dynamitey.DynamicObjects
 {
@@ -187,11 +188,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public static AggreType MakeTypeAppendable(IEquivalentType type)
         {
-            #if NET
-            ArgumentNullException.ThrowIfNull(type);
-            #else
-            if (type is null) throw new ArgumentNullException(nameof(type));
-            #endif
+            Guard.NotNull(type);
 
             if (type.EquivalentType == null)
             {

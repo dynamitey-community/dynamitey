@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using Dynamitey.Internal;
 
 using System.Text;
 using Microsoft.CSharp.RuntimeBinder;
@@ -389,11 +390,7 @@ namespace Dynamitey.DynamicObjects
         [RequiresDynamicCode("Dynamic.InvokeMember binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         protected object? InvokeStaticMethod(String_OR_InvokeMemberName name, object?[] args)
         {
-            #if NET
-            ArgumentNullException.ThrowIfNull(name);
-            #else
-            if (name is null) throw new ArgumentNullException(nameof(name));
-            #endif
+            Guard.NotNull(name);
 
             var staticType = InvokeContext.CreateStatic;
             var nameArgs = InvokeMemberName.Create;
