@@ -150,11 +150,11 @@ jobs:
           # from https://nvd.nist.gov/developers/request-an-api-key
           DC_NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
+          tKeyArg=()
           if [ -z "${DC_NVD_API_KEY}" ]; then
             echo "::notice::No NVD_API_KEY secret is set. The scan will still run, but the NVD update is rate-limited and slower."
-            tKeyArg=""
           else
-            tKeyArg="--nvdApiKey ${DC_NVD_API_KEY}"
+            tKeyArg=(--nvdApiKey "${DC_NVD_API_KEY}")
           fi
 
           # Dependency-Check validates --out before it runs and refuses a path
@@ -177,7 +177,7 @@ jobs:
             --suppression .github/owasp-suppressions.xml \
             --format HTML --format JSON --format SARIF \
             --out reports \
-            ${tKeyArg}
+            "${tKeyArg[@]}"
           tExit=$?
           set -e
 
