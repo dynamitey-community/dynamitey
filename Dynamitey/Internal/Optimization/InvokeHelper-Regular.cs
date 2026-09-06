@@ -243,7 +243,7 @@ namespace Dynamitey.Internal.Optimization
             return tTypeBuilder.CreateTypeInfo()!.AsType();
         }
 
-        internal static HashSet<object> _allCaches = new HashSet<object>();
+        internal static readonly HashSet<object> _allCaches = new HashSet<object>();
         private static readonly object _binderCacheLock = new object();
         private static readonly object _callSiteCacheLock = new object();
         internal static IDictionary<Type, CallSite<DynamicCreateCallSite>>? _dynamicInvokeCreateCallSite;
@@ -982,7 +982,7 @@ namespace Dynamitey.Internal.Optimization
 
         internal class InvokeConstructorDummy{};
 
-        internal static InvokeMemberName ConstructorName = new InvokeMemberName(Invocation.ConstructorBinderName);
+        internal static readonly InvokeMemberName ConstructorName = new InvokeMemberName(Invocation.ConstructorBinderName);
 
         [RequiresUnreferencedCode("Resolves type's constructor via Binder.InvokeConstructor; trimming can remove the constructor being resolved.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
