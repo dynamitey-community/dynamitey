@@ -98,20 +98,19 @@ namespace Dynamitey.DynamicObjects
             if (!types.Any())
                 return false;
 
-            // Local rather than assigning `type` directly: EventInfo.EventHandlerType (above) is
-            // itself nullable, so currenttype can theoretically be null (a member that is an
-            // event with no resolvable handler type - unreachable in practice). That would leave
-            // this loop's result null too; the `!` below preserves that exact pre-existing
-            // behavior (rather than guaranteeing NotNullWhen(true) can't actually promise, given
-            // this edge) while still letting ordinary callers rely on the annotation.
+            // EventInfo.EventHandlerType (above) is itself nullable: a member that is an event
+            // with no resolvable handler type would otherwise flow a null in here as
+            // currenttype, defeating the [NotNullWhen(true)] promise below (unreachable in
+            // practice - the runtime does not produce such an event - but treated the same as any
+            // other type mismatch rather than left as a documented hole).
             Type? tBest = null;
             foreach (var currenttype in types)
             {
-                tBest = tBest == null || tBest.Name == currenttype!.Name
+                tBest = currenttype != null && (tBest == null || tBest.Name == currenttype.Name)
                     ? currenttype
                     : typeof (object);
             }
-            type = tBest!;
+            type = tBest ?? typeof(object);
             return true;
         }
 

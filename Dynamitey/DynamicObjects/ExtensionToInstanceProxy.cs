@@ -139,10 +139,19 @@ namespace Dynamitey.DynamicObjects
                 if (overloadTypes == null)
                 {
 
-                    // Pre-existing gap (not introduced here, not fixed): parent.InstanceHints is null
-                    // whenever the ExtensionToInstanceProxy was constructed without instanceHints, and
-                    // this foreach would NRE in that case. The `!` preserves that exact behavior.
-                    foreach (var tGenInterface in parent.InstanceHints!)
+                    // Resolving an overload by generic type here requires reflecting over the
+                    // instance-hint interfaces to find candidate signatures; a proxy built without
+                    // instanceHints (the constructor's default) has nothing to reflect over, so
+                    // member access (as opposed to direct invocation, which goes through
+                    // TryInvokeMember and never reaches this constructor) on such a proxy is not a
+                    // supported construction.
+                    if (parent.InstanceHints == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"Cannot resolve member '{name}' by type: this {nameof(ExtensionToInstanceProxy)} was constructed without instanceHints.");
+                    }
+
+                    foreach (var tGenInterface in parent.InstanceHints)
                     {
                         var tNewType = tGenInterface;
 
@@ -444,16 +453,20 @@ namespace Dynamitey.DynamicObjects
                         tOutType = tOutType.GetGenericTypeDefinition();
                     }
 
-                    if (InstanceHints!.Select(it => tIsGeneric && it.GetTypeInfo().IsGenericType ? it.GetGenericTypeDefinition() : it)
+                    // A null result (e.g. from a nullable-returning extension method) is never
+                    // meaningful to wrap in a self-referential proxy - only a genuine instance is.
+                    if (result != null
+                        && InstanceHints!.Select(it => tIsGeneric && it.GetTypeInfo().IsGenericType ? it.GetGenericTypeDefinition() : it)
                             .Any(it=> it.Name == tOutType.Name))
-                    { 
+                    {
                         result = CreateSelf(result, _extendedType, _staticTypes, _instanceHints);
                     }
                 }
             }
             else
             {
-                if (IsExtendedType(result))
+                // Same null-result guard as above - IsExtendedType/CreateSelf require a genuine instance.
+                if (result != null && IsExtendedType(result))
                 {
                     result = CreateSelf(result, _extendedType, _staticTypes, _instanceHints);
                 }
@@ -472,17 +485,15 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         [RequiresUnreferencedCode("Constructs the annotated ExtensionToInstanceProxy.")]
         [RequiresDynamicCode("Constructs the annotated ExtensionToInstanceProxy, which requires the DLR's runtime code generation.")]
-        protected virtual ExtensionToInstanceProxy CreateSelf(object? target, Type extendedType, Type[] staticTypes, Type[]? instanceHints)
+        protected virtual ExtensionToInstanceProxy CreateSelf(object target, Type extendedType, Type[] staticTypes, Type[]? instanceHints)
         {
-            // Same pre-existing null-target gap as IsExtendedType above.
-            return  new ExtensionToInstanceProxy(target!,extendedType,staticTypes, instanceHints);
+            return  new ExtensionToInstanceProxy(target,extendedType,staticTypes, instanceHints);
         }
 
-        // target is null only via the pre-existing gap noted on IsExtendedType's own call sites
-        // above (a null InvokeMember/InvokeStaticMethod result); GetType() below would NRE exactly
-        // as it always has.
+        // Both call sites (InvokeStaticMethod, above) guard against a null result before calling
+        // this, so target is never null here.
         [RequiresUnreferencedCode("Reflects over target's interfaces (GetInterfaces) to compare against _extendedType; trimming can remove an interface this depends on.")]
-        private bool IsExtendedType(object? target)
+        private bool IsExtendedType(object target)
         {
 
             if (target is ExtensionToInstanceProxy)
@@ -492,7 +503,7 @@ namespace Dynamitey.DynamicObjects
 
             bool genericDef = _extendedType.GetTypeInfo().IsGenericTypeDefinition;
 
-            return target!.GetType().GetTypeInfo().GetInterfaces().Any(
+            return target.GetType().GetTypeInfo().GetInterfaces().Any(
                 it => ((genericDef && it.GetTypeInfo().IsGenericType) ? it.GetGenericTypeDefinition() : it).Name == _extendedType.Name);
 
         }

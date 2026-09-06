@@ -95,11 +95,9 @@ namespace Dynamitey
             {
                 _argCount = storedArgs.Length;
                 Args = Util.GetArgsAndNames(storedArgs, out var tArgNames);
-                // Pre-existing gap (not introduced here, not fixed): GetArgsAndNames returns a
-                // null tArgNames whenever none of storedArgs was an InvokeArg, and this branch
-                // dereferences it unconditionally. No caller in this codebase actually passes
-                // storedArgs, so it's never been exercised either way.
-                if (_argNames.Length < tArgNames!.Length)
+                // GetArgsAndNames returns a null tArgNames when none of storedArgs was an
+                // InvokeArg - i.e. there are no names to merge in, so _argNames is left as-is.
+                if (tArgNames != null && _argNames.Length < tArgNames.Length)
                 {
                     _argNames = tArgNames;
                 }
@@ -136,15 +134,14 @@ namespace Dynamitey
                     _argCount = 0;
                     break;
                 default:
-                    // _argNames is null only via the dead storedArgs branch above.
-                    _argCount = Math.Max(argCount, _argNames!.Length);
+                    _argCount = Math.Max(argCount, _argNames.Length);
                     break;
             }
 
             if (_argCount > 0)//setup argName array
             {
                 var tBlank = new string?[_argCount];
-                if (_argNames!.Length != 0)
+                if (_argNames.Length != 0)
                     Array.Copy(_argNames, 0, tBlank, tBlank.Length - _argNames.Length, _argNames.Length);
                 else
                     tBlank = null;
