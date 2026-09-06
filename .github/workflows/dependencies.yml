@@ -148,13 +148,13 @@ jobs:
           # the week takes far longer; findings are the same either way. Add a
           # repository secret named NVD_API_KEY to speed it up - a key is free
           # from https://nvd.nist.gov/developers/request-an-api-key
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          DC_NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
-          if [ -z "${NVD_API_KEY}" ]; then
+          if [ -z "${DC_NVD_API_KEY}" ]; then
             echo "::notice::No NVD_API_KEY secret is set. The scan will still run, but the NVD update is rate-limited and slower."
             tKeyArg=""
           else
-            tKeyArg="--nvdApiKey ${NVD_API_KEY}"
+            tKeyArg="--nvdApiKey ${DC_NVD_API_KEY}"
           fi
 
           # Dependency-Check validates --out before it runs and refuses a path
