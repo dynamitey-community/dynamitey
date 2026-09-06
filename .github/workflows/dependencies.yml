@@ -114,14 +114,17 @@ jobs:
 
       # The NVD database is large and slow to build from scratch. Keyed by week
       # so it refreshes regularly without re-downloading on every run.
+      - name: Compute Dependency-Check cache key (year-week)
+        shell: bash
+        run: echo "DC_CACHE_KEY=$(date -u +'%G-%V')" >> "$GITHUB_ENV"
+
       - name: Cache the NVD data
         uses: actions/cache@v5
         with:
           path: ~/.dependency-check/data
-          key: dependency-check-${{ env.DC_VERSION }}-${{ github.run_id }}
+          key: dependency-check-${{ env.DC_VERSION }}-${{ env.DC_CACHE_KEY }}
           restore-keys: |
             dependency-check-${{ env.DC_VERSION }}-
-
       - name: Download and verify Dependency-Check
         shell: bash
         run: |
