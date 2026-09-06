@@ -58,14 +58,9 @@ namespace Dynamitey.DynamicObjects
                 _list = new List<object>();
                 return;
             }
-            if (contents is IList<object> tContents)
-            {
-                _list = tContents;
-            }
-            else
-            {
-                _list = contents.ToList();
-            }
+            _list = contents is IList<object> tContents
+                ? tContents
+                : contents.ToList();
         }
 
         IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator()

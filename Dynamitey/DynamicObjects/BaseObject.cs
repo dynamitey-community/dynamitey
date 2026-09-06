@@ -107,10 +107,9 @@ namespace Dynamitey.DynamicObjects
             Type? tBest = null;
             foreach (var currenttype in types)
             {
-                if (tBest == null || tBest.Name == currenttype!.Name)
-                    tBest = currenttype;
-                else
-                    tBest = typeof (object);
+                tBest = tBest == null || tBest.Name == currenttype!.Name
+                    ? currenttype
+                    : typeof (object);
             }
             type = tBest!;
             return true;
