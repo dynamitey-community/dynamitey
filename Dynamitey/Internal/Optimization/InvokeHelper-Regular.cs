@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using Dynamitey.DynamicObjects;
 using Microsoft.CSharp.RuntimeBinder;
@@ -81,29 +82,157 @@ namespace Dynamitey.Internal.Optimization
 
 
 
-        internal static readonly dynamic BuildProxy = new DynamicObjects.LateType(
-            "ImpromptuInterface.Build.BuildProxy, ImpromptuInterface, PublicKeyToken=0b1781c923b2975b");
+        // Used only as a Dictionary<TKey,...> key: identifies a CallSite delegate
+        // signature (its parameter types plus return type) so that a type emitted
+        // for one signature can be found and reused for every later call with the
+        // same signature, instead of emitting - and leaking - a fresh Type per call.
+        private readonly struct CallSiteDelegateSignature : IEquatable<CallSiteDelegateSignature>
+        {
+            private readonly Type[] _argTypes;
+            private readonly Type _returnType;
 
+            public CallSiteDelegateSignature(Type[] argTypes, Type returnType)
+            {
+                _argTypes = argTypes;
+                _returnType = returnType;
+            }
+
+            public bool Equals(CallSiteDelegateSignature other)
+            {
+                if (_returnType != other._returnType || _argTypes.Length != other._argTypes.Length)
+                    return false;
+
+                for (var i = 0; i < _argTypes.Length; i++)
+                {
+                    if (_argTypes[i] != other._argTypes[i])
+                        return false;
+                }
+
+                return true;
+            }
+
+            public override bool Equals(object obj) => obj is CallSiteDelegateSignature other && Equals(other);
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var tHash = _returnType.GetHashCode();
+                    foreach (var tArgType in _argTypes)
+                    {
+                        tHash = tHash * 31 + tArgType.GetHashCode();
+                    }
+                    return tHash;
+                }
+            }
+        }
+
+        // Guards both _emittedModule's lazy initialization and all reads/writes of
+        // _emittedDelegateTypes below. EmitCallSiteFuncType is only ever reached
+        // through the >14-argument fallback branch of InvokeHelper.cs's generated
+        // switches, which is already far off the hot path, so a single lock across
+        // the whole method (cache lookup included) is simpler than lock-free
+        // tricks and costs nothing that matters here.
+        private static readonly object _emitLock = new object();
+        private static readonly Dictionary<CallSiteDelegateSignature, Type> _emittedDelegateTypes =
+            new Dictionary<CallSiteDelegateSignature, Type>();
+        private static ModuleBuilder _emittedModule;
+        private static int _emittedTypeCount;
+
+        /// <summary>
+        /// Builds (or returns a cached, previously-built) delegate type shaped
+        /// <c>TReturn Invoke(CallSite, object, object, ..., object)</c> - one
+        /// <see cref="CallSite"/> parameter followed by <paramref name="argTypes"/>
+        /// - for use as the generic argument of <see cref="CallSite{T}"/> when
+        /// invoking with more arguments than InvokeHelper.tt has a generated
+        /// <c>Func&lt;...&gt;</c>/<c>Action&lt;...&gt;</c> case for (more than 14).
+        /// </summary>
+        /// <remarks>
+        /// Up to and including Dynamitey 3.0.3, this delegate type was obtained by
+        /// reaching into ImpromptuInterface by name (see the removed <c>BuildProxy</c>
+        /// <see cref="LateType"/> field) - which threw <see cref="TypeLoadException"/>
+        /// when ImpromptuInterface was not installed, even though Dynamitey never
+        /// declared a dependency on it. That was circular by construction:
+        /// ImpromptuInterface depends on Dynamitey, so Dynamitey cannot reference it
+        /// back. Emitting the delegate type here removes both the missing-dependency
+        /// failure and the circularity (fixes #27).
+        /// </remarks>
         internal static Type EmitCallSiteFuncType(IEnumerable<Type> argTypes, Type returnType)
+        {
+            var tArgTypes = argTypes as Type[] ?? argTypes.ToArray();
+            var tSignature = new CallSiteDelegateSignature(tArgTypes, returnType);
+
+            lock (_emitLock)
+            {
+                if (_emittedDelegateTypes.TryGetValue(tSignature, out var tCachedType))
+                {
+                    return tCachedType;
+                }
+
+                var tNewType = EmitCallSiteDelegateType(tArgTypes, returnType);
+                _emittedDelegateTypes[tSignature] = tNewType;
+                return tNewType;
+            }
+        }
+
+        // Only ever called from inside the _emitLock in EmitCallSiteFuncType.
+        private static Type EmitCallSiteDelegateType(Type[] argTypes, Type returnType)
         {
             try
             {
-                //Impromptu Interface version 8.04
-                return BuildProxy.DefaultProxyMaker.EmitCallSiteFuncType(argTypes, returnType);
-            }
-            catch (LateType.MissingTypeException ex)
-            {  
-                try
+                if (_emittedModule == null)
                 {
-                    //Impromptu Interface 7.X
-                    return BuildProxy.EmitCallSiteFuncType(argTypes, returnType);
-                }
-                catch (LateType.MissingTypeException)
-                {
-                    throw new TypeLoadException("Cannot Emit long delegates without ImpromptuInterface installed", ex);
+                    _emittedModule = AssemblyBuilder
+                        .DefineDynamicAssembly(new AssemblyName("Dynamitey.CallSiteDelegates"), AssemblyBuilderAccess.Run)
+                        .DefineDynamicModule("Dynamitey.CallSiteDelegates");
                 }
             }
-    
+            catch (PlatformNotSupportedException ex)
+            {
+                // The documented failure mode for Reflection.Emit being unavailable
+                // (e.g. NativeAOT, iOS/tvOS, Blazor WebAssembly). Wrap it so the
+                // caller gets an actionable message instead of either a bare
+                // PlatformNotSupportedException with no context, or - as before this
+                // fix - a misleading complaint about a missing ImpromptuInterface
+                // installation that no longer has anything to do with the failure.
+                throw new PlatformNotSupportedException(
+                    "Dynamitey cannot invoke members with more than 14 arguments on this runtime: " +
+                    "building the call site for them requires System.Reflection.Emit, which this runtime " +
+                    "does not support (this is common on AOT-compiled, trimmed, or mobile/WebAssembly " +
+                    "targets). Keep argument counts at 14 or fewer, or run on a runtime with " +
+                    "Reflection.Emit support.", ex);
+            }
+
+            // Dynamic.InvokeCallSite invokes the delegate with [callSite, target,
+            // ...args] - one more argument than argTypes lists, because argTypes
+            // is only the user-supplied args (see InvokeHelper.tt's default
+            // branches: tArgTypes has args.Length entries, never target). The slot
+            // for target sits between CallSite and the user args, and is always
+            // object - target's static type at every call site is object/TTarget
+            // erased to object by the time it reaches here.
+            var tParameterTypes = new Type[argTypes.Length + 2];
+            tParameterTypes[0] = typeof(CallSite);
+            tParameterTypes[1] = typeof(object);
+            Array.Copy(argTypes, 0, tParameterTypes, 2, argTypes.Length);
+
+            var tTypeBuilder = _emittedModule.DefineType(
+                $"CallSiteFunc{++_emittedTypeCount}",
+                TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass |
+                TypeAttributes.AutoClass,
+                typeof(MulticastDelegate));
+
+            var tConstructor = tTypeBuilder.DefineConstructor(
+                MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public,
+                CallingConventions.Standard, new[] { typeof(object), typeof(IntPtr) });
+            tConstructor.SetImplementationFlags(MethodImplAttributes.Runtime | MethodImplAttributes.Managed);
+
+            var tInvoke = tTypeBuilder.DefineMethod(
+                "Invoke",
+                MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
+                returnType, tParameterTypes);
+            tInvoke.SetImplementationFlags(MethodImplAttributes.Runtime | MethodImplAttributes.Managed);
+
+            return tTypeBuilder.CreateTypeInfo().AsType();
         }
 
         internal static HashSet<object> _allCaches = new HashSet<object>();
