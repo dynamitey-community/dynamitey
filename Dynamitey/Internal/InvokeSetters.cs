@@ -44,6 +44,9 @@ namespace Dynamitey.Internal
             "already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same 'dynamic'/Dynamic.InvokeGet/InvokeSetChain calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember " +
+            "(and the in-body comment on rawArgs immediately below); see that member.")]
         public override bool TryInvoke(InvokeBinder binder, object?[]? rawArgs, out object? result)
         {
             IEnumerable<KeyValuePair<string, object>>? tDict = null;

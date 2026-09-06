@@ -109,6 +109,15 @@ namespace Dynamitey.DynamicObjects
             "member access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same MassageResultBasedOnInterface call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "This is a DynamicObject Try* override: the DLR is its only caller and always supplies " +
+            "a real, non-null binder (and argument array, where present) - application code cannot " +
+            "reach this override with a null argument through any public API. The base class also " +
+            "declares these parameters non-nullable, so annotating one nullable here to add a guard " +
+            "clause would be a CS8765 mismatch with the override; and guarding a parameter that stays " +
+            "non-nullable would just be dead code, since the DLR never passes null. Left unguarded " +
+            "deliberately, not overlooked. Every other Try*-override CA1062 suppression in this " +
+            "codebase points back to this comment rather than repeating it.")]
         public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
 
@@ -138,6 +147,8 @@ namespace Dynamitey.DynamicObjects
             "the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same InvokeMethodDelegate/Dynamic.Invoke/MassageResultBasedOnInterface calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             if (_dictionary.TryGetValue(binder.Name, out result))
@@ -186,9 +197,11 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
-       
+
             SetProperty(binder.Name,value);
             return true;
         }
