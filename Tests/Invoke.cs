@@ -774,6 +774,30 @@ namespace Dynamitey.Tests
             Assert.That(tOut, Is.EqualTo(tValue.ToString()));
         }
 
+        // Issue #42 gap 4: CacheableInvocation's storedArgs constructor parameter is otherwise
+        // unused anywhere in this codebase. Passing storedArgs whose elements are all plain
+        // values (no InvokeArg among them) used to NRE in the constructor - Util.GetArgsAndNames
+        // returns a null out argNames in exactly that case, and the merge check dereferenced it
+        // unconditionally. This is confirmed dead in production callers, not something anyone
+        // has hit; fixed rather than removed since it's public API on a library with external
+        // consumers, and the fix (skip the merge when there's nothing to merge) is a one-line,
+        // zero-risk correction that keeps the constructor usable for exactly what its
+        // documentation already promises.
+        [Test]
+        public void TestCacheableInvocationStoredArgsWithoutInvokeArgNames()
+        {
+            dynamic tExpando = new ExpandoObject();
+            tExpando.Func = new Func<int, string>(it => it.ToString());
+
+            var tValue = 1;
+
+            var tCachedInvoke = new CacheableInvocation(InvocationKind.InvokeMember, "Func",
+                argCount: 1, storedArgs: new object[] { tValue });
+
+            var tOut = tCachedInvoke.Invoke((object)tExpando, tValue);
+
+            Assert.That(tOut, Is.EqualTo(tValue.ToString()));
+        }
 
         [Test]
         public void TestMethodStaticOverloadingPassAndGetValue()

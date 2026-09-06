@@ -102,9 +102,7 @@ namespace Dynamitey.Internal.Optimization
             if (tInvokeContext != null)
             {
                 staticContext = tInvokeContext.StaticContext;
-                // InvokeContext.Context is null only via its (target, context) constructor called
-                // with a null context - a documented gap in that type, not introduced here.
-                context = tInvokeContext.Context!;
+                context = tInvokeContext.Context;
                 context = context.FixContext();
                 return tInvokeContext.Target;
             }

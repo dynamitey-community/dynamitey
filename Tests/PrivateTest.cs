@@ -296,6 +296,23 @@ namespace Dynamitey.Tests
             Assert.That(() => Dynamic.InvokeMember(context(tTest,this), "Test"), Throws.InstanceOf<RuntimeBinderException>());
         }
 
+        // Issue #42 gap 1: InvokeContext(target, context) with a null context used to leave
+        // Context null, which Util.GetTargetContext then dereferenced with an NRE. It now
+        // defaults Context from the target's own type - the same default the (target,
+        // staticContext, context) constructor already applies to a null context - so passing
+        // null grants exactly the access an omitted context would (private access to the
+        // target's own type), rather than the mismatched-context RuntimeBinderException above.
+        [Test]
+        public void TestInvokeContextNullContextDefaultsToTargetType()
+        {
+            var tTest = new TestWithPrivateMethod();
+            var context = InvokeContext.CreateContext;
+            var tContext = context(tTest, null);
+
+            Assert.That(tContext.Context, Is.EqualTo(tTest.GetType()));
+            Assert.That((object)Dynamic.InvokeMember(tContext, "Test"), Is.EqualTo(3));
+        }
+
         [Test]
         public void TestCacheableDoNotExposePrivateMethod()
         {

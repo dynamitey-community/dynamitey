@@ -39,9 +39,9 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         [RequiresUnreferencedCode("Constructs the annotated LinqInstanceProxy.")]
         [RequiresDynamicCode("Constructs the annotated LinqInstanceProxy, which requires the DLR's runtime code generation.")]
-        protected override ExtensionToInstanceProxy CreateSelf(object? target, Type extendedType, Type[] staticTypes, Type[]? instanceHints)
+        protected override ExtensionToInstanceProxy CreateSelf(object target, Type extendedType, Type[] staticTypes, Type[]? instanceHints)
         {
-            return new LinqInstanceProxy(target!);
+            return new LinqInstanceProxy(target);
         }
 
 
