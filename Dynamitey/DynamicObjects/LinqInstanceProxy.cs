@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using System.Text;
@@ -20,6 +21,8 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="LinqInstanceProxy" /> class.
         /// </summary>
         /// <param name="target">The target.</param>
+        [RequiresUnreferencedCode("Calls the annotated ExtensionToInstanceProxy constructor, which reflects over target's interfaces.")]
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public LinqInstanceProxy(dynamic target)
             :base(new InvokeContext(target, typeof(object)), typeof(IEnumerable<>), new[]{typeof(Enumerable)}, new[]{typeof(ILinq<>), typeof(IOrderedLinq<>)})
         {
@@ -34,6 +37,8 @@ namespace Dynamitey.DynamicObjects
         /// <param name="staticTypes">The static types.</param>
         /// <param name="instanceHints">The instance hints.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Constructs the annotated LinqInstanceProxy.")]
+        [RequiresDynamicCode("Constructs the annotated LinqInstanceProxy, which requires the DLR's runtime code generation.")]
         protected override ExtensionToInstanceProxy CreateSelf(object target, Type extendedType, Type[] staticTypes, Type[] instanceHints)
         {
             return new LinqInstanceProxy(target);
@@ -44,6 +49,12 @@ namespace Dynamitey.DynamicObjects
         /// Gets the enumerator.
         /// </summary>
         /// <returns></returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Invokes CallTarget.GetEnumerator() through 'dynamic' (DLR). This implements " +
+            "IEnumerable<object>.GetEnumerator(), which isn't annotated, so this method can't " +
+            "carry [RequiresUnreferencedCode] itself without mismatching that interface member; " +
+            "the actionable warning already lives on any consumer using this type through 'dynamic'.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic' invocation as above; see the IL2026 suppression on this member.")]
         public IEnumerator<object> GetEnumerator()
         {
             return ((dynamic) CallTarget).GetEnumerator();

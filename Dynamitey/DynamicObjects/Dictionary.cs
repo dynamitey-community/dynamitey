@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -33,6 +34,7 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Initializes a new instance of the <see cref="Dictionary"/> class.
         /// </summary>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public Dictionary() 
         {
         }
@@ -41,6 +43,7 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="Dictionary"/> class.
         /// </summary>
         /// <param name="dict">The dict.</param>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public Dictionary(IEnumerable<KeyValuePair<string, object>> dict) : base(dict)
         {
         }
@@ -104,6 +107,7 @@ namespace Dynamitey.DynamicObjects
             /// <summary>
             /// Initializes a new instance of the <see cref="ChainableDictionary"/> class.
             /// </summary>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public ChainableDictionary() 
         {
         }
@@ -112,6 +116,7 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="Dictionary"/> class.
         /// </summary>
         /// <param name="dict">The dict.</param>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public ChainableDictionary(IEnumerable<KeyValuePair<string, object>> dict) : base(dict)
         {
         }
@@ -126,6 +131,13 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
+		[UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Constructs the annotated List when a multi-arg call falls through to it. This is a " +
+            "DynamicObject.TryInvokeMember override: it can't carry [RequiresUnreferencedCode] " +
+            "itself without mismatching the unannotated base member, and the DLR invokes it only " +
+            "after the consumer's own dynamic call site already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Same List construction as above; see the IL2026 suppression on this member.")]
 		public override bool TryInvokeMember (InvokeMemberBinder binder, object[] args, out object result)
 		{
 			if(base.TryInvokeMember (binder, args, out result)){

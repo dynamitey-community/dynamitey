@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 
@@ -19,6 +20,8 @@ namespace Dynamitey.DynamicObjects
         /// <typeparam name="T"></typeparam>
         /// <param name="valueFactory">The value factory.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls the annotated Lazy<T>(Func<T>) constructor, which requires T to have a public parameterless constructor for System.Lazy<T>'s trim analysis.")]
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Create<T>(Func<T> valueFactory)
         {
             return new Lazy<T>(valueFactory);
@@ -29,6 +32,7 @@ namespace Dynamitey.DynamicObjects
         /// <typeparam name="T"></typeparam>
         /// <param name="target">The target.</param>
         /// <returns></returns>
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Create<T>(System.Lazy<T> target)
         {
             return new Lazy<T>(target);
@@ -38,6 +42,7 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="Lazy"/> class.
         /// </summary>
         /// <param name="target">The target.</param>
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         protected Lazy(object target) : base(target)
         {
         }
@@ -55,6 +60,7 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="Lazy{T}"/> class.
         /// </summary>
         /// <param name="target">The target.</param>
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public Lazy(System.Lazy<T> target) : base(target)
         {
         }
@@ -63,6 +69,8 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="Lazy{T}"/> class.
         /// </summary>
         /// <param name="valueFactory">The value factory.</param>
+        [RequiresUnreferencedCode("System.Lazy<T>'s type parameter requires T to have a public parameterless constructor for trim analysis, regardless of which Lazy<T> constructor overload is actually used; trimming can remove T's parameterless constructor.")]
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public Lazy(Func<T> valueFactory ):base(new System.Lazy<T>(valueFactory))
         {
             

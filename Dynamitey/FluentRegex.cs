@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -16,6 +17,7 @@ namespace Dynamitey
         /// <param name="list">The list.</param>
         /// <param name="regex">The regex.</param>
         /// <returns></returns>
+        [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static IEnumerable<dynamic> FluentFilter(this IEnumerable<string> list, Regex regex)
         {
             return list.Select(it => regex.Match(it)).Where(it => it.Success).Select(it => new DynamicObjects.RegexMatch(it, regex)).Cast<dynamic>();
@@ -27,6 +29,7 @@ namespace Dynamitey
         /// <param name="inputString">The input string.</param>
         /// <param name="regex">The regex.</param>
         /// <returns></returns>
+        [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static IEnumerable<dynamic> Matches(string inputString, Regex regex)
         {
             var tMatches = regex.Matches(inputString);
@@ -40,6 +43,7 @@ namespace Dynamitey
         /// <param name="inputString">The input string.</param>
         /// <param name="regex">The regex.</param>
         /// <returns></returns>
+        [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static dynamic Match(string inputString, Regex regex)
         {
             var tMatch = regex.Match(inputString);
@@ -52,6 +56,7 @@ namespace Dynamitey
         /// <param name="regex">The regex.</param>
         /// <param name="inputString">The input string.</param>
         /// <returns></returns>
+        [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static dynamic FluentMatch(this Regex regex, string inputString)
         {
             var tMatch = regex.Match(inputString);
@@ -64,6 +69,7 @@ namespace Dynamitey
         /// <param name="regex">The regex.</param>
         /// <param name="inputString">The input string.</param>
         /// <returns></returns>
+        [RequiresDynamicCode("Forwards to Matches, which constructs a RegexMatch; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static IEnumerable<dynamic> FluentMatches(this Regex regex, string inputString)
         {
             return Matches(inputString, regex);

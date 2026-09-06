@@ -15,6 +15,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -50,22 +51,51 @@ namespace Dynamitey
 
     
 
-        private static readonly dynamic ComBinder
-            = new DynamicObjects.LateType("System.Dynamic.ComBinder, System.Dynamic, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
-        
+        // Lazily constructed (not a field initializer): a LateType instantiates a DynamicObject, which
+        // unconditionally requires the DLR. Dynamic has an explicit static constructor, so a field
+        // initializer here would run - and pay that cost - the moment ANY member of Dynamic is first
+        // touched, regardless of whether ComBinder itself is ever used. Behind a property instead,
+        // [RequiresDynamicCode] lands only on callers who actually read ComBinder (e.g. GetMemberNames).
+        private static dynamic _comBinder;
+
+        private static dynamic ComBinder
+        {
+            [RequiresUnreferencedCode("Constructs a LateType(string), which resolves the optional System.Dynamic.ComBinder type by name and reports absence via IsAvailable rather than throwing; the type may legitimately be missing (e.g. System.Dynamic not referenced).")]
+            [RequiresDynamicCode("Constructing a LateType instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+            get => _comBinder ?? (_comBinder = new DynamicObjects.LateType("System.Dynamic.ComBinder, System.Dynamic, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"));
+        }
+
         // ReSharper disable once MemberCanBePrivate.Global
-        internal static readonly dynamic Impromptu
-            = new DynamicObjects.LateType("ImpromptuInterface.Impromptu, ImpromptuInterface, PublicKeyToken=0b1781c923b2975b");
-        
+        // See ComBinder above for why this is a lazy property rather than a field initializer.
+        private static dynamic _impromptu;
+
+        internal static dynamic Impromptu
+        {
+            [RequiresUnreferencedCode("Constructs a LateType(string), which resolves the optional ImpromptuInterface.Impromptu type by name and reports absence via IsAvailable rather than throwing; ImpromptuInterface may legitimately not be referenced.")]
+            [RequiresDynamicCode("Constructing a LateType instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+            get => _impromptu ?? (_impromptu = new DynamicObjects.LateType("ImpromptuInterface.Impromptu, ImpromptuInterface, PublicKeyToken=0b1781c923b2975b"));
+        }
+
         // ReSharper disable once MemberCanBePrivate.Global
-        internal static readonly dynamic TypeDescriptor
-             = new DynamicObjects.LateType("System.ComponentModel.TypeDescriptor, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
-    
-            
+        // See ComBinder above for why this is a lazy property rather than a field initializer.
+        private static dynamic _typeDescriptor;
+
+        internal static dynamic TypeDescriptor
+        {
+            [RequiresUnreferencedCode("Constructs a LateType(string), which resolves the optional System.ComponentModel.TypeDescriptor type by name and reports absence via IsAvailable rather than throwing; TypeDescriptor may legitimately not be available (e.g. on netstandard2.0).")]
+            [RequiresDynamicCode("Constructing a LateType instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+            get => _typeDescriptor ?? (_typeDescriptor = new DynamicObjects.LateType("System.ComponentModel.TypeDescriptor, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"));
+        }
+
         private static readonly Type ComObjectType;
         // ReSharper disable once MemberCanBePrivate.Global
         internal static readonly Type TypeConverterAttributeSL;
 
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "The two Assembly.GetType/Type.GetType calls below resolve an optional type by name and " +
+            "are wrapped in try/catch specifically because the type may legitimately be absent. A " +
+            "static constructor has no caller to warn at and runs unconditionally regardless of " +
+            "whether these optional features are ever used.")]
         static Dynamic()
         {
             try
@@ -102,6 +132,8 @@ namespace Dynamitey
         /// Advanced usage only for serious custom dynamic invocation.
         /// </remarks>
         /// <seealso cref="CreateCallSite{T}"/>
+        [RequiresUnreferencedCode("Builds a raw DLR CallSite from a caller-supplied binder; the binder resolves its target member by name at each call, and trimming can remove that member. Advanced/low-level API - prefer InvokeMember/InvokeGet/etc.")]
+        [RequiresDynamicCode("Creating a CallSite - and, for delegate shapes with more than 14 parameters, emitting the delegate type itself via Reflection.Emit - requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static CallSite CreateCallSite(Type delegateType, CallSiteBinder binder, String_OR_InvokeMemberName name,
                                               Type context, string[] argNames = null, bool staticContext = false,
                                               bool isEvent = false) =>
@@ -141,6 +173,8 @@ namespace Dynamitey
         /// ]]></code>
         /// </example>
         /// <seealso cref="CreateCallSite"/>
+        [RequiresUnreferencedCode("Builds a raw DLR CallSite from a caller-supplied binder; the binder resolves its target member by name at each call, and trimming can remove that member. Advanced/low-level API - prefer InvokeMember/InvokeGet/etc.")]
+        [RequiresDynamicCode("Creating a CallSite<T> requires the DLR's runtime code generation to produce the binding rule; not supported when AOT-compiled.")]
         public static CallSite<T> CreateCallSite<T>(CallSiteBinder binder, String_OR_InvokeMemberName name, Type context,
                                                     string[] argNames = null, bool staticContext = false,
                                                     bool isEvent = false) where T : class 
@@ -153,6 +187,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="enumerable">The enumerable.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Wraps enumerable in a dynamic LINQ proxy that resolves Enumerable/Queryable extension methods by name and generic signature via reflection at each call; trimming can remove the method being resolved.")]
+        [RequiresDynamicCode("Each LINQ-style call through the returned proxy binds through the DLR and, for multi-generic-argument methods, may build the closed generic method at runtime; not supported when AOT-compiled.")]
         public static dynamic Linq(object enumerable)
         {
             if (enumerable
@@ -205,6 +241,8 @@ namespace Dynamitey
         /// including a plain <see cref="Task"/>, or a <see cref="Task{TResult}"/> whose <c>TResult</c> is
         /// visible - is returned unchanged. See <see cref="AwaitableResult"/> for why this is safe.
         /// </remarks>
+        [RequiresUnreferencedCode("Resolves 'name' on target's runtime type via the DLR binder; if trimming has removed the member, this throws RuntimeBinderException reporting the member as entirely absent, even when the untrimmed source plainly declares it.")]
+        [RequiresDynamicCode("Every call binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic InvokeMember(object target, String_OR_InvokeMemberName name, params object[] args)
         {
             target = target.GetTargetContext(out var context, out var staticContext);
@@ -225,6 +263,7 @@ namespace Dynamitey
         /// itself, so this also catches a <see cref="Task"/> subclass that declares its own <c>Result</c>.
         /// A plain, non-generic <see cref="Task"/> has no <c>Result</c> property and is never wrapped.
         /// </summary>
+        [RequiresUnreferencedCode("Reads the task's 'Result' property via Type.GetProperty(nameof(Result)) reflection; trimming can remove that property from the task's concrete type.")]
         private static object WrapIfResultTypeInaccessible(object result)
         {
             if (result is Task task)
@@ -262,6 +301,8 @@ namespace Dynamitey
         /// <see cref="AwaitableResult"/> wrapper <see cref="InvokeMember"/> may have returned, and awaits it
         /// through reflection instead of the DLR.
         /// </remarks>
+        [RequiresUnreferencedCode("Calls InvokeMember, which resolves 'name' via the DLR binder and can fail against a trimmed target.")]
+        [RequiresDynamicCode("Calls InvokeMember, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static async Task<object> InvokeMemberAsync(object target, String_OR_InvokeMemberName name, params object[] args)
         {
             object result = InvokeMember(target, name, args);
@@ -284,6 +325,7 @@ namespace Dynamitey
         /// <exception cref="InvalidOperationException">
         /// <paramref name="task"/> is not a <see cref="Task"/> or an <see cref="AwaitableResult"/>.
         /// </exception>
+        [RequiresUnreferencedCode("Reads the completed task's 'Result' property via Type.GetProperty(nameof(Result)) reflection; trimming can remove that property from the task's concrete type.")]
         public static async Task<object> AwaitResult(object task)
         {
             if (task is null)
@@ -316,6 +358,8 @@ namespace Dynamitey
         /// <param name="op">The op.</param>
         /// <param name="rightArg">The right Arg.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Every operator case dispatches through 'dynamic' operands, resolved by the DLR binder against the runtime types of leftArg/rightArg; trimming can remove the operator overload being resolved.")]
+        [RequiresDynamicCode("Dynamic operator dispatch requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic InvokeBinaryOperator(dynamic leftArg, ExpressionType op, dynamic rightArg)
         {
             switch (op)
@@ -394,6 +438,8 @@ namespace Dynamitey
 
         [Obsolete("Use `InvokeUnaryOperator` instead.")]
         // ReSharper disable once IdentifierTypo
+        [RequiresUnreferencedCode("Forwards to InvokeUnaryOperator, which dispatches through a 'dynamic' operand resolved by the DLR binder.")]
+        [RequiresDynamicCode("Forwards to InvokeUnaryOperator, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic InvokeUnaryOpartor(ExpressionType op, dynamic arg)
             => InvokeUnaryOperator(op, (object)arg);
         
@@ -403,6 +449,8 @@ namespace Dynamitey
         /// <param name="arg">The arg.</param>
         /// <param name="op">The op.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Every operator case dispatches through a 'dynamic' operand, resolved by the DLR binder against arg's runtime type; trimming can remove the operator overload being resolved.")]
+        [RequiresDynamicCode("Dynamic operator dispatch requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic InvokeUnaryOperator(ExpressionType op, dynamic arg)
         {
             switch (op)
@@ -426,6 +474,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="args">The args.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Resolves target's invoke/call operator via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Invoke(object target, params object[] args)
         {
             target = target.GetTargetContext(out var context, out var staticContext);
@@ -442,6 +492,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="indexes">The indexes.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Resolves target's indexer via the DLR binder; trimming can remove the indexer being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic InvokeGetIndex(object target, params object[] indexes)
         {
             target = target.GetTargetContext(out var tContext, out var tStaticContext);
@@ -460,6 +512,8 @@ namespace Dynamitey
         /// <param name="value">The value</param>
         /// <param name="indexes">The indexes </param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Forwards to InvokeSetIndex, which resolves target's indexer via the DLR binder.")]
+        [RequiresDynamicCode("Forwards to InvokeSetIndex, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static object InvokeSetValueOnIndexes(object target, object value, params object[] indexes)
         {
             var tList = new List<object>(indexes) {value};
@@ -471,6 +525,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="target">The target.</param>
         /// <param name="indexesThenValue">The indexes then value.</param>
+        [RequiresUnreferencedCode("Resolves target's indexer setter via the DLR binder; trimming can remove the indexer being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static object InvokeSetIndex(object target, params object[] indexesThenValue)
         {
             if (indexesThenValue.Length < 2)
@@ -508,6 +564,8 @@ namespace Dynamitey
         /// ]]>
         /// </code>
         /// </example>
+        [RequiresUnreferencedCode("Resolves 'name' on target's runtime type via the DLR binder; if trimming has removed the member, this throws RuntimeBinderException reporting the member as entirely absent.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static void InvokeMemberAction(object target, String_OR_InvokeMemberName name, params object[] args)
         {
             target = target.GetTargetContext(out var tContext, out var tStaticContext);
@@ -523,6 +581,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="target">The target.</param>
         /// <param name="args">The args.</param>
+        [RequiresUnreferencedCode("Resolves target's invoke/call operator via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static void InvokeAction(object target, params object[] args)
         {
             target = target.GetTargetContext(out var tContext, out var tStaticContext);
@@ -556,6 +616,8 @@ namespace Dynamitey
         /// <remarks>
         /// if you call a static property off a type with a static context the csharp dlr binder won't do it, so this method reverts to reflection
         /// </remarks>
+        [RequiresUnreferencedCode("Resolves 'name' on target's runtime type via the DLR binder (falling back to reflection for a static context); trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("The DLR binder path requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static object InvokeSet(object target, string name, object value)
         {
             target = target.GetTargetContext(out var tContext, out var tStaticContext);
@@ -572,6 +634,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="propertyChain">The property chain.</param>
         /// <param name="value">The value.</param>
+        [RequiresUnreferencedCode("Walks propertyChain by calling InvokeGet/InvokeGetIndex/InvokeSet, each of which resolves a member via the DLR binder; trimming can remove any member along the chain.")]
+        [RequiresDynamicCode("Each step in the chain binds through the DLR; not supported when AOT-compiled.")]
         public static object InvokeSetChain(object target, string propertyChain, object value)
         {
             var tProperties = _chainRegex.FluentMatches(propertyChain).ToList();
@@ -618,13 +682,22 @@ namespace Dynamitey
 
 
 
-        private static readonly dynamic _invokeSetAll = new InvokeSetters();
+        // Lazily constructed (not a field initializer) for the same reason as ComBinder above:
+        // constructing an InvokeSetters (a DynamicObject) unconditionally requires the DLR, and Dynamic's
+        // explicit static constructor would otherwise pay that cost the moment ANY member of Dynamic is
+        // first touched, regardless of whether InvokeSetAll is ever used.
+        private static dynamic _invokeSetAll;
 
         /// <summary>
         /// Call Like method invokes set on target and a list of property/value. Invoke with dictionary, anonymous type or named arguments.
         /// </summary>
         /// <value>The invoke set all.</value>
-        public static dynamic InvokeSetAll => _invokeSetAll;
+        public static dynamic InvokeSetAll
+        {
+            [RequiresUnreferencedCode("Constructs an InvokeSetters, and the returned object's Invoke resolves each supplied property name against target via InvokeSetChain/the DLR binder; trimming can remove the property being set.")]
+            [RequiresDynamicCode("Constructing an InvokeSetters instantiates System.Dynamic.DynamicObject, and invoking the returned object, both require the DLR's runtime code generation; not supported when AOT-compiled.")]
+            get => _invokeSetAll ?? (_invokeSetAll = new InvokeSetters());
+        }
 
         /// <summary>
         /// Wraps a target to partial apply a method (or target if you can invoke target directly eg delegate).
@@ -632,6 +705,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="totalArgCount">The total arg count.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("The returned proxy resolves target's invoke/call operator (or, for a named member, InvokeMember) via the DLR binder on each call; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Invoking the returned proxy requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Curry(object target, int? totalArgCount = null)
         {
             if (target is Delegate && !totalArgCount.HasValue)
@@ -644,6 +719,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="target">The target.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("The returned proxy resolves the delegate's invoke operator via the DLR binder on each call; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Invoking the returned proxy requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Curry(Delegate target)
         {
             return new Curry(target, target.GetMethodInfo().GetParameters().Length);
@@ -670,6 +747,8 @@ namespace Dynamitey
         /// ]]>
         /// </code>
         /// </example>
+        [RequiresUnreferencedCode("Resolves 'name' on target's runtime type via the DLR binder; if trimming has removed the member, this throws RuntimeBinderException reporting the member as entirely absent, even when the untrimmed source plainly declares it.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic InvokeGet(object target, string name)
         {
             target = target.GetTargetContext(out var tContext, out var tStaticContext);            CallSite tSite = null;
@@ -686,6 +765,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="propertyChain">The property chain.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Walks propertyChain by calling InvokeGet/InvokeGetIndex, each of which resolves a member via the DLR binder; trimming can remove any member along the chain.")]
+        [RequiresDynamicCode("Each step in the chain binds through the DLR; not supported when AOT-compiled.")]
         public static dynamic InvokeGetChain(object target, string propertyChain)
         {
             var tProperties = _chainRegex.FluentMatches(propertyChain);
@@ -720,6 +801,8 @@ namespace Dynamitey
         /// <returns>
         /// 	<c>true</c> if the specified target is event; otherwise, <c>false</c>.
         /// </returns>
+        [RequiresUnreferencedCode("Resolves 'name' on target's runtime type via the DLR binder to determine whether it is an event; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static bool InvokeIsEvent(object target, string name)
         {
             target = target.GetTargetContext(out var tContext, out var tStaticContext);
@@ -734,6 +817,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="name">The name.</param>
         /// <param name="value">The value.</param>
+        [RequiresUnreferencedCode("Resolves the add accessor for 'name' via the DLR binder; trimming can remove the event being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static void InvokeAddAssignMember(object target, string name, object value)
         {
             CallSite callSiteAdd =null;
@@ -754,6 +839,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="name">The name.</param>
         /// <param name="value">The value.</param>
+        [RequiresUnreferencedCode("Resolves the remove accessor for 'name' via the DLR binder; trimming can remove the event being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static void InvokeSubtractAssignMember(object target, string name, object value)
         {
             target = target.GetTargetContext(out var context, out var staticContext);
@@ -779,6 +866,8 @@ namespace Dynamitey
         /// <param name="type">The type.</param>
         /// <param name="explicit">if set to <c>true</c> [explicit].</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Resolves the conversion operator to 'type' via the DLR binder; trimming can remove the conversion being resolved.")]
+        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic InvokeConvert(object target, Type type, bool @explicit =false)
         {
             target = target.GetTargetContext(out var tContext, out var tDummy);
@@ -796,6 +885,8 @@ namespace Dynamitey
         /// <param name="invokeableObject">The invokeable object.</param>
         /// <param name="delegateType">Type of the delegate.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Falls back to Expression.Lambda(...).Compile() and, for a plain Action/Func-shaped delegate whose parameters are all reference types, to invoking invokeableObject through the DLR; trimming can remove the member the compiled expression or DLR call resolves.")]
+        [RequiresDynamicCode("Expression.Lambda(...).Compile() and the DLR invocation path both generate code at runtime; not supported when AOT-compiled.")]
         public static dynamic CoerceToDelegate(object invokeableObject, Type delegateType)
             {
                 var delegateTypeInfo = delegateType.GetTypeInfo();
@@ -845,7 +936,17 @@ namespace Dynamitey
 
             }
 
-        private static readonly dynamic LateConvert = new DynamicObjects.LateType(typeof(Convert));
+        // Lazily constructed (not a field initializer) for the same reason as ComBinder above:
+        // constructing a LateType (a DynamicObject) unconditionally requires the DLR, and Dynamic's
+        // explicit static constructor would otherwise pay that cost the moment ANY member of Dynamic is
+        // first touched, regardless of whether IsDBNull is ever called.
+        private static dynamic _lateConvert;
+
+        private static dynamic LateConvert
+        {
+            [RequiresDynamicCode("Constructing a LateType instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+            get => _lateConvert ?? (_lateConvert = new DynamicObjects.LateType(typeof(Convert)));
+        }
 
 
         /// <summary>
@@ -855,6 +956,8 @@ namespace Dynamitey
         /// <returns>
         ///   <c>true</c> if [is DBNull]; otherwise, <c>false</c>.
         /// </returns>
+        [RequiresUnreferencedCode("Resolves System.Convert.IsDBNull dynamically (via a late-bound Convert reference) rather than calling it directly; trimming Convert's public surface breaks this.")]
+        [RequiresDynamicCode("Constructing the underlying LateType and making the late-bound call both require the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static bool IsDBNull(object value)
         {
 
@@ -874,6 +977,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="target">The target.</param>
         /// <param name="types">The types.</param>
+        [RequiresUnreferencedCode("For more than one type, converts each with ConvertEach<FauxType>, which resolves a conversion via the DLR binder per item; trimming can remove the conversion being resolved.")]
+        [RequiresDynamicCode("ConvertEach's DLR conversion path requires runtime code generation; not supported when AOT-compiled.")]
         public static void ApplyEquivalentType(DynamicObjects.IEquivalentType target, params Type[] types)
         {
             if(types.Length == 1)
@@ -893,6 +998,8 @@ namespace Dynamitey
         /// <param name="explicit">if set to <c>true</c> [explicit].</param>
         /// <returns></returns>
         [Obsolete("Use ConvertEach.")]
+        [RequiresUnreferencedCode("Forwards to ConvertEach, which resolves a conversion via the DLR binder per item.")]
+        [RequiresDynamicCode("Forwards to ConvertEach, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static IEnumerable<T> ConvertAll<T>(this System.Collections.IEnumerable enumerable, bool explict = false)
             => ConvertEach<T>(enumerable, explict);
         
@@ -903,6 +1010,8 @@ namespace Dynamitey
         /// <param name="enumerable">The enumerable.</param>
         /// <param name="explicit">if set to <c>true</c> [explicit].</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls InvokeConvert per item, which resolves a conversion via the DLR binder; trimming can remove the conversion being resolved.")]
+        [RequiresDynamicCode("InvokeConvert's DLR path requires runtime code generation; not supported when AOT-compiled.")]
         public static IEnumerable<T> ConvertEach<T>(this System.Collections.IEnumerable enumerable, bool @explicit =false)
         {
             return enumerable.Cast<object>().Select(it => InvokeConvert(it, typeof (T), @explicit)).Cast<T>();
@@ -914,6 +1023,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="type">The type.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Falls through CoerceToDelegate, a late-bound Impromptu.DynamicActLike call, InvokeConvert, and TypeDescriptor/TypeConverter reflection - each resolves a member or type by name; trimming can remove any of them.")]
+        [RequiresDynamicCode("The CoerceToDelegate and Impromptu.DynamicActLike paths require the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic CoerceConvert(object target, Type type)
         {
             var typeInfo = type.GetTypeInfo();
@@ -1026,6 +1137,8 @@ namespace Dynamitey
         /// <param name="type">The type.</param>
         /// <param name="args">The args.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Resolves type's constructor via the DLR binder; if trimming has removed the constructor, this throws RuntimeBinderException reporting the type as having no constructors at all, even when the untrimmed source plainly declares one.")]
+        [RequiresDynamicCode("For more than 14 arguments, building the call site emits a delegate type via Reflection.Emit; for 14 or fewer, it binds through Microsoft.CSharp.RuntimeBinder. Both require the DLR's runtime code generation. On a runtime without Reflection.Emit (AOT-compiled, trimmed, or mobile/WebAssembly), more than 14 arguments throws PlatformNotSupportedException instead - see issue #27; 14 or fewer still requires the DLR itself and is not supported when AOT-compiled.")]
         public static dynamic InvokeConstructor(Type type, params object[] args)
         {
             var tValue = type.GetTypeInfo().IsValueType;
@@ -1048,6 +1161,8 @@ namespace Dynamitey
         /// <param name="del">The del.</param>
         /// <param name="args">The args.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("For an argument count with no hand-written fast path, invokes del through the DLR (via a 'dynamic' reference to del) rather than Delegate.DynamicInvoke; trimming can remove the member the DLR resolves.")]
+        [RequiresDynamicCode("The DLR invocation path requires runtime code generation; not supported when AOT-compiled.")]
 		public static object FastDynamicInvoke(this Delegate del, params object[] args)
 		{
             if (del.GetMethodInfo().ReturnType != typeof(void))
@@ -1086,6 +1201,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="dynamicOnly">if set to <c>true</c> [dynamic only]. Won't add reflected properties</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("For an IDynamicMetaObjectProvider, calls GetMetaObject(...).GetDynamicMemberNames(); for a COM object, resolves member names through a late-bound ComBinder reference. Trimming can remove members either path would otherwise report.")]
+        [RequiresDynamicCode("The late-bound ComBinder path goes through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         public static IEnumerable<string> GetMemberNames(object target, bool dynamicOnly = false)
         {
             var tList = new List<string>();
@@ -1119,6 +1236,8 @@ namespace Dynamitey
         /// Advanced use only. Use this method for serious custom invocation, otherwise there are other convenience methods such as
         /// <see cref="InvokeMember"></see>, <see cref="InvokeGet"></see>, <see cref="InvokeSet"></see> and <see cref="InvokeMemberAction"></see>
         /// </remarks>
+        [RequiresUnreferencedCode("Reads callSite.Target via a 'dynamic' cast (DLR member resolution) before invoking it; trimming can remove the Target member being resolved. Advanced/low-level API - prefer InvokeMember/InvokeGet/etc.")]
+        [RequiresDynamicCode("The 'dynamic' cast and subsequent invocation both require the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic InvokeCallSite(CallSite callSite, object target, params object[] args)
         {
          

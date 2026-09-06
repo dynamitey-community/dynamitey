@@ -19,7 +19,19 @@
     <DelaySign>False</DelaySign>
 
   </PropertyGroup>
-  
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net10.0'">
+    <!-- Surfaces IL2026/IL3050 (and friends) at build time for any dynamic-dispatch or
+         reflection-by-name call this library's own code makes that isn't wrapped behind a
+         [RequiresUnreferencedCode]/[RequiresDynamicCode]-annotated member - see issue #4.
+         Deliberately NOT IsTrimmable or IsAotCompatible: those claim the assembly is safe to
+         trim/AOT-compile, which it is not and never will be (it's built on the DLR). This pair
+         only turns on the diagnostics; it makes no claim about the assembly itself. Only for
+         net10.0: netstandard2.0 predates both attributes and has no such analyzer. -->
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Computes Version, AssemblyVersion, FileVersion and InformationalVersion
          from git history and tags. Build-time only: PrivateAssets="all" keeps it

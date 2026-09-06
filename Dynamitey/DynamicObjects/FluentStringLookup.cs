@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 
@@ -22,6 +23,7 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="FluentStringLookup"/> class.
         /// </summary>
         /// <param name="lookup">The lookup.</param>
+        [RequiresDynamicCode("Constructing a FluentStringLookup instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public FluentStringLookup(Func<string,dynamic> lookup)
         {
             _lookup = lookup;

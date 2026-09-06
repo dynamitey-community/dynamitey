@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Dynamitey.Internal.Compat;
@@ -29,6 +30,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="binderName">Name of the binder.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("A FauxType wrapping a real Type (RealType) resolves this by reflecting over the target type's members by name; trimming can remove the member being resolved. Overrides on a data-only FauxType (PropretySpecType, or an AggreType composed only of those) don't need this themselves, but must match the abstract declaration.")]
         public abstract IEnumerable<MemberInfo> GetMember(string binderName);
 
         /// <summary>
@@ -37,6 +39,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public abstract Type[] GetContainedTypes();
 
+        [RequiresUnreferencedCode("A FauxType wrapping a real Type (RealType) resolves this by reflecting over the target type's members; trimming can remove members it would otherwise report. Overrides on a data-only FauxType (PropretySpecType, or an AggreType composed only of those) don't need this themselves, but must match the abstract declaration.")]
         public abstract IEnumerable<string> GetMemberNames();
 
         /// <summary>
@@ -64,6 +67,7 @@ namespace Dynamitey.DynamicObjects
             PropertySpec = propertySpec;
         }
 
+        [RequiresUnreferencedCode("Matches FauxType.GetMember's abstract declaration; this override is itself a plain dictionary lookup and does no reflection.")]
         public override IEnumerable<MemberInfo> GetMember(string binderName)
         {
             if (PropertySpec.TryGetValue(binderName, out var val))
@@ -74,6 +78,7 @@ namespace Dynamitey.DynamicObjects
             return Enumerable.Empty<MemberInfo>();
         }
 
+        [RequiresUnreferencedCode("Matches FauxType.GetMemberNames's abstract declaration; this override is itself a plain dictionary lookup and does no reflection.")]
         public override IEnumerable<string> GetMemberNames()
         {
             return PropertySpec.Keys;
@@ -131,11 +136,13 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="binderName">Name of the binder.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Reflects over TargetType's members by name; trimming can remove the member being resolved.")]
         public override IEnumerable<MemberInfo> GetMember(string binderName)
         {
             return TargetType.GetTypeInfo().GetMember(binderName);
         }
 
+        [RequiresUnreferencedCode("Reflects over TargetType's members; trimming can remove members it would otherwise report.")]
         public override IEnumerable<string> GetMemberNames()
         {
       
@@ -206,6 +213,7 @@ namespace Dynamitey.DynamicObjects
             return Types.SelectMany(it => it.GetContainedTypes()).Where(it => it.GetTypeInfo().IsInterface).ToArray();
         }
 
+        [RequiresUnreferencedCode("Matches FauxType.GetMemberNames's abstract declaration; delegates to each child FauxType, one of which may be a RealType that reflects over its target's members.")]
         public override IEnumerable<string> GetMemberNames()
         {
             return Types.SelectMany(it => it.GetMemberNames()).Distinct();
@@ -254,6 +262,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="binderName">Name of the binder.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Matches FauxType.GetMember's abstract declaration; delegates to each child FauxType, one of which may be a RealType that reflects over its target's members by name.")]
         public override IEnumerable<MemberInfo> GetMember(string binderName)
         {
             var list = new List<MemberInfo>();

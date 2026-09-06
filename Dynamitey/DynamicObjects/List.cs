@@ -17,6 +17,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -47,6 +48,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="contents">The contents.</param>
         /// <param name="members">The members.</param>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public List(
             IEnumerable<object> contents =null,
             IEnumerable<KeyValuePair<string, object>> members =null):base(members)
@@ -86,6 +88,13 @@ namespace Dynamitey.DynamicObjects
         /// Adds the specified item.
         /// </summary>
         /// <param name="item">The item.</param>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "The item parameter is statically typed 'dynamic', so this call binds through the DLR binder even though the underlying operation is a plain list add. " +
+            "Can't carry [RequiresUnreferencedCode] itself: it implements a plain BCL " +
+            "collection interface member that isn't annotated, and the two must match. The " +
+            "actionable warning belongs to whichever 'dynamic'-typed argument the caller " +
+            "supplied, which already carries this requirement at its own declaration.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
         public void Add(dynamic item)
         {
             InsertHelper(item);
@@ -111,6 +120,13 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// 	<c>true</c> if [contains] [the specified item]; otherwise, <c>false</c>.
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "The item parameter is statically typed 'dynamic', so this call binds through the DLR binder even though the underlying operation is a plain list lookup. " +
+            "Can't carry [RequiresUnreferencedCode] itself: it implements a plain BCL " +
+            "collection interface member that isn't annotated, and the two must match. The " +
+            "actionable warning belongs to whichever 'dynamic'-typed argument the caller " +
+            "supplied, which already carries this requirement at its own declaration.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
         public bool Contains(dynamic item)
         {
             return _list.Contains(item);
@@ -140,6 +156,13 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns></returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "The item parameter is statically typed 'dynamic', so this call binds through the DLR binder even though the underlying operation is a plain list lookup. " +
+            "Can't carry [RequiresUnreferencedCode] itself: it implements a plain BCL " +
+            "collection interface member that isn't annotated, and the two must match. The " +
+            "actionable warning belongs to whichever 'dynamic'-typed argument the caller " +
+            "supplied, which already carries this requirement at its own declaration.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
         public int IndexOf(dynamic item)
         {
             lock (ListLock)
@@ -153,6 +176,13 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="index">The index.</param>
         /// <param name="item">The item.</param>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "The item parameter is statically typed 'dynamic', so this call binds through the DLR binder even though the underlying operation is a plain list insert. " +
+            "Can't carry [RequiresUnreferencedCode] itself: it implements a plain BCL " +
+            "collection interface member that isn't annotated, and the two must match. The " +
+            "actionable warning belongs to whichever 'dynamic'-typed argument the caller " +
+            "supplied, which already carries this requirement at its own declaration.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
         public void Insert(int index, dynamic item)
         {
             InsertHelper(item,index);
@@ -190,6 +220,13 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns></returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "The item parameter is statically typed 'dynamic', so this call binds through the DLR binder even though the underlying operation is a plain list remove. " +
+            "Can't carry [RequiresUnreferencedCode] itself: it implements a plain BCL " +
+            "collection interface member that isn't annotated, and the two must match. The " +
+            "actionable warning belongs to whichever 'dynamic'-typed argument the caller " +
+            "supplied, which already carries this requirement at its own declaration.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
         public bool Remove(dynamic item)
         {
             return RemoveHelper(item);
@@ -226,6 +263,11 @@ namespace Dynamitey.DynamicObjects
         public dynamic this[int index]
         {
             get => _list[index];
+
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "value is statically typed 'dynamic', so assigning it into _list[index] binds through the DLR binder even though the underlying operation is a plain list write. " +
+                "Can't carry [RequiresUnreferencedCode] itself: it implements IList<T>/IList indexer setters that aren't annotated, and the two must match. The actionable warning belongs to the 'dynamic'-typed value the caller supplied.")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
             set
             {
                 object tOld;
@@ -298,8 +340,13 @@ namespace Dynamitey.DynamicObjects
 
         dynamic IDictionary<string, object>.this[string key]
         {
-         
+
             get => _dictionary[key];
+
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "value is statically typed 'dynamic', so this call binds through the DLR binder even though SetProperty takes a plain object. " +
+                "Can't carry [RequiresUnreferencedCode] itself: it implements IDictionary<TKey,TValue>'s indexer setter, which isn't annotated, and the two must match. The actionable warning belongs to the 'dynamic'-typed value the caller supplied.")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
             set => SetProperty(key, value);
         }
 

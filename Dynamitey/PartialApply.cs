@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -27,6 +28,8 @@ namespace Dynamitey
         /// <param name="argument">The argument.</param>
         /// <param name="function">The function.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Invokes function through 'dynamic', resolved via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("The 'dynamic' invocation binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic operator |(dynamic argument, PartialApply function)
         {
            return ((dynamic)function)(argument);
@@ -41,6 +44,13 @@ namespace Dynamitey
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Invokes 'this' through 'dynamic' (DLR), same as the | operator above, but this is a " +
+            "DynamicObject.TryBinaryOperation override: it can't carry [RequiresUnreferencedCode] " +
+            "itself without mismatching the unannotated base member, and the DLR invokes it only " +
+            "after the consumer's own dynamic call site already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Same DLR invocation as above; see the IL2026 suppression on this member.")]
         public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object result)
         {
             result = null;
@@ -60,6 +70,13 @@ namespace Dynamitey
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated Dynamic.CoerceToDelegate. This is a DynamicObject.TryConvert " +
+            "override: it can't carry [RequiresUnreferencedCode] itself without mismatching the " +
+            "unannotated base member, and the DLR invokes it only after the consumer's own dynamic " +
+            "conversion already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Same Dynamic.CoerceToDelegate call as above; see the IL2026 suppression on this member.")]
         public override bool TryConvert(ConvertBinder binder, out object result)
         {
             result = Dynamic.CoerceToDelegate(this, binder.Type);
@@ -76,6 +93,7 @@ namespace Dynamitey
         /// <param name="memberName">Name of the member.</param>
         /// <param name="totalCount">The total count.</param>
         /// <param name="invocationKind">Kind of the invocation.</param>
+        [RequiresDynamicCode("Constructing a PartialApply instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public PartialApply(object target, object[] args, string memberName = null, int? totalCount = null, InvocationKind? invocationKind = null)
         {
             _target = target;
@@ -140,6 +158,13 @@ namespace Dynamitey
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.
         /// </returns>
 #pragma warning restore 1734
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated Delegate.FastDynamicInvoke and Invocation.Invoke. This is a " +
+            "DynamicObject.TryInvoke override: it can't carry [RequiresUnreferencedCode] itself " +
+            "without mismatching the unannotated base member, and the DLR invokes it only after " +
+            "the consumer's own dynamic invocation already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Same FastDynamicInvoke/Invocation.Invoke calls as above; see the IL2026 suppression on this member.")]
         public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
         {
             var tNamedArgs = Util.NameArgsIfNecessary(binder.CallInfo, args);

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 
 namespace Dynamitey.DynamicObjects
@@ -26,7 +27,14 @@ namespace Dynamitey.DynamicObjects
    
     public class BaseFactory:BaseObject
     {
-  
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseFactory"/> class.
+        /// </summary>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+        public BaseFactory()
+        {
+        }
 
         /// <summary>
         /// Provides the default implementation for operations that get instance as defined by <see cref="GetInstanceForDynamicMember"/>. Classes derived from the <see cref="T:ImpromptuInterface.ImpromptuObject"/> class can override this method to specify dynamic behavior for operations such as getting a value for a property.
@@ -36,6 +44,12 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a run-time exception is thrown.)
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated GetInstanceForDynamicMember. This is a DynamicObject." +
+            "TryGetMember override: it can't carry [RequiresUnreferencedCode] itself without " +
+            "mismatching the unannotated base member, and the DLR invokes it only after the " +
+            "consumer's own dynamic member access already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same GetInstanceForDynamicMember call as above; see the IL2026 suppression on this member.")]
         public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object result)
         {
             result = GetInstanceForDynamicMember(binder.Name);
@@ -51,6 +65,12 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated GetInstanceForDynamicMember. This is a DynamicObject." +
+            "TryInvokeMember override: it can't carry [RequiresUnreferencedCode] itself without " +
+            "mismatching the unannotated base member, and the DLR invokes it only after the " +
+            "consumer's own dynamic call site already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same GetInstanceForDynamicMember call as above; see the IL2026 suppression on this member.")]
         public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object[] args, out object result)
         {
             result = GetInstanceForDynamicMember(binder.Name, args);
@@ -64,6 +84,8 @@ namespace Dynamitey.DynamicObjects
         /// <param name="type">The type.</param>
         /// <param name="args">The args.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls the annotated Dynamic.InvokeConstructor.")]
+        [RequiresDynamicCode("Dynamic.InvokeConstructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         protected virtual object CreateType(Type type, params object[] args)
         {
             return Dynamic.InvokeConstructor(type, args);
@@ -75,6 +97,8 @@ namespace Dynamitey.DynamicObjects
         /// <param name="memberName">Name of the member.</param>
         /// <param name="args">The args.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls TryTypeForName (reflects over EquivalentType's members by name) and the annotated CreateType.")]
+        [RequiresDynamicCode("CreateType requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         protected virtual object GetInstanceForDynamicMember(string memberName, params object[] args)
         {
             return TryTypeForName(memberName, out var type) ? CreateType(type, args) : null;
@@ -88,9 +112,16 @@ namespace Dynamitey.DynamicObjects
      
    
     public class BaseSingleInstancesFactory : BaseFactory
-    { 
-        
-   
+    {
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseSingleInstancesFactory"/> class.
+        /// </summary>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+        public BaseSingleInstancesFactory()
+        {
+        }
+
         /// <summary>
         /// Store Singletons
         /// </summary>
@@ -109,6 +140,8 @@ namespace Dynamitey.DynamicObjects
         /// <param name="memberName">Name of the member.</param>
         /// <param name="args"></param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls TryTypeForName (reflects over EquivalentType's members by name) and the annotated CreateType.")]
+        [RequiresDynamicCode("CreateType requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         protected override object GetInstanceForDynamicMember(string memberName, params object[] args)
         {
             lock (_lockTable)

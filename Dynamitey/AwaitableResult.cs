@@ -13,6 +13,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
@@ -117,6 +118,7 @@ namespace Dynamitey
             /// <see cref="AggregateException"/>), or <see cref="OperationCanceledException"/> if the task
             /// was cancelled.
             /// </exception>
+            [RequiresUnreferencedCode("Reads the wrapped task's 'Result' property via Type.GetProperty(nameof(Result)) reflection; trimming can remove that property from the task's concrete type.")]
             public object GetResult()
             {
                 // Statically typed against Task, not the task's actual runtime type: the compiler binds

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -42,6 +43,7 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="Dictionary"/> class.
         /// </summary>
         /// <param name="dict">The dict.</param>
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         protected BaseDictionary(IEnumerable<KeyValuePair<string, object>> dict =null)
         {
             if (dict == null)
@@ -96,6 +98,13 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a run-time exception is thrown.)
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated MassageResultBasedOnInterface. This is a DynamicObject.TryGetMember " +
+            "override: it can't carry [RequiresUnreferencedCode] itself without mismatching the " +
+            "unannotated base member, and the DLR invokes it only after the consumer's own dynamic " +
+            "member access already triggered the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Same MassageResultBasedOnInterface call as above; see the IL2026 suppression on this member.")]
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
 
@@ -117,6 +126,14 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Calls the annotated InvokeMethodDelegate/Dynamic.Invoke/MassageResultBasedOnInterface. " +
+            "This is a DynamicObject.TryInvokeMember override: it can't carry " +
+            "[RequiresUnreferencedCode] itself without mismatching the unannotated base member, and " +
+            "the DLR invokes it only after the consumer's own dynamic call site already triggered " +
+            "the framework's warning.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Same InvokeMethodDelegate/Dynamic.Invoke/MassageResultBasedOnInterface calls as above; see the IL2026 suppression on this member.")]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
             if (_dictionary.TryGetValue(binder.Name, out result))

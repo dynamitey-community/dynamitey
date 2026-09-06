@@ -13,6 +13,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Dynamitey.DynamicObjects;
 
@@ -29,6 +30,8 @@ namespace Dynamitey
         /// New Builder
         /// </summary>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Constructs the annotated Builder<ChainableDictionary>.")]
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static IBuilder New()
         {
             return new Builder<ChainableDictionary>();
@@ -41,6 +44,8 @@ namespace Dynamitey
         /// </summary>
         /// <typeparam name="TObjectPrototype">The type of the object prototype.</typeparam>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Constructs the annotated Builder<TObjectPrototype>.")]
+        [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static IBuilder New<TObjectPrototype>() where TObjectPrototype : new()
         {
             return new Builder<TObjectPrototype>();
@@ -54,8 +59,16 @@ namespace Dynamitey
     /// </summary>
     public static class Build
     {
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Constructing a Builder<ChainableDictionary> (a BaseObject-derived type) requires the DLR " +
+            "regardless of whether NewObject is ever used. This field initializer has no " +
+            "caller to warn at; the actionable warning lives on NewObject itself.")]
         private static readonly dynamic _objectBuilder = new Builder<ChainableDictionary>().Object;
 
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Constructs a Builder<ChainableDictionary>, calls its dynamic ListSetup<List>()/List(), and curries the result - all DLR/reflection-heavy. This field initializer has no caller to warn at; the actionable " +
+            "warning lives on the members that use it once resolved (NewList).")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression above.")]
         private static readonly dynamic _listBuilder =
             Dynamic.Curry(new Builder<ChainableDictionary>().ListSetup<List>()).
                 List();
@@ -80,10 +93,18 @@ namespace Dynamitey
     public static class Build<TObjectPrototype> where TObjectPrototype : new()
     {
 // ReSharper disable StaticFieldInGenericType
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Constructing a Builder<TObjectPrototype> (a BaseObject-derived type) requires the DLR " +
+            "regardless of whether NewObject is ever used. This field initializer has no " +
+            "caller to warn at; the actionable warning lives on NewObject itself.")]
         private static readonly dynamic _typedBuilder = new Builder<TObjectPrototype>().Object;
 // ReSharper restore StaticFieldInGenericType
 
 // ReSharper disable StaticFieldInGenericType
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Constructs a Builder<TObjectPrototype>, calls its dynamic ListSetup<TObjectPrototype>()/List(), and curries the result - all DLR/reflection-heavy. This field initializer has no caller to warn at; the actionable " +
+            "warning lives on the members that use it once resolved (NewList).")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression above.")]
         private static readonly dynamic _typedListBuilder = Dynamic.Curry(new Builder<TObjectPrototype>().ListSetup<TObjectPrototype>()).List();
 // ReSharper restore StaticFieldInGenericType
 
@@ -152,6 +173,8 @@ namespace Dynamitey
         /// Creates this instance.
         /// </summary>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls the annotated Dynamic.InvokeConstructor.")]
+        [RequiresDynamicCode("Dynamic.InvokeConstructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public virtual dynamic Create()
         {
             object[] tArgs = Arguments();
@@ -186,6 +209,8 @@ namespace Dynamitey
         /// Creates this instance.
         /// </summary>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls Activator.CreateInstance<TObjectPrototype>(), which requires TObjectPrototype to have a public parameterless constructor for trim analysis, and falls back to the annotated Dynamic.InvokeConstructor.")]
+        [RequiresDynamicCode("The Dynamic.InvokeConstructor fallback requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public override dynamic Create()
         {
             var tArgs = Arguments();

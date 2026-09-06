@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -47,6 +48,7 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="LateType"/> class.
         /// </summary>
         /// <param name="type">The type.</param>
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public LateType(Type type)
             : base(type)
         {
@@ -56,6 +58,7 @@ namespace Dynamitey.DynamicObjects
         private readonly string TypeName;
 
 
+        [RequiresUnreferencedCode("Resolves typeName via Assembly.GetType/Type.GetType, both name-based type lookups the trimmer cannot see; a type this depends on can be removed. Returns null instead of throwing when the type can't be found.")]
         public static Type FindType(string typeName, Assembly assembly = null)
         {
             try
@@ -77,6 +80,8 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="LateType"/> class.
         /// </summary>
         /// <param name="typeName">Qualified Name of the type.</param>
+        [RequiresUnreferencedCode("Calls FindType, which resolves typeName via Assembly.GetType/Type.GetType, a name-based type lookup the trimmer cannot see.")]
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public LateType(string typeName)
             : base(FindType(typeName))
         {
@@ -89,6 +94,8 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="assembly">The assembly.</param>
         /// <param name="typeName">Name of the type.</param>
+        [RequiresUnreferencedCode("Calls FindType, which resolves typeName via Assembly.GetType/Type.GetType, a name-based type lookup the trimmer cannot see.")]
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public LateType(Assembly assembly, string typeName)
             : base(FindType(typeName, assembly))
         {
@@ -100,7 +107,11 @@ namespace Dynamitey.DynamicObjects
         /// Returns a late bound constructor
         /// </summary>
         /// <value>The late bound constructor</value>
-        public dynamic @new => new ConstructorForward((Type)Target);
+        public dynamic @new
+        {
+            [RequiresDynamicCode("Constructing the returned ConstructorForward instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+            get => new ConstructorForward((Type)Target);
+        }
 
         /// <summary>
         /// Forward argument to constructor including named arguments
@@ -108,6 +119,7 @@ namespace Dynamitey.DynamicObjects
         public class ConstructorForward:DynamicObject
         {
             private readonly Type _type;
+            [RequiresDynamicCode("Constructing any DynamicObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
             internal ConstructorForward(Type type)
             {
                 _type = type;
@@ -119,6 +131,13 @@ namespace Dynamitey.DynamicObjects
             /// <param name="args">The args.</param>
             /// <param name="result">The result.</param>
             /// <returns></returns>
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "Calls the annotated Dynamic.InvokeConstructor. This is a DynamicObject.TryInvoke " +
+                "override: it can't carry [RequiresUnreferencedCode] itself without mismatching the " +
+                "unannotated base member, and the DLR invokes it only after the consumer's own " +
+                "dynamic call site already triggered the framework's warning.")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+                "Same Dynamic.InvokeConstructor call as above; see the IL2026 suppression on this member.")]
             public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
             {
                 result = Dynamic.InvokeConstructor(_type, Util.NameArgsIfNecessary(binder.CallInfo, args));

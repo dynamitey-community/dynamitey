@@ -15,6 +15,7 @@
 
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CSharp.RuntimeBinder;
 
@@ -212,6 +213,8 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="args">The args.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Dispatches to a Dynamic.Invoke*/InvokeMember/InvokeGet/etc. method based on Kind, each of which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Every Kind dispatches through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         public virtual object Invoke(object target, params object[] args)
         {
             switch (Kind)
@@ -288,6 +291,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="target">The target.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls Invoke, which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Calls Invoke, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public virtual object InvokeWithStoredArgs(object target)
         {
             return Invoke(target, Args);

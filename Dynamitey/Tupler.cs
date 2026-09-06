@@ -16,6 +16,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -47,6 +48,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="args">The args.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Forwards to ToTuple, which resolves System.Tuple.Create via the DLR binder; trimming can remove the overload being resolved.")]
+        [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Create(params object[] args)
         {
             return args.ToTuple();
@@ -57,6 +60,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="enumerable">The enumerable.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Resolves System.Tuple.Create (an 8-arity private TuplerFix.Create for >7 items) via Dynamic.InvokeMember/the DLR binder; trimming can remove the overload being resolved.")]
+        [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic ToTuple(this IEnumerable enumerable)
         {
             var items = enumerable as IEnumerable<object> ?? enumerable.Cast<object>();
@@ -74,6 +79,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="tuple">The tuple.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Forwards to Index, which reads tuple.ItemN/tuple.Rest via InvokeHelper.TupleItem or 'dynamic' member access; trimming can remove those properties.")]
+        [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic First(object tuple)
         {
             return Index(tuple, 0);
@@ -84,6 +91,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="tuple">The tuple.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Forwards to Index, which reads tuple.ItemN/tuple.Rest via InvokeHelper.TupleItem or 'dynamic' member access; trimming can remove those properties.")]
+        [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Second(object tuple)
         {
             return Index(tuple, 1);
@@ -94,6 +103,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="tuple">The tuple.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Forwards to Index, which reads tuple.ItemN/tuple.Rest via InvokeHelper.TupleItem or 'dynamic' member access; trimming can remove those properties.")]
+        [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Last(object tuple)
         {
             return Index(tuple, Size(tuple)-1);
@@ -104,6 +115,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="tuple">The tuple.</param>
         /// <returns></returns>
+        [RequiresUnreferencedCode("Calls HelperToList, which reads tuple.ItemN/tuple.Rest via InvokeHelper.TupleItem or 'dynamic' member access; trimming can remove those properties.")]
+        [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static IList<dynamic> ToList(object tuple)
         {
 
@@ -114,6 +127,8 @@ namespace Dynamitey
         }
 
 
+        [RequiresUnreferencedCode("Reads tuple.ItemN via InvokeHelper.TupleItem and tuple.Rest via 'dynamic' member access; trimming can remove those properties.")]
+        [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         private static void HelperToList(List<dynamic> list, object tuple, bool safe)
         {
             if(HelperIsTuple(tuple, out var type, out var generic, out var size, safe))
@@ -137,11 +152,15 @@ namespace Dynamitey
         /// <param name="index">The index.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentException">index must be greater than or equalto 0;index</exception>
+        [RequiresUnreferencedCode("Forwards to HelperIndex, which reads tuple.ItemN/tuple.Rest via InvokeHelper.TupleItem or 'dynamic' member access; trimming can remove those properties.")]
+        [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Index(object tuple, int index)
         {
             return HelperIndex(tuple, index, false);
         }
 
+        [RequiresUnreferencedCode("Reads tuple.ItemN via InvokeHelper.TupleItem and tuple.Rest via 'dynamic' member access; trimming can remove those properties.")]
+        [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         private static dynamic HelperIndex(object tuple, int index, bool safe)
         {
             var item = index + 1;

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 
@@ -34,6 +35,7 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Initializes a new instance of the <see cref="Recorder"/> class.
         /// </summary>
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type (and the Dummy target) instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public Recorder():base(new Dummy())
         {
             Recording = new List<Invocation>();
@@ -50,6 +52,7 @@ namespace Dynamitey.DynamicObjects
         /// Initializes a new instance of the <see cref="Recorder"/> class.
         /// </summary>
         /// <param name="target">The target.</param>
+        [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public Recorder(object target) : base(target)
         {
             Recording = new List<Invocation>();
@@ -59,6 +62,8 @@ namespace Dynamitey.DynamicObjects
         /// Replays the recording on target.
         /// </summary>
         /// <param name="target">The target.</param>
+        [RequiresUnreferencedCode("Calls the annotated Invocation.InvokeWithStoredArgs, which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Invocation.InvokeWithStoredArgs requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public T ReplayOn<T>(T target)
         {
             foreach (var tInvocation in Recording)

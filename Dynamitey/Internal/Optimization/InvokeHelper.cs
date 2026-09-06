@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Reflection;
@@ -250,6 +251,8 @@ namespace Dynamitey.Internal.Optimization {
 		
         }
 
+		[RequiresUnreferencedCode("Reads tuple.ItemN/tuple.Rest through 'dynamic' member access; trimming can remove those properties from the tuple's concrete type.")]
+		[RequiresDynamicCode("The 'dynamic' member access binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
 		internal static dynamic TupleItem(dynamic tuple, int index){
 			switch(index){
 				case 1:
@@ -272,6 +275,8 @@ namespace Dynamitey.Internal.Optimization {
 		}
 
 
+        [RequiresUnreferencedCode("For an argument count with a generated fast-path case, builds/reuses a cached CallSite whose binder resolves a member by name; for any other count, falls back to Dynamic.InvokeCallSite. Trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Every case binds through the DLR (and, past 14 arguments, emits a delegate type via Reflection.Emit); not supported when AOT-compiled.")]
         internal static void InvokeMemberAction(ref CallSite callsite,
 		                                            Type binderType,
 													int knownType,
@@ -457,6 +462,8 @@ namespace Dynamitey.Internal.Optimization {
 
 
 
+        [RequiresUnreferencedCode("For an argument count with a generated fast-path case, builds/reuses a cached CallSite whose binder resolves a member by name; for any other count, falls back to Dynamic.InvokeCallSite. Trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Every case binds through the DLR (and, past 14 arguments, emits a delegate type via Reflection.Emit); not supported when AOT-compiled.")]
         internal static TReturn InvokeMemberTargetType<TTarget,TReturn>(
 										ref CallSite callsite,
 										Type binderType,
@@ -625,6 +632,8 @@ namespace Dynamitey.Internal.Optimization {
 
 
 
+		[RequiresUnreferencedCode("For an argument count with a generated fast-path case, wraps invokable in a Func by invoking it through 'dynamic'; for any other count, falls back to Dynamic.Invoke. Trimming can remove the member either path resolves.")]
+		[RequiresDynamicCode("Both the 'dynamic' invocation and Dynamic.Invoke bind through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
 		internal static Delegate WrapFuncHelper<TReturn>(dynamic invokable, int length)
         {
 			 switch(length){
@@ -669,6 +678,8 @@ namespace Dynamitey.Internal.Optimization {
 			}
         }
 
+        [RequiresUnreferencedCode("For an argument count with a generated fast-path case, wraps invokable in an Action by invoking it through 'dynamic'; for any other count, falls back to Dynamic.InvokeAction. Trimming can remove the member either path resolves.")]
+        [RequiresDynamicCode("Both the 'dynamic' invocation and Dynamic.InvokeAction bind through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static Delegate WrapAction(dynamic invokable, int length)
         {
            	 switch(length){
@@ -714,6 +725,8 @@ namespace Dynamitey.Internal.Optimization {
         }
 
 
+        [RequiresUnreferencedCode("For a known argument count, invokes del through a 'dynamic' reference; trimming can remove the member the DLR resolves.")]
+        [RequiresDynamicCode("The 'dynamic' invocation binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static object FastDynamicInvokeReturn(Delegate del, dynamic [] args)
         {
             dynamic tDel =del;
@@ -764,6 +777,8 @@ namespace Dynamitey.Internal.Optimization {
             }
         }
 
+        [RequiresUnreferencedCode("For a known argument count, invokes del through a 'dynamic' reference; trimming can remove the member the DLR resolves.")]
+        [RequiresDynamicCode("The 'dynamic' invocation binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static void FastDynamicInvokeAction(Delegate del, params dynamic [] args)
         {
             dynamic tDel =del;
