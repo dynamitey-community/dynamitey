@@ -574,6 +574,18 @@ namespace Dynamitey.Tests
             Assert.That(tVar.NameLast, Is.EqualTo("Watson"));
         }
 
+        [Test]
+        public void TestRecorderReplaysIndexAssignment()
+        {
+            dynamic recorder = new DynamicObjects.Recorder();
+            recorder[1] = "written";
+
+            var target = new List<string> { "zero", "one" };
+            recorder.ReplayOn(target);
+
+            Assert.That(target[1], Is.EqualTo("written"));
+        }
+
 
         [Test]
         public void TestRoslynLateTypeBind()

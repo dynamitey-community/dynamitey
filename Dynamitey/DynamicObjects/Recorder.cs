@@ -154,7 +154,7 @@ namespace Dynamitey.DynamicObjects
             if (base.TrySetIndex(binder, indexes, value))
             {
                 var tCombinedArgs = indexes!.Concat(new[] { value }).ToArray();
-                Recording.Add(new Invocation(InvocationKind.GetIndex, Invocation.IndexBinderName, Util.NameArgsIfNecessary(binder.CallInfo, tCombinedArgs)));
+                Recording.Add(new Invocation(InvocationKind.SetIndex, Invocation.IndexBinderName, Util.NameArgsIfNecessary(binder.CallInfo, tCombinedArgs)));
                 return true;
             }
             return false;
