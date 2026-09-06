@@ -1196,9 +1196,9 @@ namespace Dynamitey
 		{
             if (del.GetMethodInfo().ReturnType != typeof(void))
             {
-                return InvokeHelper.FastDynamicInvokeReturn(del, (object[])args);
+                return InvokeHelper.FastDynamicInvokeReturn(del, args!);
             }
-            InvokeHelper.FastDynamicInvokeAction(del, (object[])args);
+            InvokeHelper.FastDynamicInvokeAction(del, args!);
             return null;
         }
 

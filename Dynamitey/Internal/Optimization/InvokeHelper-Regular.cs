@@ -769,7 +769,7 @@ namespace Dynamitey.Internal.Optimization
             // InvokeMember's generated fast-path slots are always plain 'object' (see
             // InvokeHelper.tt); args' element nullability is preserved at runtime regardless
             // of this array-identity cast.
-            return InvokeMember<object>(ref callSite, tBinderType, KnownMember, tBinder, name, tStaticContext, tContext, tArgNames, target, (object[])args);
+            return InvokeMember<object>(ref callSite, tBinderType, KnownMember, tBinder, name, tStaticContext, tContext, tArgNames, target, args!);
         }
 
         [RequiresUnreferencedCode("Resolves target's invoke/call operator via Binder.Invoke; trimming can remove the member being resolved.")]
@@ -792,7 +792,7 @@ namespace Dynamitey.Internal.Optimization
             }
 
 
-            return InvokeMember<object>(ref callSite, tBinderType, KnownDirect,tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, (object[])args);
+            return InvokeMember<object>(ref callSite, tBinderType, KnownDirect,tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, args!);
         }
 
         [RequiresUnreferencedCode("Resolves target's indexer via Binder.GetIndex; trimming can remove the indexer being resolved.")]
@@ -814,7 +814,7 @@ namespace Dynamitey.Internal.Optimization
 
             }
 
-            return InvokeMember<object>(ref callSite,tBinderType, Unknown, tBinder, Invocation.IndexBinderName, tStaticContext, context, argNames, target, (object[])indexes);
+            return InvokeMember<object>(ref callSite,tBinderType, Unknown, tBinder, Invocation.IndexBinderName, tStaticContext, context, argNames, target, indexes!);
         }
 
         [RequiresUnreferencedCode("Resolves target's indexer setter via Binder.SetIndex; trimming can remove the indexer being resolved.")]
@@ -836,7 +836,7 @@ namespace Dynamitey.Internal.Optimization
                 tBinderType = typeof (SetIndexBinder);
             }
 
-            return InvokeMember<object>(ref tCallSite, tBinderType, Unknown, tBinder, Invocation.IndexBinderName, tStaticContext, tContext, tArgNames, target, (object[])indexesThenValue);
+            return InvokeMember<object>(ref tCallSite, tBinderType, Unknown, tBinder, Invocation.IndexBinderName, tStaticContext, tContext, tArgNames, target, indexesThenValue!);
         }
 
         [RequiresUnreferencedCode("Resolves name.Name via Binder.InvokeMember; trimming can remove the member being resolved.")]
@@ -866,7 +866,7 @@ namespace Dynamitey.Internal.Optimization
             }
 
 
-            InvokeMemberAction(ref callSite,tBinderType, KnownMember, tBinder, name, tStaticContext, tContext, tArgNames, target, (object[])args);
+            InvokeMemberAction(ref callSite,tBinderType, KnownMember, tBinder, name, tStaticContext, tContext, tArgNames, target, args!);
         }
 
 
@@ -894,7 +894,7 @@ namespace Dynamitey.Internal.Optimization
             }
 
 
-            InvokeMemberAction(ref callSite, tBinderType, KnownDirect, tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, (object[])args);
+            InvokeMemberAction(ref callSite, tBinderType, KnownDirect, tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, args!);
         }
 
         internal class IsEventBinderDummy{
@@ -1010,11 +1010,11 @@ namespace Dynamitey.Internal.Optimization
             {
                 CallSite? tDummy = null;
                 return DynamicInvokeStaticMember(type, ref tDummy, tBinderType, KnownConstructor, tBinder, ConstructorName, true, type,
-                                                              argNames, type, (object[])args);
+                                                              argNames, type, args!);
             }
 
             return InvokeMemberTargetType<Type, object>(ref callSite, tBinderType, KnownConstructor, tBinder, ConstructorName, true, type, argNames,
-                                                                     type, (object[])args);
+                                                                     type, args!);
         }
 
         internal static readonly IDictionary<Type, CallSite<DynamicInvokeWrapFunc>> _dynamicInvokeWrapFunc = new Dictionary<Type, CallSite<DynamicInvokeWrapFunc>>();
