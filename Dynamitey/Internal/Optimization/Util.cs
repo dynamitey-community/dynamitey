@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  Copyright 2011  Ekon Benefits
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,7 +55,7 @@ namespace Dynamitey.Internal.Optimization
         /// <returns>
         /// 	<c>true</c> if [is anonymous type] [the specified target]; otherwise, <c>false</c>.
         /// </returns>
-        public static bool IsAnonymousType(object target)
+        public static bool IsAnonymousType(object? target)
         {
             if (target == null)
                 return false;
@@ -77,6 +77,8 @@ namespace Dynamitey.Internal.Optimization
         /// <returns></returns>
         public static object?[] NameArgsIfNecessary(CallInfo callInfo, object?[] args)
         {
+            Guard.NotNull(callInfo);
+
             object?[] tArgs;
             if (callInfo.ArgumentNames.Count == 0)
                 tArgs = args;
@@ -120,6 +122,8 @@ namespace Dynamitey.Internal.Optimization
         /// <returns></returns>
         public static Type FixContext(this Type context)
         {
+            Guard.NotNull(context);
+
             if (context.IsArray)
             {
                 return typeof (object);

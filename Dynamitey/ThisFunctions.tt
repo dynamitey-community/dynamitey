@@ -1,4 +1,4 @@
-﻿<#@ template language="C#" #>
+<#@ template language="C#" #>
 <#@ output extension="cs" #>
 <#@ assembly  name="System.Core" #>
 <#@ import namespace="System.Linq" #>
@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Dynamitey.Internal.Compat;
+using Dynamitey.Internal;
 
 namespace Dynamitey
 {
@@ -76,6 +77,8 @@ namespace Dynamitey
         /// 	<c>true</c> if [is special this delegate] [the specified del]; otherwise, <c>false</c>.
         /// </returns>
 		public static bool IsSpecialThisDelegate(this Delegate del){
+				Guard.NotNull(del);
+
 				var tType =del.GetType();
 				if(!tType.GetTypeInfo().IsGenericType) return false;
 				var tGenDel =del.GetType().GetGenericTypeDefinition();

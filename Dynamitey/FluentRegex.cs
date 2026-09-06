@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Dynamitey.Internal;
 
 namespace Dynamitey
 {
@@ -32,6 +34,8 @@ namespace Dynamitey
         [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static IEnumerable<dynamic> Matches(string inputString, Regex regex)
         {
+            Guard.NotNull(regex);
+
             var tMatches = regex.Matches(inputString);
 
             return tMatches.Cast<Match>().Where(it => it.Success).Select(it => new DynamicObjects.RegexMatch(it, regex)).Cast<dynamic>();
@@ -46,6 +50,8 @@ namespace Dynamitey
         [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static dynamic? Match(string inputString, Regex regex)
         {
+            Guard.NotNull(regex);
+
             var tMatch = regex.Match(inputString);
             return tMatch.Success ? new DynamicObjects.RegexMatch(tMatch, regex) : null;
         }
@@ -59,6 +65,8 @@ namespace Dynamitey
         [RequiresDynamicCode("Constructs a RegexMatch, which instantiates System.Dynamic.DynamicObject; requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
         public static dynamic? FluentMatch(this Regex regex, string inputString)
         {
+            Guard.NotNull(regex);
+
             var tMatch = regex.Match(inputString);
             return tMatch.Success ? new DynamicObjects.RegexMatch(tMatch, regex) : null;
         }

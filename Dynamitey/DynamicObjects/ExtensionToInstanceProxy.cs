@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using Dynamitey.Internal;
 
 using System.Text;
 using Microsoft.CSharp.RuntimeBinder;
@@ -86,6 +87,8 @@ namespace Dynamitey.DynamicObjects
             "Constructs the annotated Invoker. Same DynamicObject.TryGetMember override reasoning as the IL2075 suppression above.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Invoker construction as above; see the IL2075/IL2026 suppressions on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
 
@@ -219,6 +222,8 @@ namespace Dynamitey.DynamicObjects
                 "the unannotated base member, and the DLR invokes it only after the consumer's " +
                 "own dynamic member access already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same OverloadInvoker construction as above; see the IL2026 suppression on this member.")]
+            [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+                "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
             public override bool TryGetMember(GetMemberBinder binder, out object? result)
             {
                 if (binder.Name == "Overloads")
@@ -244,6 +249,8 @@ namespace Dynamitey.DynamicObjects
                 "member, and the DLR invokes it only after the consumer's own dynamic call " +
                 "site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
+            [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+                "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
             public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
             {
                 object?[] tArgs = args!;
@@ -328,6 +335,8 @@ namespace Dynamitey.DynamicObjects
             "itself without mismatching the unannotated base member, and the DLR invokes it " +
             "only after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             if (!base.TryInvokeMember(binder, args, out result))
@@ -381,6 +390,8 @@ namespace Dynamitey.DynamicObjects
         [RequiresDynamicCode("Dynamic.InvokeMember binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         protected object? InvokeStaticMethod(String_OR_InvokeMemberName name, object?[] args)
         {
+            Guard.NotNull(name);
+
             var staticType = InvokeContext.CreateStatic;
             var nameArgs = InvokeMemberName.Create;
 
