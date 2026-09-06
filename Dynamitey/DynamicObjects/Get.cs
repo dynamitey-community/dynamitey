@@ -111,7 +111,7 @@ namespace Dynamitey.DynamicObjects
                 if (result == null)
                     return false;
                 var tDel = result as Delegate;
-                if (!binder.CallInfo.ArgumentNames.Any() && tDel != null)
+                if (binder.CallInfo.ArgumentNames.Count == 0 && tDel != null)
                 {
                     try
                     {
