@@ -226,7 +226,7 @@ namespace Dynamitey
             {
                 tObjectPrototype = Activator.CreateInstance<TObjectPrototype>();//Try first because it's really fast, but won't work with optional parameters
             }
-            catch (MissingMethodException)
+            catch (MissingMemberException)
             {
                 // The one documented failure mode of Activator.CreateInstance<T>() is exactly the
                 // "no parameterless constructor" case this method exists to work around (e.g. a
@@ -234,6 +234,12 @@ namespace Dynamitey
                 // Catching Exception here would also swallow a genuine failure from inside a real
                 // parameterless constructor and silently invoke it a second time via the DLR path
                 // (cs/catch-of-all-exceptions).
+                //
+                // MissingMemberException, not its MissingMethodException subclass: the documented
+                // exception is MissingMethodException, but the same docs direct reduced-surface
+                // targets to catch the base class instead, and netstandard2.0 is one. The base is
+                // still narrow - it can only mean "the member is absent", never "the constructor
+                // threw", which arrives as TargetInvocationException and must keep propagating.
                 tObjectPrototype = Dynamic.InvokeConstructor(typeof(TObjectPrototype))!;
             }
             return tObjectPrototype!;

@@ -224,9 +224,28 @@ namespace Dynamitey.Tests
             object tSameContentDifferentBox = 5;
             Assert.That(ReferenceEquals(tDict["Test"], tSameContentDifferentBox), Is.False);
 
-            tDict.Remove(new KeyValuePair<string, object>("Test", tSameContentDifferentBox));
+            var tRemoved = tDict.Remove(new KeyValuePair<string, object>("Test", tSameContentDifferentBox));
 
             Assert.That(tDict.ContainsKey("Test"), Is.False);
+            // Every path of this method used to return false, so even a successful removal
+            // reported failure. ICollection<T>.Remove is documented to return whether the item
+            // was removed, and callers branch on it.
+            Assert.That(tRemoved, Is.True, "A successful removal must report true.");
+        }
+
+        [Test]
+        public void RemoveKeyValuePairReportsFalseWhenValueDoesNotMatch()
+        {
+            IDictionary<string, object> tDict = new DynamicObjects.Dictionary();
+            tDict["Test"] = 5;
+
+            var tRemoved = tDict.Remove(new KeyValuePair<string, object>("Test", 6));
+
+            Assert.That(tRemoved, Is.False, "A value mismatch must report false.");
+            Assert.That(tDict.ContainsKey("Test"), Is.True, "A value mismatch must leave the entry in place.");
+            Assert.That(
+                tDict.Remove(new KeyValuePair<string, object>("Absent", 5)), Is.False,
+                "A missing key must report false.");
         }
 
         [Test]
@@ -495,7 +514,7 @@ namespace Dynamitey.Tests
         }
 
         // Issue #50 (cs/catch-of-all-exceptions). Activate<T>.Create() used to catch(Exception)
-        // around Activator.CreateInstance<T>(), narrowed to catch(MissingMethodException) - the one
+        // around Activator.CreateInstance<T>(), narrowed to catch(MissingMemberException) - the one
         // documented failure of that call, and exactly the "optional-parameter constructor" case the
         // fallback exists for (see PocoOptConstructor: only a (string,string,string) ctor, all
         // defaulted).
@@ -515,8 +534,9 @@ namespace Dynamitey.Tests
             ThrowingParameterlessCtorPoco.ConstructAttempts = 0;
 
             // Activator.CreateInstance<T>() wraps a throwing constructor's exception in a
-            // TargetInvocationException, which is not a MissingMethodException, so the narrowed
-            // catch must let it propagate rather than treat it as "no parameterless constructor".
+            // TargetInvocationException, which is nowhere in the MissingMemberException hierarchy,
+            // so the narrowed catch must let it propagate rather than treat it as "no
+            // parameterless constructor".
             Assert.That(() => new Activate<ThrowingParameterlessCtorPoco>().Create(),
                 Throws.InstanceOf<TargetInvocationException>()
                     .With.InnerException.InstanceOf<InvalidOperationException>());

@@ -231,17 +231,19 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public bool Remove(KeyValuePair<string, object> item)
         {
-            if (TryGetValue(item.Key, out var tValue))
+            // Value comparison, not the key's: object's own == is reference equality, which
+            // would almost never match a boxed value type or an independently-built string
+            // with equal content (cs/reference-equality-with-object). ICollection<KVP>.Remove
+            // is documented to compare values structurally.
+            if (TryGetValue(item.Key, out var tValue) && Equals(item.Value, tValue))
             {
-                // Value comparison, not the key's: object's own == is reference equality, which
-                // would almost never match a boxed value type or an independently-built string
-                // with equal content (cs/reference-equality-with-object). ICollection<KVP>.Remove
-                // is documented to compare values structurally.
-                if (Equals(item.Value, tValue))
-                {
-                    Remove(item.Key);
-                }
+                // Returning the removal's own result, not an unconditional false: every path used
+                // to return false, so a successful removal reported failure. Not a CodeQL alert,
+                // but the equality fix above is what makes this path reachable at all for the
+                // ordinary boxed-value case, so leaving it wrong would ship a newly-live bug.
+                return Remove(item.Key);
             }
+
             return false;
         }
 
