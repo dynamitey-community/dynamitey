@@ -21,6 +21,11 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Exception When The Late Type can not be found to bind.
         /// </summary>
+        [SuppressMessage("Usage", "RCS1194:Implement exception constructors",
+            Justification = "The standard set includes a parameterless constructor and a (string message) one. "
+                + "Neither fits: this exception exists to name the type that could not be found, and its single "
+                + "string parameter is that type name, not a message - it is formatted into one. A parameterless "
+                + "overload could only produce a message with no type in it, which is worse than not offering it.")]
         public class MissingTypeException:Exception
         {
             /// <summary>

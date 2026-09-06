@@ -162,6 +162,12 @@ namespace Dynamitey
         /// <seealso cref="CreateCallSite{T}"/>
         [RequiresUnreferencedCode("Builds a raw DLR CallSite from a caller-supplied binder; the binder resolves its target member by name at each call, and trimming can remove that member. Advanced/low-level API - prefer InvokeMember/InvokeGet/etc.")]
         [RequiresDynamicCode("Creating a CallSite - and, for delegate shapes with more than 14 parameters, emitting the delegate type itself via Reflection.Emit - requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
+        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters",
+            Justification = "Pre-existing public surface inherited from upstream 3.0.3. The rule guards against a "
+                + "later version adding optional parameters to an overload set, which silently breaks binary "
+                + "compatibility for already-compiled callers. Removing the optional parameters now would itself "
+                + "be that break. Frozen instead: the PublicAPI declaration files record this shape, so any "
+                + "future change to it has to be written down before it can build.")]
         public static CallSite CreateCallSite(Type delegateType, CallSiteBinder binder, String_OR_InvokeMemberName name,
                                               Type context, string?[]? argNames = null, bool staticContext = false,
                                               bool isEvent = false) =>
@@ -203,6 +209,12 @@ namespace Dynamitey
         /// <seealso cref="CreateCallSite"/>
         [RequiresUnreferencedCode("Builds a raw DLR CallSite from a caller-supplied binder; the binder resolves its target member by name at each call, and trimming can remove that member. Advanced/low-level API - prefer InvokeMember/InvokeGet/etc.")]
         [RequiresDynamicCode("Creating a CallSite<T> requires the DLR's runtime code generation to produce the binding rule; not supported when AOT-compiled.")]
+        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters",
+            Justification = "Pre-existing public surface inherited from upstream 3.0.3. The rule guards against a "
+                + "later version adding optional parameters to an overload set, which silently breaks binary "
+                + "compatibility for already-compiled callers. Removing the optional parameters now would itself "
+                + "be that break. Frozen instead: the PublicAPI declaration files record this shape, so any "
+                + "future change to it has to be written down before it can build.")]
         public static CallSite<T> CreateCallSite<T>(CallSiteBinder binder, String_OR_InvokeMemberName name, Type context,
                                                     string?[]? argNames = null, bool staticContext = false,
                                                     bool isEvent = false) where T : class 
@@ -331,6 +343,13 @@ namespace Dynamitey
         /// </remarks>
         [RequiresUnreferencedCode("Calls InvokeMember, which resolves 'name' via the DLR binder and can fail against a trimmed target.")]
         [RequiresDynamicCode("Calls InvokeMember, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+        [SuppressMessage("AsyncUsage", "AsyncFixer01:Unnecessary async/await usage",
+            Justification = "Not unnecessary here, and applying it would change observable behaviour twice over. "
+                + "InvokeMember runs synchronously before the await and can throw RuntimeBinderException; because "
+                + "this method is async that exception is captured into the returned Task and surfaces when the "
+                + "caller awaits. Returning the inner task directly would instead throw at the call site, before "
+                + "anyone awaits it. It would also discard the ConfigureAwait(false), handing context capture to "
+                + "the caller's await. The rule is about allocation overhead and does not account for either.")]
         public static async Task<object?> InvokeMemberAsync(object target, String_OR_InvokeMemberName name, params object?[] args)
         {
             object? result = InvokeMember(target, name, args);
