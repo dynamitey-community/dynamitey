@@ -36,7 +36,7 @@ namespace Dynamitey.DynamicObjects
         /// <value>
         /// The type of the equivalent.
         /// </value>
-        FauxType EquivalentType { get; set; }
+        FauxType? EquivalentType { get; set; }
     }
     
     
@@ -67,7 +67,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="type">The type.</param>
         /// <returns></returns>
         [RequiresUnreferencedCode("Calls the annotated FauxType.GetMember, which for a RealType reflects over its target's members by name; trimming can remove the member being resolved.")]
-        public bool TryTypeForName(string binderName, out Type type)
+        public bool TryTypeForName(string binderName, [NotNullWhen(true)] out Type? type)
         {
            var eqType = (IEquivalentType) this;
            type = null;
@@ -97,17 +97,26 @@ namespace Dynamitey.DynamicObjects
 ;
             if (!types.Any())
                 return false;
+
+            // Local rather than assigning `type` directly: EventInfo.EventHandlerType (above) is
+            // itself nullable, so currenttype can theoretically be null (a member that is an
+            // event with no resolvable handler type - unreachable in practice). That would leave
+            // this loop's result null too; the `!` below preserves that exact pre-existing
+            // behavior (rather than guaranteeing NotNullWhen(true) can't actually promise, given
+            // this edge) while still letting ordinary callers rely on the annotation.
+            Type? tBest = null;
             foreach (var currenttype in types)
             {
-                if (type == null || type.Name == currenttype.Name)
-                    type = currenttype;
+                if (tBest == null || tBest.Name == currenttype!.Name)
+                    tBest = currenttype;
                 else
-                    type = typeof (object);
+                    tBest = typeof (object);
             }
+            type = tBest!;
             return true;
         }
 
 
-        FauxType IEquivalentType.EquivalentType { get; set; }
+        FauxType? IEquivalentType.EquivalentType { get; set; }
     }
 }

@@ -69,7 +69,7 @@ namespace Dynamitey.DynamicObjects
             "member, and the DLR invokes it only after the consumer's own dynamic call site " +
             "already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
-        public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object result)
+        public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object? result)
         {
             if (base.TryGetMember(binder, out result))
             {
@@ -94,7 +94,7 @@ namespace Dynamitey.DynamicObjects
             "member, and the DLR invokes it only after the consumer's own dynamic call site " +
             "already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
-        public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object[] args, out object result)
+        public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object?[]? args, out object? result)
         {
 
             if (!base.TryInvokeMember(binder, args, out result))
@@ -102,7 +102,7 @@ namespace Dynamitey.DynamicObjects
                 try
                 {
                     //Check if there is a get property because it might return a function
-                    result = Dynamic.InvokeGet(CallTarget, binder.Name);
+                    result = Dynamic.InvokeGet(CallTarget!, binder.Name);
                 }
                 catch (RuntimeBinderException)
                 {
@@ -115,18 +115,18 @@ namespace Dynamitey.DynamicObjects
                 {
                     try
                     {
-                        result = this.InvokeMethodDelegate(tDel, args);
+                        result = this.InvokeMethodDelegate(tDel, args!);
                     }
                     catch (RuntimeBinderException)
                         //If it has out parmaters etc it can't be invoked dynamically like this.
-                        //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation 
+                        //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation
                     {
                         return false;
                     }
                 }
                 try
                 {
-                    result = Dynamic.Invoke(result, Util.NameArgsIfNecessary(binder.CallInfo, args));
+                    result = Dynamic.Invoke(result!, Util.NameArgsIfNecessary(binder.CallInfo, args!));
                 }
                 catch (RuntimeBinderException)//If it has out parmaters etc it can't be invoked dynamically like this.
                 //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation 
@@ -152,11 +152,17 @@ namespace Dynamitey.DynamicObjects
             "member, and the DLR invokes it only after the consumer's own dynamic call site " +
             "already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
-        public override bool TryGetIndex(System.Dynamic.GetIndexBinder binder, object[] indexes, out object result)
+        public override bool TryGetIndex(System.Dynamic.GetIndexBinder binder, object?[]? indexes, out object result)
         {
             if (base.TryGetIndex(binder, indexes, out result))
             {
-                return this.MassageResultBasedOnInterface(Invocation.IndexBinderName, true, ref result);
+                // MassageResultBasedOnInterface takes `ref object?` (it can null the result out),
+                // but TryGetIndex's own result is non-nullable to match DynamicObject's base
+                // signature - bridge through a nullable local rather than changing either contract.
+                object? tResult = result;
+                var success = this.MassageResultBasedOnInterface(Invocation.IndexBinderName, true, ref tResult);
+                result = tResult!;
+                return success;
             }
             return false;
         }

@@ -39,9 +39,9 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         [RequiresUnreferencedCode("Constructs the annotated LinqInstanceProxy.")]
         [RequiresDynamicCode("Constructs the annotated LinqInstanceProxy, which requires the DLR's runtime code generation.")]
-        protected override ExtensionToInstanceProxy CreateSelf(object target, Type extendedType, Type[] staticTypes, Type[] instanceHints)
+        protected override ExtensionToInstanceProxy CreateSelf(object? target, Type extendedType, Type[] staticTypes, Type[]? instanceHints)
         {
-            return new LinqInstanceProxy(target);
+            return new LinqInstanceProxy(target!);
         }
 
 
@@ -57,7 +57,7 @@ namespace Dynamitey.DynamicObjects
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic' invocation as above; see the IL2026 suppression on this member.")]
         public IEnumerator<object> GetEnumerator()
         {
-            return ((dynamic) CallTarget).GetEnumerator();
+            return ((dynamic) CallTarget!).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -184,10 +184,10 @@ namespace Dynamitey.DynamicObjects
         ILinq<TSource> TakeWhile(Func<TSource, Boolean> predicate);
         ILinq<TSource> TakeWhile(Func<TSource, Int32, Boolean> predicate);
         TSource[] ToArray();
-        Dictionary<TKey, TSource> ToDictionary<TKey>(Func<TSource, TKey> keySelector);
-        Dictionary<TKey, TSource> ToDictionary<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer);
-        Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector);
-        Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer);
+        Dictionary<TKey, TSource> ToDictionary<TKey>(Func<TSource, TKey> keySelector) where TKey : notnull;
+        Dictionary<TKey, TSource> ToDictionary<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) where TKey : notnull;
+        Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector) where TKey : notnull;
+        Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer) where TKey : notnull;
         List<TSource> ToList();
         ILookup<TKey, TSource> ToLookup<TKey>(Func<TSource, TKey> keySelector);
         ILookup<TKey, TSource> ToLookup<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer);

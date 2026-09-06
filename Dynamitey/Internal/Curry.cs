@@ -73,7 +73,7 @@ namespace Dynamitey.Internal
                 "call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                 "Same DLR invocation as above; see the IL2026 suppression on this member.")]
-            public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object result)
+            public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object? result)
             {
                 result = null;
                 if (binder.Operation == ExpressionType.LeftShift)
@@ -99,7 +99,7 @@ namespace Dynamitey.Internal
                 "conversion already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                 "Same Dynamic.CoerceToDelegate call as above; see the IL2026 suppression on this member.")]
-            public override bool TryConvert(ConvertBinder binder, out object result)
+            public override bool TryConvert(ConvertBinder binder, out object? result)
             {
                 result = Dynamic.CoerceToDelegate(this, binder.Type);
 
@@ -135,9 +135,9 @@ namespace Dynamitey.Internal
                "call site already triggered the framework's warning.")]
            [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                "Same PartialApply construction as above; see the IL2026 suppression on this member.")]
-           public override bool  TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+           public override bool  TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
            {
-               result = new PartialApply(_target, Util.NameArgsIfNecessary(binder.CallInfo, args), binder.Name, _totalArgCount);
+               result = new PartialApply(_target, Util.NameArgsIfNecessary(binder.CallInfo, args!), binder.Name, _totalArgCount);
                return true;
            }
            /// <summary>
@@ -156,7 +156,7 @@ namespace Dynamitey.Internal
                 "after the consumer's own dynamic call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                 "Same PartialApply construction/invocation as above; see the IL2026 suppression on this member.")]
-            public override bool  TryInvoke(InvokeBinder binder, object[] args, out object result)
+            public override bool  TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
             {
                 var tCurrying = _target as PartialApply;
 
@@ -164,13 +164,13 @@ namespace Dynamitey.Internal
                var  curryResult = tCurrying != null
                              //If already currying append
                              ? new PartialApply(tCurrying.Target,
-                                            tCurrying.Args.Concat(Util.NameArgsIfNecessary(binder.CallInfo, args)).
+                                            tCurrying.Args.Concat(Util.NameArgsIfNecessary(binder.CallInfo, args!)).
                                                 ToArray(), tCurrying.MemberName, tCurrying.TotalArgCount, tCurrying.InvocationKind)
-                             : new PartialApply(_target, Util.NameArgsIfNecessary(binder.CallInfo, args), String.Empty, _totalArgCount);
+                             : new PartialApply(_target, Util.NameArgsIfNecessary(binder.CallInfo, args!), String.Empty, _totalArgCount);
 
 
                result = curryResult;
-               if (args.Length == curryResult.TotalArgCount)
+               if (args!.Length == curryResult.TotalArgCount)
                    result= ((dynamic) curryResult)();
                return true;
            }

@@ -50,7 +50,7 @@ namespace Dynamitey.DynamicObjects
             "mismatching the unannotated base member, and the DLR invokes it only after the " +
             "consumer's own dynamic member access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same GetInstanceForDynamicMember call as above; see the IL2026 suppression on this member.")]
-        public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object result)
+        public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object? result)
         {
             result = GetInstanceForDynamicMember(binder.Name);
             return result != null;
@@ -71,9 +71,9 @@ namespace Dynamitey.DynamicObjects
             "mismatching the unannotated base member, and the DLR invokes it only after the " +
             "consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same GetInstanceForDynamicMember call as above; see the IL2026 suppression on this member.")]
-        public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object[] args, out object result)
+        public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object?[]? args, out object? result)
         {
-            result = GetInstanceForDynamicMember(binder.Name, args);
+            result = GetInstanceForDynamicMember(binder.Name, args!);
             return result != null;
         }
 
@@ -86,7 +86,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         [RequiresUnreferencedCode("Calls the annotated Dynamic.InvokeConstructor.")]
         [RequiresDynamicCode("Dynamic.InvokeConstructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        protected virtual object CreateType(Type type, params object[] args)
+        protected virtual object? CreateType(Type type, params object?[] args)
         {
             return Dynamic.InvokeConstructor(type, args);
         }
@@ -99,7 +99,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         [RequiresUnreferencedCode("Calls TryTypeForName (reflects over EquivalentType's members by name) and the annotated CreateType.")]
         [RequiresDynamicCode("CreateType requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        protected virtual object GetInstanceForDynamicMember(string memberName, params object[] args)
+        protected virtual object? GetInstanceForDynamicMember(string memberName, params object?[] args)
         {
             return TryTypeForName(memberName, out var type) ? CreateType(type, args) : null;
         }
@@ -142,7 +142,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         [RequiresUnreferencedCode("Calls TryTypeForName (reflects over EquivalentType's members by name) and the annotated CreateType.")]
         [RequiresDynamicCode("CreateType requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        protected override object GetInstanceForDynamicMember(string memberName, params object[] args)
+        protected override object? GetInstanceForDynamicMember(string memberName, params object?[] args)
         {
             lock (_lockTable)
             {
@@ -150,7 +150,7 @@ namespace Dynamitey.DynamicObjects
                 {
                     if (TryTypeForName(memberName, out var type))
                     {
-                        _hashFactoryTypes.Add(memberName, CreateType(type, args));
+                        _hashFactoryTypes.Add(memberName, CreateType(type, args)!);
                     }
                     else
                     {

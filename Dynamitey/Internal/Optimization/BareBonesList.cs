@@ -112,7 +112,10 @@ namespace Dynamitey.Internal.Optimization
 
             public T Current => _list[_enumerateInex];
 
-            object IEnumerator.Current => Current;
+            // IEnumerator.Current is declared non-nullable, but T (unconstrained) may itself be a
+            // reference type whose current element is legitimately null; the `!` only silences the
+            // annotation mismatch; it doesn't affect what value is actually returned.
+            object IEnumerator.Current => Current!;
         }
     
     }

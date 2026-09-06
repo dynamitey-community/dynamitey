@@ -42,7 +42,7 @@ namespace Dynamitey.DynamicObjects
             "member access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same MassageResultBasedOnInterface call as above; see the IL2026 suppression on this member.")]
-        public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object result)
+        public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object? result)
         {
             result = null;
             return this.MassageResultBasedOnInterface(binder.Name, true, ref result);
@@ -57,7 +57,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
-        public override bool TrySetMember(System.Dynamic.SetMemberBinder binder, object value)
+        public override bool TrySetMember(System.Dynamic.SetMemberBinder binder, object? value)
         {
             return true;
         }
@@ -79,7 +79,7 @@ namespace Dynamitey.DynamicObjects
             "consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same MassageResultBasedOnInterface call as above; see the IL2026 suppression on this member.")]
-        public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object[] args, out object result)
+        public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object?[]? args, out object? result)
         {
 
             result = null;
@@ -102,11 +102,15 @@ namespace Dynamitey.DynamicObjects
             "indexer access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same MassageResultBasedOnInterface call as above; see the IL2026 suppression on this member.")]
-        public override bool TryGetIndex(System.Dynamic.GetIndexBinder binder, object[] indexes, out object result)
+        public override bool TryGetIndex(System.Dynamic.GetIndexBinder binder, object?[]? indexes, out object result)
         {
-            result = null;
-            return this.MassageResultBasedOnInterface(Invocation.IndexBinderName, true, ref result);
-        
+            // See Get.TryGetIndex for why this bridges through a nullable local: TryGetIndex's
+            // own result is non-nullable (matching DynamicObject's base signature) but
+            // MassageResultBasedOnInterface takes `ref object?`.
+            object? tResult = null;
+            var success = this.MassageResultBasedOnInterface(Invocation.IndexBinderName, true, ref tResult);
+            result = tResult!;
+            return success;
         }
 
         /// <summary>
@@ -116,7 +120,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="indexes">The indexes.</param>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public override bool TrySetIndex(System.Dynamic.SetIndexBinder binder, object[] indexes, object value)
+        public override bool TrySetIndex(System.Dynamic.SetIndexBinder binder, object?[]? indexes, object? value)
         {
             return true;
         }

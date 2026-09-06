@@ -178,7 +178,9 @@ namespace Dynamitey
         public virtual dynamic Create()
         {
             object[] tArgs = Arguments();
-            return Dynamic.InvokeConstructor(Type, tArgs);
+            // A constructor call never actually returns null; InvokeConstructor's return is
+            // nullable only because it's declared for the general "whatever was invoked" case.
+            return Dynamic.InvokeConstructor(Type, tArgs)!;
         }
     }
 
@@ -226,9 +228,9 @@ namespace Dynamitey
             }
             catch (Exception)
             {
-                tObjectPrototype = Dynamic.InvokeConstructor(typeof(TObjectPrototype));
+                tObjectPrototype = Dynamic.InvokeConstructor(typeof(TObjectPrototype))!;
             }
-            return tObjectPrototype;
+            return tObjectPrototype!;
         }
     }
 

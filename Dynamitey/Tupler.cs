@@ -34,7 +34,7 @@ namespace Dynamitey
     {
         private class TuplerFix
         {
-            private Tuple<T1, T2, T3, T4, T5, T6, T7, T8> Create<T1, T2, T3, T4, T5, T6, T7, T8>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, T8 item8)
+            private Tuple<T1, T2, T3, T4, T5, T6, T7, T8> Create<T1, T2, T3, T4, T5, T6, T7, T8>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, T8 item8) where T8 : notnull
             {
                 return new Tuple<T1, T2, T3, T4, T5, T6, T7, T8>(item1, item2, item3, item4, item5, item6, item7, item8);
             }
@@ -67,11 +67,13 @@ namespace Dynamitey
             var items = enumerable as IEnumerable<object> ?? enumerable.Cast<object>();
             if (items.Count() < 8)
             {
-                return Dynamic.InvokeMember(StaticTuple, "Create", items.ToArray());
+                // Tuple.Create/TuplerFix.Create never return null; InvokeMember's return is
+                // nullable only because it's whatever an arbitrary invoked member might return.
+                return Dynamic.InvokeMember(StaticTuple, "Create", items.ToArray())!;
             }
 
             return Dynamic.InvokeMember(TuplerHelper, "Create",
-                                        items.Take(7).Concat(new object[] { items.Skip(7).ToTuple() }).ToArray());
+                                        items.Take(7).Concat(new object[] { items.Skip(7).ToTuple() }).ToArray())!;
         }
 
         /// <summary>
@@ -194,12 +196,12 @@ namespace Dynamitey
         /// <returns>
         ///   <c>true</c> if the specified target is tuple; otherwise, <c>false</c>.
         /// </returns>
-        public static bool IsTuple(object target)
+        public static bool IsTuple(object? target)
         {
             return HelperIsTuple(target, out var type, out var genericType, out var size, false);
         }
 
-        private static bool HelperIsTuple(object target, out Type type, out Type genericeType, out int size, bool safe)
+        private static bool HelperIsTuple(object? target, [NotNullWhen(true)] out Type? type, out Type genericeType, out int size, bool safe)
         {
             genericeType = typeof(object);
             size = 1;

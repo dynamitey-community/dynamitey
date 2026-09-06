@@ -57,8 +57,8 @@ namespace Dynamitey
         /// <summary>
         /// Create Function can set to variable to make cleaner syntax;
         /// </summary>
-        public static readonly Func<object, object, InvokeContext> CreateContext =
-            Return<InvokeContext>.Arguments<object, object>((t, c) => new InvokeContext(t, c));
+        public static readonly Func<object, object?, InvokeContext> CreateContext =
+            Return<InvokeContext>.Arguments<object, object?>((t, c) => new InvokeContext(t, c));
 
         /// <summary>
         /// Create Function can set to variable to make cleaner syntax;
@@ -70,8 +70,8 @@ namespace Dynamitey
     /// <summary>
         /// Create Function can set to variable to make cleaner syntax;
         /// </summary>
-        public static readonly Func<Type, object, InvokeContext> CreateStaticWithContext =
-        Return<InvokeContext>.Arguments<Type, object>((t, c) => new InvokeContext(t, true, c));
+        public static readonly Func<Type, object?, InvokeContext> CreateStaticWithContext =
+        Return<InvokeContext>.Arguments<Type, object?>((t, c) => new InvokeContext(t, true, c));
 
 
         /// <summary>
@@ -80,10 +80,12 @@ namespace Dynamitey
         /// <value>The target.</value>
         public object Target { get; protected set; }
         /// <summary>
-        /// Gets or sets the context.
+        /// Gets or sets the context. <see langword="null"/> only when constructed via the
+        /// (target, context) overload with a <see langword="null"/> context - see that
+        /// constructor's remarks.
         /// </summary>
         /// <value>The context.</value>
-        public Type Context { get; protected set; }
+        public Type? Context { get; protected set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether [static context].
@@ -97,14 +99,14 @@ namespace Dynamitey
         /// <param name="target">The target.</param>
         /// <param name="staticContext">if set to <c>true</c> [static context].</param>
         /// <param name="context">The context.</param>
-        public InvokeContext(Type target, bool staticContext, object context)
+        public InvokeContext(Type target, bool staticContext, object? context)
         {
             if (context != null && !(context is Type))
             {
                 context = context.GetType();
             }
             Target = target;
-            Context = ((Type)context) ?? target;
+            Context = ((Type?)context) ?? target;
             StaticContext = staticContext;
         }
 
@@ -112,8 +114,12 @@ namespace Dynamitey
         /// Initializes a new instance of the <see cref="InvokeContext"/> class.
         /// </summary>
         /// <param name="target">The target.</param>
-        /// <param name="context">The context.</param>
-        public InvokeContext(object target, object context)
+        /// <param name="context">
+        /// The context. Passing <see langword="null"/> leaves <see cref="Context"/> null too,
+        /// rather than defaulting it from <paramref name="target"/> the way the
+        /// (target, staticContext, context) overload does.
+        /// </param>
+        public InvokeContext(object target, object? context)
         {
             this.Target = target;
 
@@ -122,7 +128,7 @@ namespace Dynamitey
                 context = context.GetType();
             }
 
-            Context = (Type)context;
+            Context = (Type?)context;
         }
     }
 }

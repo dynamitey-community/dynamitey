@@ -128,15 +128,19 @@ namespace Dynamitey
         /// <value>The kind.</value>
         public InvocationKind Kind { get; protected set; }
         /// <summary>
-        /// Gets or sets the name.
+        /// Gets or sets the name. <see langword="null"/> for a Kind - such as
+        /// <see cref="InvocationKind.Convert"/> or <see cref="InvocationKind.Invoke"/> - that
+        /// doesn't need a member name.
         /// </summary>
         /// <value>The name.</value>
-        public String_OR_InvokeMemberName Name { get; protected set; }
+        public String_OR_InvokeMemberName? Name { get; protected set; }
         /// <summary>
-        /// Gets or sets the args.
+        /// Gets or sets the args. <see langword="null"/> when constructed with no stored args
+        /// (e.g. <see cref="CacheableInvocation.CreateConvert"/>'s default); individual elements
+        /// may themselves be <see langword="null"/> - any argument value including null is valid.
         /// </summary>
         /// <value>The args.</value>
-        public object[] Args { get; protected set; }
+        public object?[]? Args { get; protected set; }
 
         /// <summary>
         /// Creates the invocation.
@@ -145,7 +149,7 @@ namespace Dynamitey
         /// <param name="name">The name.</param>
         /// <param name="storedArgs">The args.</param>
         /// <returns></returns>
-        public static Invocation Create(InvocationKind kind, String_OR_InvokeMemberName name, params object[] storedArgs)
+        public static Invocation Create(InvocationKind kind, String_OR_InvokeMemberName? name, params object?[]? storedArgs)
         {
             return new Invocation(kind,name,storedArgs);
         }
@@ -156,7 +160,7 @@ namespace Dynamitey
         /// <param name="kind">The kind.</param>
         /// <param name="name">The name.</param>
         /// <param name="storedArgs">The args.</param>
-        public Invocation(InvocationKind kind, String_OR_InvokeMemberName name, params object[] storedArgs)
+        public Invocation(InvocationKind kind, String_OR_InvokeMemberName? name, params object?[]? storedArgs)
         {
             Kind = kind;
             Name = name;
@@ -168,11 +172,15 @@ namespace Dynamitey
         /// </summary>
         /// <param name="other">The other.</param>
         /// <returns></returns>
-        public bool Equals(Invocation other)
+        public bool Equals(Invocation? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Kind, Kind) && Equals(other.Name, Name) && (Equals(other.Args, Args) || Enumerable.SequenceEqual(other.Args, Args));
+            // SequenceEqual requires non-null sequences; Equals(other.Args, Args) is checked first
+            // and short-circuits whenever either is null (true if both null, false if only one is -
+            // matching the pre-existing null-tolerant behavior), so SequenceEqual only ever runs
+            // with both non-null.
+            return Equals(other.Kind, Kind) && Equals(other.Name, Name) && (Equals(other.Args, Args) || Enumerable.SequenceEqual(other.Args!, Args!));
         }
 
         /// <summary>
@@ -182,7 +190,7 @@ namespace Dynamitey
         /// <returns>
         ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -215,71 +223,76 @@ namespace Dynamitey
         /// <returns></returns>
         [RequiresUnreferencedCode("Dispatches to a Dynamic.Invoke*/InvokeMember/InvokeGet/etc. method based on Kind, each of which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Every Kind dispatches through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
-        public virtual object Invoke(object target, params object[] args)
+        // Both `args` and `Name` are, in general, nullable (see their declarations), and this
+        // method has never null-checked either - which Kind values need which is an existing,
+        // unenforced contract (e.g. Kind.Get needs Name; most Kinds need args), not something
+        // introduced here. The `!` suppressions below preserve that exact pre-existing behavior
+        // (an NRE if the contract is violated) rather than adding new checks.
+        public virtual object? Invoke(object target, params object?[]? args)
         {
             switch (Kind)
             {
                 case InvocationKind.Constructor:
-                    return Dynamic.InvokeConstructor((Type)target, args);
+                    return Dynamic.InvokeConstructor((Type)target, args!);
                 case InvocationKind.Convert:
                     bool tExplicit = false;
-                    if (Args.Length == 2)
-                        tExplicit = (bool)args[1];
-                    return Dynamic.InvokeConvert(target, (Type)args[0], tExplicit);
+                    if (Args!.Length == 2)
+                        tExplicit = (bool)args![1]!;
+                    return Dynamic.InvokeConvert(target, (Type)args![0]!, tExplicit);
                 case InvocationKind.Get:
-                    return Dynamic.InvokeGet(target, Name.Name);
+                    return Dynamic.InvokeGet(target, Name!.Name);
                 case InvocationKind.Set:
-                    Dynamic.InvokeSet(target, Name.Name, args.FirstOrDefault());
+                    Dynamic.InvokeSet(target, Name!.Name, args!.FirstOrDefault());
                     return null;
                 case InvocationKind.GetIndex:
-                    return Dynamic.InvokeGetIndex(target, args);
+                    return Dynamic.InvokeGetIndex(target, args!);
                 case InvocationKind.SetIndex:
-                    Dynamic.InvokeSetIndex(target, args);
+                    Dynamic.InvokeSetIndex(target, args!);
                     return null;
                 case InvocationKind.InvokeMember:
-                    return Dynamic.InvokeMember(target, Name, args);
+                    return Dynamic.InvokeMember(target, Name!, args!);
                 case InvocationKind.InvokeMemberAction:
-                    Dynamic.InvokeMemberAction(target, Name, args);
+                    Dynamic.InvokeMemberAction(target, Name!, args!);
                     return null;
                 case InvocationKind.InvokeMemberUnknown:
                     {
                         try
                         {
-                            return Dynamic.InvokeMember(target, Name, args);
+                            return Dynamic.InvokeMember(target, Name!, args!);
                         }
                         catch (RuntimeBinderException)
                         {
 
-                            Dynamic.InvokeMemberAction(target, Name, args);
+                            Dynamic.InvokeMemberAction(target, Name!, args!);
                             return null;
                         }
                     }
                 case InvocationKind.Invoke:
-                    return Dynamic.Invoke(target, args);
+                    return Dynamic.Invoke(target, args!);
                 case InvocationKind.InvokeAction:
-                    Dynamic.InvokeAction(target, args);
+                    Dynamic.InvokeAction(target, args!);
                     return null;
                 case InvocationKind.InvokeUnknown:
                     {
                         try
                         {
-                            return Dynamic.Invoke(target, args);
+                            return Dynamic.Invoke(target, args!);
                         }
                         catch (RuntimeBinderException)
                         {
 
-                            Dynamic.InvokeAction(target, args);
+                            Dynamic.InvokeAction(target, args!);
                             return null;
                         }
                     }
                 case InvocationKind.AddAssign:
-                    Dynamic.InvokeAddAssignMember(target, Name.Name, args.FirstOrDefault());
+                    Dynamic.InvokeAddAssignMember(target, Name!.Name, args!.FirstOrDefault());
                     return null;
                 case InvocationKind.SubtractAssign:
-                    Dynamic.InvokeSubtractAssignMember(target, Name.Name, args.FirstOrDefault());
+                    Dynamic.InvokeSubtractAssignMember(target, Name!.Name, args!.FirstOrDefault());
                     return null;
                 case InvocationKind.IsEvent:
-                    return Dynamic.InvokeIsEvent(target, Name.Name);
+                    return Dynamic.InvokeIsEvent(target, Name!.Name);
                 default:
                     throw new InvalidOperationException("Unknown Invocation Kind: " + Kind);
             }
@@ -293,7 +306,7 @@ namespace Dynamitey
         /// <returns></returns>
         [RequiresUnreferencedCode("Calls Invoke, which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Calls Invoke, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        public virtual object InvokeWithStoredArgs(object target)
+        public virtual object? InvokeWithStoredArgs(object target)
         {
             return Invoke(target, Args);
         }

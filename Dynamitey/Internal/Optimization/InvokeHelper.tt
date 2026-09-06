@@ -32,7 +32,7 @@ namespace Dynamitey.Internal.Optimization {
 <# foreach(var name in cacheTypes){ #>
     internal static class Binder<#=name#>Cache<T> where T : class
     {
-        private static IDictionary<BinderHash<T>, CallSite<T>> _cache;
+        private static IDictionary<BinderHash<T>, CallSite<T>>? _cache;
 
         private static readonly object _cacheLock = new object();
 
@@ -123,14 +123,18 @@ namespace Dynamitey.Internal.Optimization {
 
         [RequiresUnreferencedCode("For an argument count with a generated fast-path case, builds/reuses a cached CallSite whose binder resolves a member by name; for any other count, falls back to Dynamic.InvokeCallSite. Trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Every case binds through the DLR (and, past 14 arguments, emits a delegate type via Reflection.Emit); not supported when AOT-compiled.")]
-        internal static void InvokeMemberAction(ref CallSite callsite,
-		                                            Type binderType,
+        // binderType/binder/argNames are null exactly when callsite is already non-null (every
+        // caller sets them together, gated on the same "is callsite null yet" check as this
+        // method's own per-arity cases below) - so binderType!/binder! at each CreateCallSite call
+        // only run on the branch where callsite was actually null and they were freshly supplied.
+        internal static void InvokeMemberAction(ref CallSite? callsite,
+		                                            Type? binderType,
 													int knownType,
-													LazyBinder binder,
+													LazyBinder? binder,
                                                     InvokeMemberName name,
 													bool staticContext,
-                                                    Type context, 
-                                                    string[] argNames,
+                                                    Type context,
+                                                    string?[]? argNames,
                                                     object target,
                                                     params object [] args)
         {
@@ -145,9 +149,9 @@ namespace Dynamitey.Internal.Optimization {
 #>
                 case <#=i#>:
                     {
-						var tCallSite = (CallSite<Action<CallSite, <#=tobjectArgs#>>>)callsite;
+						var tCallSite = (CallSite<Action<CallSite, <#=tobjectArgs#>>>?)callsite;
 						if(tCallSite == null){
-							tCallSite = CreateCallSite<Action<CallSite, <#=tobjectArgs#>>>(binderType,knownType, binder, name, context, argNames, staticContext);
+							tCallSite = CreateCallSite<Action<CallSite, <#=tobjectArgs#>>>(binderType!,knownType, binder!, name, context, argNames, staticContext);
 						    callsite=tCallSite;
 						}
                         tCallSite.Target(tCallSite, target<#=tArrayArgs#>);
@@ -158,7 +162,7 @@ namespace Dynamitey.Internal.Optimization {
                 default:
                     var tArgTypes = Enumerable.Repeat(typeof(object), tSwitch);
                     var tDelagateType = EmitCallSiteFuncType(tArgTypes, typeof(void));
-                    Dynamic.InvokeCallSite(CreateCallSite(tDelagateType, binderType,knownType, binder, name, context, argNames), target, args);
+                    Dynamic.InvokeCallSite(CreateCallSite(tDelagateType, binderType!,knownType, binder!, name, context, argNames), target, args);
                     break;
 
             }
@@ -175,15 +179,17 @@ namespace Dynamitey.Internal.Optimization {
 
         [RequiresUnreferencedCode("For an argument count with a generated fast-path case, builds/reuses a cached CallSite whose binder resolves a member by name; for any other count, falls back to Dynamic.InvokeCallSite. Trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Every case binds through the DLR (and, past 14 arguments, emits a delegate type via Reflection.Emit); not supported when AOT-compiled.")]
+        // See InvokeMemberAction above for why binderType/binder are nullable and suppressed
+        // with `!` below rather than threaded through as `?`.
         internal static TReturn InvokeMemberTargetType<TTarget,TReturn>(
-										ref CallSite callsite,
-										Type binderType,
+										ref CallSite? callsite,
+										Type? binderType,
 										int knownType,
-										LazyBinder binder,
+										LazyBinder? binder,
                                        InvokeMemberName name,
 									 bool staticContext,
                                      Type context,
-                                     string[] argNames,
+                                     string?[]? argNames,
                                      TTarget target, params object [] args)
         {
 
@@ -200,9 +206,9 @@ namespace Dynamitey.Internal.Optimization {
 #>
                 case <#=i#>:
                     {
-					    var tCallSite = (CallSite<Func<CallSite, TTarget, <#=tobjectArgs#>>>)callsite;
+					    var tCallSite = (CallSite<Func<CallSite, TTarget, <#=tobjectArgs#>>>?)callsite;
 					    if(tCallSite==null){
-							 tCallSite = CreateCallSite<Func<CallSite, TTarget, <#=tobjectArgs#>>>(binderType,knownType,binder, name, context, argNames, staticContext);
+							 tCallSite = CreateCallSite<Func<CallSite, TTarget, <#=tobjectArgs#>>>(binderType!,knownType,binder!, name, context, argNames, staticContext);
 							 callsite =tCallSite;
 						}
                         return tCallSite.Target(tCallSite, target<#=tArrayArgs#>);
@@ -212,7 +218,10 @@ namespace Dynamitey.Internal.Optimization {
                 default:
                     var tArgTypes = Enumerable.Repeat(typeof(object), tSwitch);
                     var tDelagateType = EmitCallSiteFuncType(tArgTypes, typeof(TReturn));
-                    return Dynamic.InvokeCallSite(CreateCallSite(tDelagateType, binderType,knownType, binder, name, context, argNames), target, args);
+                    // target/the return value are TTarget/TReturn - unconstrained generics are
+                    // nullable-oblivious, but InvokeCallSite's own object/dynamic? signature isn't;
+                    // the `!`s bridge that without asserting anything actually new.
+                    return (TReturn)Dynamic.InvokeCallSite(CreateCallSite(tDelagateType, binderType!,knownType, binder!, name, context, argNames), target!, args)!;
 
             }
         }
@@ -236,7 +245,7 @@ namespace Dynamitey.Internal.Optimization {
 <# } #>
 #endregion	
 				default:
-					return new DynamicFunc<TReturn>(args=>(TReturn)Dynamic.Invoke((object)invokable,args));
+					return new DynamicFunc<TReturn>(args=>(TReturn)Dynamic.Invoke((object)invokable,args)!);
 			}
         }
 
@@ -263,7 +272,7 @@ namespace Dynamitey.Internal.Optimization {
 
         [RequiresUnreferencedCode("For a known argument count, invokes del through a 'dynamic' reference; trimming can remove the member the DLR resolves.")]
         [RequiresDynamicCode("The 'dynamic' invocation binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
-        internal static object FastDynamicInvokeReturn(Delegate del, dynamic [] args)
+        internal static object? FastDynamicInvokeReturn(Delegate del, dynamic [] args)
         {
             dynamic tDel =del;
             switch(args.Length){
@@ -274,7 +283,11 @@ namespace Dynamitey.Internal.Optimization {
                     }
                     catch (TargetInvocationException ex)
                     {
-                        throw ex.InnerException;
+                        // InnerException is nullable in general, but TargetInvocationException
+                        // always sets it; if it were ever null this rethrows exactly as before
+                        // nullable was enabled - `throw` on a null expression raises a
+                        // NullReferenceException rather than silently doing nothing.
+                        throw ex.InnerException!;
                     }
 #region Optimization
 <# for(int i=1; i <= 16; i++){ 
@@ -299,7 +312,8 @@ namespace Dynamitey.Internal.Optimization {
 					}
 					catch (TargetInvocationException ex)
                     {
-                        throw ex.InnerException;
+                        // See the InnerException comment in FastDynamicInvokeReturn above.
+                        throw ex.InnerException!;
                     }
                     return;
 #region Optimization

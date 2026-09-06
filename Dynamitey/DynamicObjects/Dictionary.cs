@@ -138,19 +138,19 @@ namespace Dynamitey.DynamicObjects
             "after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same List construction as above; see the IL2026 suppression on this member.")]
-		public override bool TryInvokeMember (InvokeMemberBinder binder, object[] args, out object result)
+		public override bool TryInvokeMember (InvokeMemberBinder binder, object?[]? args, out object? result)
 		{
 			if(base.TryInvokeMember (binder, args, out result)){
 				return true;
 			}
 			if(binder.CallInfo.ArgumentCount ==1){
-					SetProperty(binder.Name, args.FirstOrDefault());
+					SetProperty(binder.Name, args!.FirstOrDefault());
 				result = this;
 				return true;
 			}
             if (binder.CallInfo.ArgumentCount > 1)
             {
-                SetProperty(binder.Name,new List(args));
+                SetProperty(binder.Name,new List(args!));
                 result = this;
                 return true;
             }

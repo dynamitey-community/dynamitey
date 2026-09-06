@@ -17,9 +17,12 @@ namespace Dynamitey
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns>The result of the conversion.</returns>
-        public static implicit operator String_OR_InvokeMemberName(string name)
+        public static implicit operator String_OR_InvokeMemberName(string? name)
         {
-            return new InvokeMemberName(name, null);
+            // name can be null here (e.g. PartialApply representing a direct, member-less
+            // invocation via Invocation.Name); InvokeMemberName.Name is otherwise non-null, so
+            // this is a deliberate, pre-existing exception to that rather than a new one.
+            return new InvokeMemberName(name!, null);
         }
 
 
@@ -27,12 +30,16 @@ namespace Dynamitey
         /// Gets the name.
         /// </summary>
         /// <value>The name.</value>
-        public string Name { get; protected set; }
+        // Never initialized here: this abstract class has no constructor of its own, and its one
+        // subclass (InvokeMemberName) always sets Name in every constructor it declares. The `= null!`
+        // documents that invariant instead of leaving an unexplained non-null-without-assignment gap.
+        public string Name { get; protected set; } = null!;
         /// <summary>
-        /// Gets the generic args.
+        /// Gets the generic args. <see langword="null"/> when this name was created without any
+        /// (e.g. via the implicit <see cref="string"/> conversion), as distinct from an empty array.
         /// </summary>
         /// <value>The generic args.</value>
-        public Type[] GenericArgs { get; protected set; }
+        public Type[]? GenericArgs { get; protected set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this member is special name.
@@ -51,8 +58,8 @@ namespace Dynamitey
         /// <summary>
         /// Create Function can set to variable to make cleaner syntax;
         /// </summary>
-        public static readonly Func<string, Type[], InvokeMemberName> Create =
-            Return<InvokeMemberName>.Arguments<string, Type[]>((n, a) => new InvokeMemberName(n, a));
+        public static readonly Func<string, Type[]?, InvokeMemberName> Create =
+            Return<InvokeMemberName>.Arguments<string, Type[]?>((n, a) => new InvokeMemberName(n, a));
 
         /// <summary>
         /// Create Function can set to variable to make cleaner syntax;
@@ -76,7 +83,7 @@ namespace Dynamitey
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="genericArgs">The generic args.</param>
-        public InvokeMemberName(string name, params Type[] genericArgs)
+        public InvokeMemberName(string name, params Type[]? genericArgs)
         {
             Name = name;
             GenericArgs = genericArgs;
@@ -99,13 +106,13 @@ namespace Dynamitey
         /// </summary>
         /// <param name="other">The other.</param>
         /// <returns></returns>
-        public bool Equals(InvokeMemberName other)
+        public bool Equals(InvokeMemberName? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return EqualsHelper(other);
         }
-        
+
         private bool EqualsHelper(InvokeMemberName other)
         {
 
@@ -116,10 +123,12 @@ namespace Dynamitey
             return Equals(other.Name, Name)
                 && !(other.IsSpecialName ^ IsSpecialName)
                 && !(tOtherGenArgs == null ^ tGenArgs == null)
-                && (tGenArgs == null || 
-                //Exclusive Or makes sure this doesn't happen
+                && (tGenArgs == null ||
+                //Exclusive Or makes sure this doesn't happen: the XOR check above already
+                //proves tOtherGenArgs is non-null whenever tGenArgs is, which the nullable
+                //analyzer can't see through - same reasoning ReSharper needed suppressing below.
 // ReSharper disable AssignNullToNotNullAttribute
-                tGenArgs.SequenceEqual(tOtherGenArgs));
+                tGenArgs.SequenceEqual(tOtherGenArgs!));
 // ReSharper restore AssignNullToNotNullAttribute
         }
 
@@ -130,7 +139,7 @@ namespace Dynamitey
         /// <returns>
         /// 	<c>true</c> if the specified <see cref="System.Object"/> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

@@ -50,17 +50,17 @@ namespace Dynamitey.DynamicObjects
         /// <param name="members">The members.</param>
         [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public List(
-            IEnumerable<object> contents =null,
-            IEnumerable<KeyValuePair<string, object>> members =null):base(members)
+            IEnumerable<object>? contents =null,
+            IEnumerable<KeyValuePair<string, object>>? members =null):base(members)
         {
             if (contents == null)
             {
                 _list = new List<object>();
                 return;
             }
-            if (contents is IList<object>)
+            if (contents is IList<object> tContents)
             {
-                _list = contents as IList<object>;
+                _list = tContents;
             }
             else
             {
@@ -127,7 +127,11 @@ namespace Dynamitey.DynamicObjects
             "actionable warning belongs to whichever 'dynamic'-typed argument the caller " +
             "supplied, which already carries this requirement at its own declaration.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
-        public bool Contains(dynamic item)
+        // dynamic? rather than plain dynamic: this method is the implicit implementation of both
+        // ICollection<object>.Contains(object item) (non-null) and, via the non-generic IList this
+        // class also implements, IList.Contains(object? value) - the second genuinely needs a
+        // nullable parameter to match, and satisfying it doesn't weaken the first.
+        public bool Contains(dynamic? item)
         {
             return _list.Contains(item);
         }
@@ -163,7 +167,8 @@ namespace Dynamitey.DynamicObjects
             "actionable warning belongs to whichever 'dynamic'-typed argument the caller " +
             "supplied, which already carries this requirement at its own declaration.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
-        public int IndexOf(dynamic item)
+        // See Contains above for why this is dynamic? rather than plain dynamic.
+        public int IndexOf(dynamic? item)
         {
             lock (ListLock)
             {
@@ -183,24 +188,27 @@ namespace Dynamitey.DynamicObjects
             "actionable warning belongs to whichever 'dynamic'-typed argument the caller " +
             "supplied, which already carries this requirement at its own declaration.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression on this member.")]
-        public void Insert(int index, dynamic item)
+        // See Contains above for why this is dynamic? rather than plain dynamic.
+        public void Insert(int index, dynamic? item)
         {
             InsertHelper(item,index);
         }
 
-        private void InsertHelper(object item, int? index = null)
+        private void InsertHelper(object? item, int? index = null)
         {
+            // _list's element type is non-null to match IList<object>, but callers reach this
+            // through 'dynamic' entry points that don't check for null - preserved as-is.
             lock (ListLock)
             {
                 if (!index.HasValue)
                 {
                     index = _list.Count;
-                    _list.Add(item);
-                   
+                    _list.Add(item!);
+
                 }
                 else
                 {
-                    _list.Insert(index.Value, item);
+                    _list.Insert(index.Value, item!);
                 }
             }
             OnCollectionChanged(NotifyCollectionChangedAction.Add, newItem: item, newIndex: index);
@@ -232,7 +240,7 @@ namespace Dynamitey.DynamicObjects
             return RemoveHelper(item);
         }
 
-        private bool RemoveHelper(object item = null, int? index = null)
+        private bool RemoveHelper(object? item = null, int? index = null)
         {
       
             lock (ListLock)
@@ -281,6 +289,17 @@ namespace Dynamitey.DynamicObjects
             }
         }
 
+        // Separate from the dynamic indexer above: IList<object>.this[int] needs a non-null
+        // getter (satisfied by the property above), but the non-generic IList.this[int] setter
+        // is nullable - the same split as Contains/IndexOf/Insert above, except here the getter
+        // and setter can't share one property declaration with two different nullabilities, so
+        // the non-generic interface gets its own explicit implementation instead.
+        object? IList.this[int index]
+        {
+            get => this[index];
+            set => this[index] = value!;
+        }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -295,7 +314,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="newItem">The new item.</param>
         /// <param name="oldIndex">The old index.</param>
         /// <param name="newIndex">The new index.</param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedAction action, object oldItem = null, object newItem = null, int? oldIndex = null, int? newIndex = null)
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedAction action, object? oldItem = null, object? newItem = null, int? oldIndex = null, int? newIndex = null)
 
         {
             if (CollectionChanged != null)
@@ -336,7 +355,7 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Occurs when the collection changes.
         /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         dynamic IDictionary<string, object>.this[string key]
         {
@@ -355,7 +374,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="other">The other.</param>
         /// <returns></returns>
-        public bool Equals(List other)
+        public bool Equals(List? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -369,7 +388,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -395,7 +414,7 @@ namespace Dynamitey.DynamicObjects
         /// Gets or sets the override getting item method names. USED for GetItemProperties
         /// </summary>
         /// <value>The override getting item method names.</value>
-        public Func<IEnumerable<object>, IEnumerable<string>> OverrideGettingItemMethodNames { get; set; }
+        public Func<IEnumerable<object>, IEnumerable<string>>? OverrideGettingItemMethodNames { get; set; }
 
 
 
@@ -403,7 +422,7 @@ namespace Dynamitey.DynamicObjects
         /// Gets the represented item. USED fOR GetItemProperties
         /// </summary>
         /// <returns></returns>
-        protected virtual dynamic GetRepresentedItem()
+        protected virtual dynamic? GetRepresentedItem()
         {
             var tItem = ((IEnumerable<object>)this).FirstOrDefault();
             return tItem;
@@ -446,15 +465,18 @@ namespace Dynamitey.DynamicObjects
         #region Implementation of IList
 
 
-        int IList.Add(object value)
+        int IList.Add(object? value)
         {
-            Add(value);
+            // Add(dynamic item) only implements ICollection<object>.Add(object item) (non-null);
+            // IList.Add itself accepts null, and forwarding it unchecked is the pre-existing
+            // behavior (whatever Add(dynamic) then does with a null item is unaffected by this).
+            Add(value!);
             return Count - 1;
         }
 
-        void IList.Remove(object value)
+        void IList.Remove(object? value)
         {
-            Remove(value);
+            Remove(value!);
         }
 
         /// <summary>

@@ -33,7 +33,7 @@ namespace Dynamitey.DynamicObjects
             "can't carry [RequiresDynamicCode] itself without mismatching the unannotated base " +
             "member, and the DLR invokes it only after the consumer's own dynamic call site " +
             "already triggered the framework's warning.")]
-        public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object result)
+        public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object? result)
         {
             result = new Mimic();
             return true;
@@ -52,7 +52,7 @@ namespace Dynamitey.DynamicObjects
             "conversion already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeConstructor call as above; see the IL2026 suppression on this member.")]
-        public override bool TryConvert(ConvertBinder binder, out object result)
+        public override bool TryConvert(ConvertBinder binder, out object? result)
         {
 
             result = Dynamic.InvokeConstructor(binder.ReturnType);
@@ -71,7 +71,7 @@ namespace Dynamitey.DynamicObjects
             "[RequiresDynamicCode] itself without mismatching the unannotated base member, " +
             "and the DLR invokes it only after the consumer's own dynamic call site already " +
             "triggered the framework's warning.")]
-        public override bool TryCreateInstance(CreateInstanceBinder binder, object[] args, out object result)
+        public override bool TryCreateInstance(CreateInstanceBinder binder, object?[]? args, out object result)
         {
             result = new Mimic();
             return true;
@@ -83,7 +83,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="binder"></param>
         /// <param name="indexes"></param>
         /// <returns></returns>
-        public override bool TryDeleteIndex(DeleteIndexBinder binder, object[] indexes)
+        public override bool TryDeleteIndex(DeleteIndexBinder binder, object?[]? indexes)
         {
             return true;
         }
@@ -110,7 +110,7 @@ namespace Dynamitey.DynamicObjects
             "[RequiresDynamicCode] itself without mismatching the unannotated base member, " +
             "and the DLR invokes it only after the consumer's own dynamic call site already " +
             "triggered the framework's warning.")]
-        public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
+        public override bool TryGetIndex(GetIndexBinder binder, object?[]? indexes, out object result)
         {
             result = new Mimic();
             return true;
@@ -127,25 +127,7 @@ namespace Dynamitey.DynamicObjects
             "[RequiresDynamicCode] itself without mismatching the unannotated base member, " +
             "and the DLR invokes it only after the consumer's own dynamic call site already " +
             "triggered the framework's warning.")]
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
-        {
-            result = new Mimic();
-            return true;
-        }
-
-        /// <summary>
-        /// Override on DynamicObject
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="args"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
-            "Constructs another Mimic. This is a DynamicObject override: it can't carry " +
-            "[RequiresDynamicCode] itself without mismatching the unannotated base member, " +
-            "and the DLR invokes it only after the consumer's own dynamic call site already " +
-            "triggered the framework's warning.")]
-        public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
+        public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             result = new Mimic();
             return true;
@@ -163,7 +145,25 @@ namespace Dynamitey.DynamicObjects
             "[RequiresDynamicCode] itself without mismatching the unannotated base member, " +
             "and the DLR invokes it only after the consumer's own dynamic call site already " +
             "triggered the framework's warning.")]
-        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
+        {
+            result = new Mimic();
+            return true;
+        }
+
+        /// <summary>
+        /// Override on DynamicObject
+        /// </summary>
+        /// <param name="binder"></param>
+        /// <param name="args"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
+            "Constructs another Mimic. This is a DynamicObject override: it can't carry " +
+            "[RequiresDynamicCode] itself without mismatching the unannotated base member, " +
+            "and the DLR invokes it only after the consumer's own dynamic call site already " +
+            "triggered the framework's warning.")]
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             result = new Mimic();
             return true;
@@ -176,7 +176,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="indexes"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
+        public override bool TrySetIndex(SetIndexBinder binder, object?[]? indexes, object? value)
         {
             return true;
         }
@@ -187,7 +187,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="binder"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override bool TrySetMember(SetMemberBinder binder, object value)
+        public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
             return true;
         }
@@ -203,7 +203,7 @@ namespace Dynamitey.DynamicObjects
             "[RequiresDynamicCode] itself without mismatching the unannotated base member, " +
             "and the DLR invokes it only after the consumer's own dynamic call site already " +
             "triggered the framework's warning.")]
-        public override bool TryUnaryOperation(UnaryOperationBinder binder, out object result)
+        public override bool TryUnaryOperation(UnaryOperationBinder binder, out object? result)
         {
             result = new Mimic();
             return true;

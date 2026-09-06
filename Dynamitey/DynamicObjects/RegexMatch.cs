@@ -35,7 +35,7 @@ namespace Dynamitey.DynamicObjects
        
         private readonly Match _match;
        
-        private readonly Regex _regex;
+        private readonly Regex? _regex;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RegexMatch" /> class.
@@ -43,7 +43,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="match">The match.</param>
         /// <param name="regex">The regex.</param>
         [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        public RegexMatch(Match match, Regex regex = null)
+        public RegexMatch(Match match, Regex? regex = null)
         {
             _match = match;
             _regex = regex;
@@ -74,7 +74,7 @@ namespace Dynamitey.DynamicObjects
             "and the DLR invokes it only after the consumer's own dynamic member access already " +
             "triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
-       public override bool TryGetMember(GetMemberBinder binder, out object result)
+       public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             var tGroup = _match.Groups[binder.Name];
             if (!TryTypeForName(binder.Name, out var outType))
@@ -100,7 +100,7 @@ namespace Dynamitey.DynamicObjects
        /// </value>
        /// <param name="value">The value.</param>
        /// <returns></returns>
-        public string this[int value]
+        public string? this[int value]
         {
             get
             {
@@ -122,7 +122,7 @@ namespace Dynamitey.DynamicObjects
         /// </value>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public string this[string value]
+        public string? this[string value]
         {
             get
             {
