@@ -323,7 +323,12 @@ namespace Dynamitey.DynamicObjects
                         CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, oldItem, oldIndex.GetValueOrDefault()));
                         break;
                     case NotifyCollectionChangedAction.Replace:
-                        CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, oldItem, newItem, oldIndex.GetValueOrDefault()));
+                        // newItem before oldItem: the BCL constructor is
+                        // (action, newItem, oldItem, index), the opposite order to this method's
+                        // own parameter list. Both are object?, so a transposition compiles
+                        // cleanly and only shows up in what a bound control displays - which is
+                        // how it went unnoticed. See issue #59.
+                        CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, newItem, oldItem, oldIndex.GetValueOrDefault()));
                         break;
                     case NotifyCollectionChangedAction.Reset:
                         CollectionChanged(this,new NotifyCollectionChangedEventArgs(action));
