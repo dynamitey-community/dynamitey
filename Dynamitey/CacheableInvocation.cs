@@ -252,11 +252,17 @@ namespace Dynamitey
                             goto default;
                         break;
                     default:
-                        // CA2208: the two ArgumentException(string, string) arguments were
-                        // transposed - message and paramName were swapped, so Message used to read
-                        // literally "args" and ParamName was left null. Fixing the order is an
-                        // observable behaviour change (see the batch 4 release notes): Message now
-                        // carries the actual description and ParamName is populated.
+                        // CA2208: the two ArgumentException(string message, string paramName)
+                        // arguments were transposed, so the exception described itself backwards.
+                        // Verified by construction rather than by reading the overload:
+                        //   before  ParamName = "Incorrect number of Arguments for CachedInvocation,
+                        //                        Expected:N"
+                        //           Message   = "args (Parameter 'Incorrect number of Arguments...')"
+                        //   after   ParamName = "args"
+                        //           Message   = "Incorrect number of Arguments... (Parameter 'args')"
+                        // ParamName was never null - it carried the description - which is why the
+                        // exception still looked plausible in a log and survived this long.
+                        // Fixing the order is an observable change; see the batch 4 release notes.
                         throw new ArgumentException(
                             $"Incorrect number of Arguments for CachedInvocation, Expected:{_argCount}",
                             nameof(args));
