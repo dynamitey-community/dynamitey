@@ -50,6 +50,8 @@ namespace Dynamitey
         /// (e.g. via the implicit <see cref="string"/> conversion), as distinct from an empty array.
         /// </summary>
         /// <value>The generic args.</value>
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification =
+            "Public API, breaking to reshape - see Invocation.Args (Invocation.cs) for the full reasoning.")]
         public Type[]? GenericArgs { get; protected set; }
 
         /// <summary>
@@ -170,7 +172,14 @@ namespace Dynamitey
             {
                 // int.GetHashCode() is the identity transform (cs/useless-gethashcode-call); using
                 // Length directly is the same value without the redundant call.
+                // Name.GetHashCode(StringComparison.Ordinal) rather than the parameterless overload
+                // (CA1307): see the identical reasoning, including the netstandard2.0 conditional,
+                // on BinderHash.GetHashCode (Internal/Optimization/BinderHash.cs).
+#if NETSTANDARD2_0
                 return (GenericArgs != null ? GenericArgs.Length * 397 : 0) ^ (Name.GetHashCode());
+#else
+                return (GenericArgs != null ? GenericArgs.Length * 397 : 0) ^ (Name.GetHashCode(StringComparison.Ordinal));
+#endif
             }
         }
     }

@@ -146,7 +146,18 @@ namespace Dynamitey.Internal.Optimization
                 result = (result  ^ StaticContext.GetHashCode());
                 //result = (result * 397) ^ DelegateType.GetHashCode();
                 //result = (result * 397) ^ Context.GetHashCode();
+                // Name.GetHashCode(StringComparison.Ordinal) rather than the parameterless overload
+                // (CA1307): CoreEquals compares Name via object.Equals(string, string), which is
+                // ordinal, so the Ordinal overload is not merely consistent but documented to
+                // compute the exact same hash as the parameterless one - no observable change, just
+                // the explicit comparison type the rule asks for. That overload doesn't exist on
+                // netstandard2.0's string surface (added in .NET Core 2.1), which is also why CA1307
+                // itself only fires for the net10.0 leg of the multi-target build.
+#if NETSTANDARD2_0
                 result = (result * 397) ^ Name.GetHashCode();
+#else
+                result = (result * 397) ^ Name.GetHashCode(StringComparison.Ordinal);
+#endif
                 return result;
             }
         }
