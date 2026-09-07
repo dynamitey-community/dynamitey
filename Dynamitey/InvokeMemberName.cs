@@ -14,7 +14,7 @@ namespace Dynamitey
     [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification =
         "String_OR_InvokeMemberName's name literally IS its contract: it's a poor-man's discriminated union " +
         "predating C#'s union-type proposals, accepting either a bare string or an InvokeMemberName via " +
-        "implicit conversion operators, so an InvokeMember overload can take 'a name, optionally with named- " +
+        "implicit conversion operators, so an InvokeMember overload can take 'a name, optionally with named-" +
         "argument metadata' without two overloads. The underscores spell out the three logical words - " +
         "String, OR, InvokeMemberName - at a glance; collapsing them to StringOrInvokeMemberName trades that " +
         "readability for a cosmetic style rule. It is declared public API that appears in the signature of " +

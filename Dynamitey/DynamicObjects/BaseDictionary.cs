@@ -37,7 +37,7 @@ namespace Dynamitey.DynamicObjects
         "DynamicObject property-as-key overrides that its two concrete subclasses, Dictionary and List, " +
         "build IDictionary<string,object> on top of - it just doesn't implement IDictionary itself, which " +
         "is the base class's job to leave open. The other CA1711 site in this batch, ThisFunctions.cs's " +
-        "ThisDelegate, is the same story in reverse: it's a static class of helpers *about* the ThisAction/ " +
+        "ThisDelegate, is the same story in reverse: it's a static class of helpers *about* the ThisAction/" +
         "ThisFunc delegate family, not itself a delegate, named the way a helper class for a type family " +
         "conventionally is. Renaming either is a breaking rename of declared public API (PublicAPI.Unshipped.txt) " +
         "with no behavior change, which this batch is not authorized to make.")]

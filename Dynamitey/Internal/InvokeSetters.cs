@@ -73,7 +73,7 @@ namespace Dynamitey.Internal
 
                 }else
                 {
-                    throw new RuntimeBinderException("InvokeSetAll requires first parameter to be target unamed, and all other parameters to be named.");
+                    throw new RuntimeBinderException("InvokeSetAll requires the first argument to be the target, unnamed, and every other argument to be named.");
                 }
             }
             else if (nonNullArgs.Length == 2)
