@@ -180,14 +180,6 @@
          trips rules that a library trips rarely or never. The figures below are
          re-measured from a clean build of Dynamitey.csproj by itself.
 
-         Likely mostly deliberate design, expected to end as suppressions:
-           CA1000 (36) static members on generic types - this is the library's
-                       core pattern (BinderHash<T>.Create, InvokeHelper<T>)
-           CA1034 (8)  nested public types - InvokeContext, Builder and friends
-           CA1040 (1)  empty interfaces - marker interfaces
-           CA1724 (3)  type name conflicts with a namespace
-           CA1716 (7)  identifier matches a language keyword
-
          Likely real, expected to end as fixes:
            CA1810 (3)  static field initialization in an explicit static ctor
            CA1812 (3)  internal classes that are apparently never instantiated
@@ -204,16 +196,63 @@
                        genuinely single-pass source instead of just costing more
                        CPU, which is out of bounds for an analyzer-driven change.
 
+         Resolved in batch 3 (design/naming rules, triaged off the backlog -
+         removed from NoWarn below, each finding either fixed or suppressed at
+         its call site with a written reason; see PublicAPI.Unshipped.txt for
+         confirmation every suppressed site is declared public API):
+           CA1000 (36) static members on generic types - this IS the library's
+                       core static-factory pattern. Full reasoning on
+                       Build<TObjectPrototype>.NewObject (Builder.cs); every
+                       other site (NewList, and Return<TR>'s 34 T4-generated
+                       overloads in InlineLambdas.cs/.tt) points back to it.
+           CA1034 (8)  nested public types, each forced public by a compiler
+                       pattern (AwaitableResult.Awaiter) or by overriding a
+                       public DynamicObject member (BuilderTrampoline,
+                       SetupTrampoline, ConstructorForward, Invoker,
+                       OverloadInvoker), or scoped to one owner
+                       (AddRemoveMarker, MissingTypeException). Full reasoning
+                       on AwaitableResult.Awaiter.
+           CA1716 (7)  identifier matches a language keyword, not a keyword in
+                       C# itself and chosen to mirror a familiar API (LINQ's
+                       Select/Single, a builder's .Object). Full reasoning on
+                       IBuilder.Object (DynamicObjects/Builder.cs).
+           CA1720 (4)  identifier contains a type name, and is not misleading -
+                       same IBuilder.Object/ILinq<TSource>.Single sites as
+                       CA1716 above; full reasoning alongside it.
+           CA1724 (3)  type name conflicts with a namespace this library
+                       doesn't use (System.Dynamic, the retired
+                       System.Runtime.InteropServices.Expando, System.Web.Util).
+                       Full reasoning on Dynamic.cs.
+           CA1711 (2)  incorrect type-name suffix - BaseDictionary previews the
+                       shape its two IDictionary-implementing subclasses build
+                       on; ThisDelegate is a helper class *about* a delegate
+                       family, not a delegate. Full reasoning on
+                       DynamicObjects/BaseDictionary.cs.
+           CA1040 (1)  IPartialApply, an intentionally-empty marker interface
+                       checkable via `is` - PartialApply.cs.
+           CA1707 (1)  String_OR_InvokeMemberName's underscores spell out its
+                       three-word discriminated-union contract - InvokeMemberName.cs.
+           CA1710 (1)  List implements real collection interfaces but is named
+                       to match its Dictionary/Expando siblings, not them -
+                       DynamicObjects/List.cs.
+           CA1725 (1)  FIXED, not suppressed: InvokeSetters.TryInvoke's
+                       rawArgs parameter renamed to args to match
+                       DynamicObject.TryInvoke's own parameter name, like
+                       every other Try* override in this codebase already did.
+                       Safe to rename freely - InvokeSetters' only constructor
+                       is internal, so no external assembly can ever construct
+                       an instance to call it on by name - and the type hasn't
+                       shipped yet (PublicAPI.Unshipped.txt).
+
          Needs a judgement call on public API, which #3 will revisit anyway:
            CA1051 (11) visible instance fields
            CA2225 (12) operator overloads without named alternatives
            CA2227 (1)  collection properties with a public setter
            CA1002 (1)  List<T> on a public surface
-           CA1710 (1), CA1711 (2), CA1720 (4), CA1707 (1), CA1725 (1),
            CA1019 (2), CA1024 (2), CA1032 (1), CA1033 (1), CA1065 (1),
            CA1822 (1), CA1305 (1), CA1307 (2), CA1819 (3), CA1031 (4)
     -->
-    <NoWarn>$(NoWarn);CA1000;CA1002;CA1019;CA1024;CA1031;CA1032;CA1033;CA1034;CA1040;CA1051;CA1065;CA1305;CA1307;CA1707;CA1710;CA1711;CA1716;CA1720;CA1724;CA1725;CA1810;CA1812;CA1819;CA1822;CA1851;CA2201;CA2208;CA2225;CA2227;CA1508</NoWarn>
+    <NoWarn>$(NoWarn);CA1002;CA1019;CA1024;CA1031;CA1032;CA1033;CA1051;CA1065;CA1305;CA1307;CA1810;CA1812;CA1819;CA1822;CA1851;CA2201;CA2208;CA2225;CA2227;CA1508</NoWarn>
 
     <!-- Sonar's share of the backlog: 90 findings across 31 rules, on the same
          terms as the CA list above. Its signal is different in kind - it found
