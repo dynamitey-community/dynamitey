@@ -84,8 +84,12 @@ namespace Dynamitey.Tests
         }
 
         [Test]
-        public void TestSingleInstanceFactoryUnknownMemberReturnsNull()
+        public void TestSingleInstanceFactoryUnknownMemberThrowsRuntimeBinderException()
         {
+            // Named for what is asserted, not for what the override returns. The DynamicObject
+            // Try* method returns false here; the DLR is what converts that false into a
+            // RuntimeBinderException at the call site, and the exception is the only part a
+            // consumer can observe.
             var tFactory = new BaseSingleInstancesFactory();
             Dynamic.ApplyEquivalentType(tFactory, typeof(IWidgetFactory));
             dynamic tDyn = tFactory;

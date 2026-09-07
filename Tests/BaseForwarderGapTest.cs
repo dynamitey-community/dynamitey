@@ -125,8 +125,12 @@ namespace Dynamitey.Tests
         }
 
         [Test]
-        public void TestForwarderSetMemberNullTargetReturnsFalse()
+        public void TestForwarderSetMemberNullTargetThrowsRuntimeBinderException()
         {
+            // Named for what is asserted, not for what the override returns. The DynamicObject
+            // Try* method returns false here; the DLR is what converts that false into a
+            // RuntimeBinderException at the call site, and the exception is the only part a
+            // consumer can observe.
             dynamic tFwd = new DynamicObjs.TestForwarder(null!);
             Assert.Throws<RuntimeBinderException>(() => tFwd.Foo = 5);
         }
@@ -166,8 +170,12 @@ namespace Dynamitey.Tests
         }
 
         [Test]
-        public void TestForwarderSetIndexNullTargetReturnsFalse()
+        public void TestForwarderSetIndexNullTargetThrowsRuntimeBinderException()
         {
+            // Named for what is asserted, not for what the override returns. The DynamicObject
+            // Try* method returns false here; the DLR is what converts that false into a
+            // RuntimeBinderException at the call site, and the exception is the only part a
+            // consumer can observe.
             dynamic tFwd = new DynamicObjs.TestForwarder(null!);
             Assert.Throws<RuntimeBinderException>(() => tFwd[0] = 1);
         }
