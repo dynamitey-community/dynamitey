@@ -258,6 +258,19 @@ namespace Dynamitey.Tests
         }
 
         [Test]
+        public void SecondRealTupleReturnsCorrectValue()
+        {
+            var tup = Tuple.Create(1, 2, 3);
+            Assert.That((object)Tupler.Second(tup), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void IsTupleOfNullReturnsFalse()
+        {
+            Assert.That(Tupler.IsTuple(null), Is.False);
+        }
+
+        [Test]
         public void LastNullThrowsArgumentNullException()
         {
             Assert.That(() => Tupler.Last(null!),

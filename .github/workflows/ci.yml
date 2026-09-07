@@ -173,8 +173,8 @@ jobs:
       - name: Enforce coverage floors
         shell: bash
         env:
-          MIN_LINE: '88'
-          MIN_BRANCH: '79'
+          MIN_LINE: '95'
+          MIN_BRANCH: '84'
         run: |
           tReport=$(find TestResults -name coverage.cobertura.xml | head -1)
           if [ -z "$tReport" ]; then
