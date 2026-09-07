@@ -621,6 +621,17 @@ namespace Dynamitey.Tests
 
         }
 
+        // Pins the CA2201 fix on CoerceToDelegate's "impossible" branch (System.Exception ->
+        // InvalidOperationException). MulticastDelegate is the one built-in type that reaches it:
+        // it passes the earlier IsAssignableFrom(Delegate) check (its own base type is Delegate),
+        // but unlike every concrete delegate type it has no compiler-generated Invoke method, so
+        // GetMethod("Invoke") really does come back null.
+        [Test]
+        public void CoerceToDelegateThrowsInvalidOperationExceptionWhenDelegateTypeHasNoInvokeMethod()
+        {
+            Assert.Throws<InvalidOperationException>(() => Dynamic.CoerceToDelegate(new object(), typeof(MulticastDelegate)));
+        }
+
         [Test]
         public void TestGetIndexer()
         {

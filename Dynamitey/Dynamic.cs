@@ -739,7 +739,7 @@ namespace Dynamitey
                     tTarget = InvokeGetIndex(tTarget, tStringIndexer);
                 else
                 {
-                    throw new Exception($"Could Not Parse :'{propertyChain}'");
+                    throw new FormatException($"Could Not Parse :'{propertyChain}'");
                 }
             }
 
@@ -756,7 +756,7 @@ namespace Dynamitey
             if (tSetStringIndexer != null)
                 return InvokeSetIndex(tTarget, tSetStringIndexer, value);
             
-            throw new Exception($"Could Not Parse :'{propertyChain}'");
+            throw new FormatException($"Could Not Parse :'{propertyChain}'");
         }
 
            
@@ -867,7 +867,7 @@ namespace Dynamitey
                     tTarget = InvokeGetIndex(tTarget, tStringIndexer);
                 else
                 {
-                    throw new Exception($"Could Not Parse :'{propertyChain}'");
+                    throw new FormatException($"Could Not Parse :'{propertyChain}'");
                 }
             }
             return tTarget;
@@ -979,7 +979,7 @@ namespace Dynamitey
                 var tDelMethodInfo = delegateTypeInfo.GetMethod("Invoke");
                 if (tDelMethodInfo is null)
                 {
-                    throw new Exception("This Delegate Didn't have and Invoke method! Impossible!");
+                    throw new InvalidOperationException("This Delegate Didn't have and Invoke method! Impossible!");
                 }
                 var tReturnType = tDelMethodInfo.ReturnType;
                 var tAction = tReturnType == typeof(void);
