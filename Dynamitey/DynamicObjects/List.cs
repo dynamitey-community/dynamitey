@@ -160,6 +160,39 @@ namespace Dynamitey.DynamicObjects
         /// <value>The count.</value>
         public int Count => _list.Count;
 
+        // This type implements IList<object> over _list AND IDictionary<string, object> over
+        // the inherited _dictionary, and a single public member cannot mean the right thing to
+        // both. Count above is the element count, which is what list-shaped callers expect;
+        // the dictionary side is implemented explicitly here so it reports the property count.
+        //
+        // Getting this wrong was not only a wrong number: LINQ special-cases ICollection<T>, so
+        // Count() and ToList() over the properties read this value rather than enumerating, and
+        // disagreed with the enumerator (issue #69).
+        int ICollection<KeyValuePair<string, object>>.Count => _dictionary.Count;
+
+        /// <summary>
+        /// Clears the dynamic properties, leaving the elements alone.
+        /// </summary>
+        /// <remarks>
+        /// Explicit for the same reason as Count above, and the consequence was worse: the
+        /// public Clear empties the elements, so asking to clear the properties through
+        /// IDictionary or ICollection&lt;KeyValuePair&lt;,&gt;&gt; destroyed the list contents
+        /// and left the properties untouched - the exact opposite of what was asked for.
+        /// Notifications mirror Dictionary.Clear, including snapshotting the keys before the
+        /// clear because Keys is a live view.
+        /// </remarks>
+        void ICollection<KeyValuePair<string, object>>.Clear()
+        {
+            var tKeys = _dictionary.Keys.ToList();
+
+            _dictionary.Clear();
+
+            foreach (var tKey in tKeys)
+            {
+                OnPropertyChanged(tKey);
+            }
+        }
+
 
         /// <summary>
         /// Indexes the of.
