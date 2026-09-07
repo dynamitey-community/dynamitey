@@ -150,5 +150,148 @@ namespace Dynamitey.Tests
 
             Assert.Throws<ArgumentException>(() => tNew.Person("unnamed"));
         }
+
+        // Exercises the private InvokeHelper's "single positional arg" detection: a lone
+        // anonymous-type argument is treated as a set of named properties rather than requiring
+        // ArgumentNames to line up with ArgumentCount.
+        [Test]
+        public void TestObjectFactoryWithSingleAnonymousArgSetsItsProperties()
+        {
+            dynamic tResult = Build.NewObject(new { Prop1 = "AnonSet", Prop2 = 7L });
+
+            Assert.That((string)tResult.Prop1, Is.EqualTo("AnonSet"));
+            Assert.That((long)tResult.Prop2, Is.EqualTo(7L));
+        }
+
+        // Same InvokeHelper branch, the other half of the "or": a lone
+        // IEnumerable<KeyValuePair<string,object>> argument is likewise treated as named
+        // properties instead of a single unnamed positional argument.
+        [Test]
+        public void TestObjectFactoryWithSingleKeyValuePairEnumerableArgSetsItsProperties()
+        {
+            var tPairs = new List<KeyValuePair<string, object>> { new("Prop1", "FromKv") };
+
+            dynamic tResult = Build.NewObject(tPairs);
+
+            Assert.That((string)tResult.Prop1, Is.EqualTo("FromKv"));
+        }
+
+        // Exercises Builder<T>.TrySetMember's Type branch, then that the stored Activate is
+        // used by TryInvokeMember to construct the named factory.
+        [Test]
+        public void TestSetMemberWithTypeThenInvokeCreatesThatType()
+        {
+            dynamic tNew = Builder.New();
+            tNew.Foo = typeof(ExpandoObject);
+
+            dynamic tResult = tNew.Foo();
+
+            Assert.That((object)tResult, Is.InstanceOf<ExpandoObject>());
+        }
+
+        // Exercises Builder<T>.TrySetMember's Activate branch directly (as opposed to the Type
+        // branch, which wraps the value in a new Activate itself).
+        [Test]
+        public void TestSetMemberWithActivateThenInvokeCreatesThatType()
+        {
+            dynamic tNew = Builder.New();
+            tNew.Foo = new Activate(typeof(ExpandoObject));
+
+            dynamic tResult = tNew.Foo();
+
+            Assert.That((object)tResult, Is.InstanceOf<ExpandoObject>());
+        }
+
+        // Exercises Builder<T>.TrySetMember's null branch: explicitly setting a member to null
+        // clears any factory previously registered for that name rather than throwing.
+        [Test]
+        public void TestSetMemberWithNullClearsFactory()
+        {
+            dynamic tNew = Builder.New();
+            tNew.Foo = typeof(ExpandoObject);
+            tNew.Foo = null;
+
+            dynamic tResult = tNew.Foo();
+
+            Assert.That((object)tResult, Is.InstanceOf<ChainableDictionary>());
+        }
+
+        // Exercises Builder<T>.TrySetMember's false branch: a value that is neither null, a
+        // Type, nor an Activate is rejected, and the DLR turns that into an exception at the
+        // call site.
+        [Test]
+        public void TestSetMemberWithUnsupportedValueThrows()
+        {
+            dynamic tNew = Builder.New();
+
+            Assert.Throws<Microsoft.CSharp.RuntimeBinder.RuntimeBinderException>(() => tNew.Foo = 5);
+        }
+
+        // Exercises SetupTrampoline.TryInvoke's ternary both ways: a Type argument gets wrapped
+        // in a new Activate, while an Activate argument is used as-is.
+        [Test]
+        public void TestSetupWithTypeAndActivateArgumentsBothRegisterFactories()
+        {
+            dynamic tNew = Builder.New();
+
+            tNew.Setup(FromType: typeof(ExpandoObject), FromActivate: new Activate(typeof(List<object>)));
+
+            Assert.That((object)tNew.FromType(), Is.InstanceOf<ExpandoObject>());
+            Assert.That((object)tNew.FromActivate(), Is.InstanceOf<List<object>>());
+        }
+
+        // Build<T>.NewList had no coverage: every existing NewList use goes through the
+        // non-generic Build facade.
+        [Test]
+        public void TestBuildOfTNewList()
+        {
+            List<object> tResult = Build<List<object>>.NewList(1, 2, 3);
+
+            Assert.That(tResult, Is.EqualTo(new object[] { 1, 2, 3 }));
+        }
+
+        // Exercises Builder<T>.ListSetup's "reuse the Object factory's type" branch: when
+        // ListSetup is called with plain constructor args (no explicit Activate) and no List
+        // factory was registered yet, it falls back to whatever ObjectSetup already registered
+        // under "Object" rather than defaulting to List<object>.
+        [Test]
+        public void TestListSetupWithoutActivateReusesObjectFactoryType()
+        {
+            IBuilder tBuilder = Builder.New(); // TObjectPrototype defaults to ChainableDictionary
+            tBuilder.ObjectSetup();
+            var tSeed = new Dictionary<string, object> { { "Foo", "Bar" } };
+
+            tBuilder.ListSetup(tSeed);
+            var tResult = tBuilder.List();
+
+            Assert.That(tResult, Is.InstanceOf<ChainableDictionary>());
+            Assert.That((string)tResult.Foo, Is.EqualTo("Bar"));
+        }
+
+        // ArraySetup's plain params-array overload (as opposed to the generic <TList> or
+        // Func<object[]> overloads, both covered above) had no direct coverage.
+        [Test]
+        public void TestArraySetupWithPlainConstructorArgs()
+        {
+            IBuilder tBuilder = Builder.New();
+            tBuilder.ArraySetup();
+
+            var tResult = tBuilder.Array(1, 2, 3);
+
+            Assert.That(tResult, Is.InstanceOf<DynamicObjects.List>());
+            Assert.That(tResult.Count, Is.EqualTo(3));
+        }
+
+        // BaseForwarder's explicit IForwarder.Target implementation is never read through the
+        // interface anywhere else in the suite - every other test reaches Target only
+        // indirectly (through dynamic dispatch on CallTarget).
+        [Test]
+        public void TestForwarderTargetIsReadableThroughTheInterface()
+        {
+            var tTarget = new object();
+            DynamicObjects.IForwarder tForwarder = new DynamicObjects.Get(tTarget);
+
+            Assert.That(tForwarder.Target, Is.SameAs(tTarget));
+        }
     }
 }
