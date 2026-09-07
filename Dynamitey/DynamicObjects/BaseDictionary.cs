@@ -50,6 +50,17 @@ namespace Dynamitey.DynamicObjects
         // IDictionary<string, object> - not object? - so this has to match that public contract.
         // SetProperty below (which every nullable DynamicObject override funnels through) is the
         // one place that bridges a value the DLR may hand us as null into this non-null storage.
+        [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+            "A protected field on a public class, deliberately: it's the extension point Dictionary " +
+            "and List (the two concrete subclasses) build on, and every other CA1051 site in this " +
+            "batch is the same pattern - Builder._buildType, the five protected fields on " +
+            "ExtensionToInstanceProxy.Invoker (Name, Parent, OverloadTypes, GenericParams, " +
+            "GenericMethodParameters), " +
+            "Factory's two BaseSingleInstancesFactory fields, FauxType.RealType's " +
+            "TargetType, and List's own _list. Turning any of them into a property is a binary breaking " +
+            "change for an external subclass that reads or assigns the field directly - the very thing " +
+            "they're declared protected to allow - for no behavioral gain, so this is a suppression " +
+            "rather than a fix. Full reasoning here; every other site points back to it.")]
         protected IDictionary<string,object> _dictionary;
 
 

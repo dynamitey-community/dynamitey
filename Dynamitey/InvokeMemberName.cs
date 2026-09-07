@@ -36,6 +36,17 @@ namespace Dynamitey
             return new InvokeMemberName(name!, null);
         }
 
+        /// <summary>
+        /// Named alternate for the implicit conversion from <see cref="string"/> above, for callers
+        /// in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns>The result of the conversion.</returns>
+        public static String_OR_InvokeMemberName FromString(string? name)
+        {
+            return new InvokeMemberName(name!, null);
+        }
+
 
         /// <summary>
         /// Gets the name.
@@ -88,6 +99,17 @@ namespace Dynamitey
           public static implicit operator InvokeMemberName(string name)
         {
             return new InvokeMemberName(name,null);
+        }
+
+        /// <summary>
+        /// Named alternate for the implicit conversion from <see cref="string"/> above, for callers
+        /// in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns>The result of the conversion.</returns>
+        public static new InvokeMemberName FromString(string name)
+        {
+            return new InvokeMemberName(name, null);
         }
 
        

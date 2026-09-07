@@ -65,6 +65,14 @@ namespace Dynamitey.DynamicObjects
             /// <param name="left">The left.</param>
             /// <param name="right">The right.</param>
             /// <returns>The result of the operator.</returns>
+            [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification =
+                "AddRemoveMarker is internal DLR plumbing, not a type a consumer converts by hand: it is " +
+                "only ever constructed internally (Util.cs, BaseForwarder.TryGetMember) and these operators " +
+                "are invoked implicitly by the DLR's own binder when a consumer writes `dynamicForwarder." +
+                "SomeEvent += handler` on a DynamicObject - the C# compiler lowers that to `marker = marker " +
+                "+ handler` and hands it to the binder, never to a named method a caller would choose to " +
+                "call instead. Adding an Add/Subtract method here is surface nobody would use; full " +
+                "reasoning also covers the mirroring operator - below.")]
             public static AddRemoveMarker operator +(AddRemoveMarker left, object right)
             {
                 Guard.NotNull(left);
@@ -81,6 +89,8 @@ namespace Dynamitey.DynamicObjects
             /// <param name="left">The left.</param>
             /// <param name="right">The right.</param>
             /// <returns>The result of the operator.</returns>
+            [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification =
+                "Same internal-plumbing reasoning as operator + above.")]
             public static AddRemoveMarker operator -(AddRemoveMarker left, object right)
             {
                 Guard.NotNull(left);

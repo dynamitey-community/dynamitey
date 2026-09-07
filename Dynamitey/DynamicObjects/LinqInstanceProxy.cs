@@ -200,6 +200,13 @@ namespace Dynamitey.DynamicObjects
         Dictionary<TKey, TSource> ToDictionary<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) where TKey : notnull;
         Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector) where TKey : notnull;
         Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer) where TKey : notnull;
+        [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification =
+            "ILinq<TSource> deliberately mirrors System.Linq.Enumerable's real extension-method surface " +
+            "member-for-member (see the Sum/Take/ToDictionary/ToLookup/Zip signatures around it) so a " +
+            "consumer working through the dynamic Linq proxy sees the same shape LINQ itself has. The " +
+            "real Enumerable.ToList<T>() returns List<T>, not Collection<T>; changing this one member to " +
+            "satisfy CA1002 would break that mirroring for no benefit, and it is declared public API " +
+            "(PublicAPI.Unshipped.txt) besides.")]
         List<TSource> ToList();
         ILookup<TKey, TSource> ToLookup<TKey>(Func<TSource, TKey> keySelector);
         ILookup<TKey, TSource> ToLookup<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer);

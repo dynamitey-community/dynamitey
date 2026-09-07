@@ -129,12 +129,16 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Store Singletons
         /// </summary>
-       
+
+        [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+            "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
         protected readonly Dictionary<string, dynamic> _hashFactoryTypes= new Dictionary<string, dynamic>();
 
         /// <summary>
         /// Lock for accessing singletons
         /// </summary>
+        [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+            "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
         protected readonly object _lockTable = new object();
 
 

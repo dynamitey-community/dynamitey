@@ -39,6 +39,15 @@ namespace Dynamitey.Internal
             /// <returns></returns>
             [RequiresUnreferencedCode("Invokes function through 'dynamic', resolved via the DLR binder; trimming can remove the member being resolved.")]
             [RequiresDynamicCode("The 'dynamic' invocation binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
+            [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification =
+                "Curry is internal implementation of Dynamic.Curry (see the class summary) with an " +
+                "internal constructor - a consumer never has a statically-typed Curry to write `4 | curry` " +
+                "against; Dynamic.Curry returns it only as `dynamic`, and the same pipe result is already " +
+                "reachable by directly invoking the curried value (`curry(4)`, exercised throughout Tests/" +
+                "Curry.cs) or through the library's own InvokeMember-family API, which is the actual named " +
+                "alternate this library offers non-C# callers. No test in this repository exercises the `|` " +
+                "syntax. Adding a BitwiseOr method would just re-wrap invocation nobody needs a second way " +
+                "to spell; same reasoning covers PartialApply's mirroring operator (PartialApply.cs).")]
             public static dynamic operator |(dynamic argument, Curry function)
             {
                 return ((dynamic)function)(argument);

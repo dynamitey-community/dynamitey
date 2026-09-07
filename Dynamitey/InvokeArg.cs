@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -36,6 +37,17 @@ namespace Dynamitey
         public static explicit operator InvokeArg(KeyValuePair<string, object> pair)
         {
             return new InvokeArg(pair.Key,pair.Value);
+        }
+
+        /// <summary>
+        /// Named alternate for the explicit conversion from <see cref="KeyValuePair{String,Object}"/>
+        /// above, for callers in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="pair">The pair.</param>
+        /// <returns>The result of the conversion.</returns>
+        public static InvokeArg FromKeyValuePair(KeyValuePair<string, object> pair)
+        {
+            return new InvokeArg(pair.Key, pair.Value);
         }
 
         /// <summary>
@@ -89,6 +101,22 @@ namespace Dynamitey
         /// <param name="pair">The pair.</param>
         /// <returns>The result of the conversion.</returns>
         public static explicit operator InvokeArg<T>(KeyValuePair<string, T> pair)
+        {
+            return new InvokeArg<T>(pair.Key, pair.Value);
+        }
+
+        /// <summary>
+        /// Named alternate for the explicit conversion from <see cref="KeyValuePair{String,T}"/>
+        /// above, for callers in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="pair">The pair.</param>
+        /// <returns>The result of the conversion.</returns>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification =
+            "Same static-generic-factory pattern already accepted for Build<TObjectPrototype>.NewObject " +
+            "(Builder.cs): FromKeyValuePair is meant to be called as InvokeArg<T>.FromKeyValuePair, naming " +
+            "the closed type at the call site the same way the explicit conversion operator immediately " +
+            "above it already does.")]
+        public static InvokeArg<T> FromKeyValuePair(KeyValuePair<string, T> pair)
         {
             return new InvokeArg<T>(pair.Key, pair.Value);
         }
