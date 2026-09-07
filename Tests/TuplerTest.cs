@@ -60,6 +60,31 @@ namespace Dynamitey.Tests
 
             Assert.That((object)Tupler.Size(tup),Is.EqualTo(5));
         }
+
+        // Guards the TupleArgs arity map in InvokeHelper (T4-generated). That dictionary keyed its
+        // index range off ActionKinds.Length rather than TupleKinds.Length, and produced the right
+        // answer only because ActionKinds happens to be longer (17 against 8) so Zip truncated to
+        // the correct range. Nothing asserted the mapping itself, so shortening ActionKinds - or
+        // lengthening TupleKinds past it - would have silently dropped arities from the map.
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        public void SizeReportsEveryTupleArity(int tArity)
+        {
+            var tArgs = Enumerable.Range(0, tArity).Select(it => (object)it).ToArray();
+            var tTypes = Enumerable.Repeat(typeof(int), tArity).ToArray();
+
+            var tTuple = typeof(Tuple).GetMethods()
+                .Single(it => it.Name == nameof(Tuple.Create) && it.GetGenericArguments().Length == tArity)
+                .MakeGenericMethod(tTypes)
+                .Invoke(null, tArgs);
+
+            Assert.That((object)Tupler.Size(tTuple), Is.EqualTo(tArity));
+        }
         [Test]
         public void DynamicTupleSize8()
         {

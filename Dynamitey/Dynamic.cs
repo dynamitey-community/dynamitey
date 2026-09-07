@@ -123,38 +123,55 @@ namespace Dynamitey
             get => _typeDescriptor ?? (_typeDescriptor = new DynamicObjects.LateType("System.ComponentModel.TypeDescriptor, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"));
         }
 
-        private static readonly Type? ComObjectType;
+        // Field initializers rather than an explicit static constructor (CA1810): each probe is
+        // now a static method the field initializer calls straight away, in the same declaration
+        // order the old .cctor body ran them in, so the two remain independent of each other exactly
+        // as before.
+        private static readonly Type? ComObjectType = ProbeComObjectType();
         // ReSharper disable once MemberCanBePrivate.Global
-        internal static readonly Type? TypeConverterAttributeSL;
+        internal static readonly Type? TypeConverterAttributeSL = ProbeTypeConverterAttributeSL();
 
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
-            "The two Assembly.GetType/Type.GetType calls below resolve an optional type by name and " +
-            "are wrapped in try/catch specifically because the type may legitimately be absent. A " +
-            "static constructor has no caller to warn at and runs unconditionally regardless of " +
-            "whether these optional features are ever used.")]
-        static Dynamic()
+            "Resolves an optional type by name via Assembly.GetType and is wrapped in try/catch " +
+            "specifically because the type may legitimately be absent. A static field initializer " +
+            "has no caller to warn at and runs unconditionally regardless of whether this optional " +
+            "feature is ever used.")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
+            "Deliberately broad (cs/catch-of-all-exceptions), and this is the first of several CA1031 " +
+            "sites in this batch with the same shape: a name-based probe for an optional type, where " +
+            "Assembly.GetType/Type.GetType can throw several different exceptions (ArgumentException, " +
+            "FileNotFoundException, BadImageFormatException, ...) for \"can't resolve this\", not just " +
+            "the \"not found\" case that throwOnError:false alone suppresses - any of them means " +
+            "\"treat as absent\", which is what issue #50 already established for probes of this " +
+            "shape. Narrowing the catch would let an unanticipated resolution failure propagate " +
+            "instead of falling back to \"absent\", which is an observable behaviour change this " +
+            "batch's rules forbid making on an analyzer's say-so.")]
+        private static Type? ProbeComObjectType()
         {
             try
             {
-                ComObjectType = typeof(object).GetTypeInfo().Assembly.GetType("System.__ComObject");
+                return typeof(object).GetTypeInfo().Assembly.GetType("System.__ComObject");
             }
             catch
             {
-                // Deliberately broad (cs/catch-of-all-exceptions): this is a name-based probe for an
-                // optional type, and Assembly.GetType/Type.GetType can throw several different
-                // exceptions (ArgumentException, FileNotFoundException, BadImageFormatException, ...)
-                // for "can't resolve this", not just "not found" - any of them means "treat as absent".
-                ComObjectType = null;
+                return null;
             }
+        }
+
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Same reasoning as ProbeComObjectType above: resolves an optional type by name and is " +
+            "wrapped in try/catch for the same reason.")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
+            "Same type-probe reasoning as ProbeComObjectType above.")]
+        private static Type? ProbeTypeConverterAttributeSL()
+        {
             try
             {
-                TypeConverterAttributeSL
-                    = Type.GetType("System.ComponentModel.TypeConverter, System, Version=5.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", false);
+                return Type.GetType("System.ComponentModel.TypeConverter, System, Version=5.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", false);
             }
             catch
             {
-                // Same reasoning as the ComObjectType probe above.
-                TypeConverterAttributeSL = null;
+                return null;
             }
         }
         
@@ -722,7 +739,7 @@ namespace Dynamitey
                     tTarget = InvokeGetIndex(tTarget, tStringIndexer);
                 else
                 {
-                    throw new Exception($"Could Not Parse :'{propertyChain}'");
+                    throw new FormatException($"Could Not Parse :'{propertyChain}'");
                 }
             }
 
@@ -739,7 +756,7 @@ namespace Dynamitey
             if (tSetStringIndexer != null)
                 return InvokeSetIndex(tTarget, tSetStringIndexer, value);
             
-            throw new Exception($"Could Not Parse :'{propertyChain}'");
+            throw new FormatException($"Could Not Parse :'{propertyChain}'");
         }
 
            
@@ -850,7 +867,7 @@ namespace Dynamitey
                     tTarget = InvokeGetIndex(tTarget, tStringIndexer);
                 else
                 {
-                    throw new Exception($"Could Not Parse :'{propertyChain}'");
+                    throw new FormatException($"Could Not Parse :'{propertyChain}'");
                 }
             }
             return tTarget;
@@ -962,7 +979,7 @@ namespace Dynamitey
                 var tDelMethodInfo = delegateTypeInfo.GetMethod("Invoke");
                 if (tDelMethodInfo is null)
                 {
-                    throw new Exception("This Delegate Didn't have and Invoke method! Impossible!");
+                    throw new InvalidOperationException("This Delegate Didn't have an Invoke method! Impossible!");
                 }
                 var tReturnType = tDelMethodInfo.ReturnType;
                 var tAction = tReturnType == typeof(void);
@@ -1028,6 +1045,14 @@ namespace Dynamitey
         /// </returns>
         [RequiresUnreferencedCode("Resolves System.Convert.IsDBNull dynamically (via a late-bound Convert reference) rather than calling it directly; trimming Convert's public surface breaks this.")]
         [RequiresDynamicCode("Constructing the underlying LateType and making the late-bound call both require the DLR's runtime code generation; not supported when AOT-compiled.")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
+            "Deliberately broad (cs/catch-of-all-exceptions): the expected failure is " +
+            "RuntimeBinderException when trimming has removed Convert.IsDBNull (see the " +
+            "[RequiresUnreferencedCode] above), but this is a boolean probe with a safe default " +
+            "either way - \"can't tell\" and \"not DBNull\" collapse to the same false, the same " +
+            "symmetric-default shape issue #50 established. Narrowing the catch would let some " +
+            "other failure propagate instead of returning that default, changing observable " +
+            "behaviour for no benefit.")]
         public static bool IsDBNull(object? value)
         {
 

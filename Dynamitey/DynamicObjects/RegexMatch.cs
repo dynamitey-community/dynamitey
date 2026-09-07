@@ -30,7 +30,12 @@ namespace Dynamitey.DynamicObjects
     /// <summary>
     /// A Dynamic Regex Match
     /// </summary>
-    public class RegexMatch : BaseObject, IRegexMatch
+    // Sealed to satisfy CA1033 (IRegexMatch.Value is implemented explicitly, which the rule flags
+    // unless the class is sealed or the member is otherwise reachable from a derived class).
+    // Sealing is the fix CA1033 itself names as non-breaking here: RegexMatch hasn't shipped
+    // (PublicAPI.Unshipped.txt) and nothing in this repository derives from it, so there is no
+    // subclass that could ever need to reach IRegexMatch.Value non-explicitly.
+    public sealed class RegexMatch : BaseObject, IRegexMatch
     {
        
         private readonly Match _match;

@@ -41,6 +41,11 @@ namespace Dynamitey.DynamicObjects
         public abstract Type[] GetContainedTypes();
 
         [RequiresUnreferencedCode("A FauxType wrapping a real Type (RealType) resolves this by reflecting over the target type's members; trimming can remove members it would otherwise report. Overrides on a data-only FauxType (PropretySpecType, or an AggreType composed only of those) don't need this themselves, but must match the abstract declaration.")]
+        [SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification =
+            "GetMemberNames is declared public API (PublicAPI.Unshipped.txt) and abstract: turning " +
+            "it into a property is a breaking signature change for this member and every override " +
+            "(RealType, PropretySpecType, AggreType), out of scope for an analyzer-driven cleanup - " +
+            "same public-API-freeze reasoning as the CA1819 sites (see Invocation.Args, Invocation.cs).")]
         public abstract IEnumerable<string> GetMemberNames();
 
         /// <summary>

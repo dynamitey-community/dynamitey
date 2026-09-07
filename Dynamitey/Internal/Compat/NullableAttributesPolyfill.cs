@@ -94,6 +94,15 @@ namespace System.Diagnostics.CodeAnalysis
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true, Inherited = false)]
     internal sealed class MemberNotNullAttribute : Attribute
     {
+        [SuppressMessage("Design", "CA1019:Define accessors for attribute arguments", Justification =
+            "This constructor's single string funnels into the same Members string[] property the " +
+            "params-array constructor below sets directly - CA1019 wants a property whose type " +
+            "matches this parameter's exactly, but that would mean a second, single-string property " +
+            "alongside Members, which the real System.Diagnostics.CodeAnalysis.MemberNotNullAttribute " +
+            "(.NET Core 3.0+/netstandard2.1) does not have either. This type's whole purpose is to be " +
+            "byte-for-byte the same shape as that real attribute (see the file header) so the C# " +
+            "compiler's pattern-matching recognises it identically on netstandard2.0; adding a property " +
+            "the real one lacks would be less faithful, not more.")]
         public MemberNotNullAttribute(string member)
         {
             Members = new[] { member };
@@ -110,6 +119,8 @@ namespace System.Diagnostics.CodeAnalysis
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true, Inherited = false)]
     internal sealed class MemberNotNullWhenAttribute : Attribute
     {
+        [SuppressMessage("Design", "CA1019:Define accessors for attribute arguments", Justification =
+            "Same reasoning as the matching constructor on MemberNotNullAttribute above.")]
         public MemberNotNullWhenAttribute(bool returnValue, string member)
         {
             ReturnValue = returnValue;

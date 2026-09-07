@@ -114,9 +114,13 @@ namespace Dynamitey.DynamicObjects
                 {
                     return false;
                 }
+                // The cast comes before the null check (matching BaseDictionary.TryInvokeMember's
+                // same pattern) rather than after it: `as` on a null value is already null, so the
+                // result is identical either way, but casting first is what keeps CA1508 from
+                // mistakenly flagging the later `tDel != null` as dead code.
+                var tDel = result as Delegate;
                 if (result == null)
                     return false;
-                var tDel = result as Delegate;
                 if (binder.CallInfo.ArgumentNames.Count == 0 && tDel != null)
                 {
                     try

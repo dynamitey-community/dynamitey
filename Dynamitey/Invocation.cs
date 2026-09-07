@@ -140,6 +140,14 @@ namespace Dynamitey
         /// may themselves be <see langword="null"/> - any argument value including null is valid.
         /// </summary>
         /// <value>The args.</value>
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification =
+            "Args is declared public API (PublicAPI.Unshipped.txt): changing its shape to something " +
+            "like IReadOnlyList<object?> to satisfy CA1819 is a breaking signature change for every " +
+            "existing reader of Invocation/CacheableInvocation. PublicApiAnalyzer exists specifically " +
+            "to make a change like that a deliberate, reviewed decision rather than an analyzer-driven " +
+            "side effect, so it's out of scope here - the same batch 3 policy that kept CA1051/CA2225/" +
+            "CA2227/CA1002 off this batch's list. The same reasoning covers the other two public " +
+            "CA1819 sites in this batch - InvokeMemberName.GenericArgs and PartialApply.Args.")]
         public object?[]? Args { get; protected set; }
 
         /// <summary>
