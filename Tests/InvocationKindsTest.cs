@@ -235,25 +235,20 @@ namespace Dynamitey.Tests
             Assert.That(tA.Equals(new object()), Is.False);
         }
 
-        // BUG (found while writing this coverage): Invocation.GetHashCode folds in
-        // `Args.GetHashCode()` - the array's own (reference-identity) hash code - while
-        // Invocation.Equals compares Args by SequenceEqual (content equality, tested above).
-        // Two Invocations built with distinct-but-equal-content Args arrays are therefore
-        // Equal but do not have equal hash codes, which breaks the Equals/GetHashCode contract
-        // (a violation is directly observable: put such an Invocation in a Dictionary/HashSet
-        // keyed by itself and a lookup with an "equal" key can miss it). This test pins the
-        // current (contract-violating) behavior rather than papering over it - see the
-        // coverage task's report for the write-up.
+        // Issue #68. GetHashCode used to fold in Args.GetHashCode() - the array's own
+        // reference-identity hash - while Equals compared Args by SequenceEqual. Two
+        // Invocations built from distinct but equal-content argument arrays were therefore
+        // equal with different hash codes, which breaks the Equals/GetHashCode contract and
+        // makes the type miss its own key in a Dictionary or HashSet. It now hashes contents.
         [Test]
-        public void TestGetHashCodeViolatesEqualsContractForDistinctArgsArrayInstances()
+        public void TestGetHashCodeHonorsEqualsContractForDistinctArgsArrayInstances()
         {
             var tA = new Invocation(InvocationKind.Get, "Prop1", 1, 2);
             var tB = new Invocation(InvocationKind.Get, "Prop1", 1, 2);
 
             Assert.That(tA.Equals(tB), Is.True, "precondition: these compare as equal");
-            Assert.That(tA.GetHashCode(), Is.Not.EqualTo(tB.GetHashCode()),
-                "Args.GetHashCode() hashes the array by reference, not by content, so equal-by-content " +
-                "Invocations built from separate array literals get different hash codes");
+            Assert.That(tA.GetHashCode(), Is.EqualTo(tB.GetHashCode()),
+                "equal objects must return equal hash codes");
         }
     }
 }

@@ -180,15 +180,35 @@ namespace Dynamitey
         /// </summary>
         /// <param name="other">The other.</param>
         /// <returns></returns>
+        /// <summary>
+        /// Two argument lists match when both are null, or both are non-null with equal contents.
+        /// A null argument list is not the same as an empty one.
+        /// </summary>
+        /// <remarks>
+        /// This replaces "Equals(other.Args, Args) || Enumerable.SequenceEqual(other.Args!, Args!)",
+        /// which threw rather than returning false. `||` short-circuits only when its LEFT side is
+        /// true, so when exactly one of the two was null the reference comparison returned false and
+        /// SequenceEqual then ran against a null - an ArgumentNullException out of Equals, which is
+        /// a hard contract violation: Equals must never throw for a non-null argument. A comment
+        /// above the old expression asserted the short-circuit protected this. It did not (#68).
+        /// </remarks>
+        private static bool ArgsEqual(object?[]? left, object?[]? right)
+        {
+            if (left is null)
+            {
+                return right is null;
+            }
+
+            return right is not null && left.SequenceEqual(right);
+        }
+
         public bool Equals(Invocation? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            // SequenceEqual requires non-null sequences; Equals(other.Args, Args) is checked first
-            // and short-circuits whenever either is null (true if both null, false if only one is -
-            // matching the pre-existing null-tolerant behavior), so SequenceEqual only ever runs
-            // with both non-null.
-            return Equals(other.Kind, Kind) && Equals(other.Name, Name) && (Equals(other.Args, Args) || Enumerable.SequenceEqual(other.Args!, Args!));
+            return Equals(other.Kind, Kind)
+                && Equals(other.Name, Name)
+                && ArgsEqual(other.Args, Args);
         }
 
         /// <summary>
@@ -218,7 +238,28 @@ namespace Dynamitey
             {
                 int result = Kind.GetHashCode();
                 result = (result*397) ^ (Name != null ? Name.GetHashCode() : 0);
-                result = (result*397) ^ (Args != null ? Args.GetHashCode() : 0);
+
+                // Hash the arguments' CONTENTS, because Equals compares them by content.
+                // This previously read "Args.GetHashCode()", which for object[] is reference
+                // identity - so two invocations built from separate but equal argument arrays
+                // compared equal and hashed differently, breaking the Equals/GetHashCode
+                // contract and making Invocation unusable as a dictionary key (#68).
+                //
+                // Length + 1 rather than Length so a null argument list and an empty one, which
+                // Equals treats as different, do not collide on the obvious input.
+                if (Args is null)
+                {
+                    result = result*397;
+                }
+                else
+                {
+                    result = (result*397) ^ (Args.Length + 1);
+                    foreach (var tArg in Args)
+                    {
+                        result = (result*397) ^ (tArg?.GetHashCode() ?? 0);
+                    }
+                }
+
                 return result;
             }
         }
