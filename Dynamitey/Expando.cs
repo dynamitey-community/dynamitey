@@ -19,6 +19,9 @@ using Dynamitey.DynamicObjects;
 
 namespace Dynamitey
 {
+    [SuppressMessage("Naming", "CA1724:Type names should not match namespaces", Justification =
+        "See Dynamic.cs; identical reasoning. Expando collides only with the retired " +
+        "System.Runtime.InteropServices.Expando namespace, which this library doesn't use.")]
     public class Expando : Builder<ExpandoObject>
     {
         // ReSharper disable StaticFieldInGenericType

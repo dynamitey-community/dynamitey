@@ -62,6 +62,19 @@ namespace Dynamitey
     /// (<see cref="Curry(object,int?)"/>, <see cref="InvokeSetAll"/>) stay non-nullable <c>dynamic</c>.
     /// </para>
     /// </remarks>
+    [SuppressMessage("Naming", "CA1724:Type names should not match namespaces", Justification =
+        "Dynamic is Dynamitey's main dispatch entry point (InvokeMember, InvokeGet, InvokeSet, " +
+        "InvokeConstructor, and friends) and has been the library's public entry point since upstream's " +
+        "first release; it happens to share its name with the BCL's System.Dynamic namespace, which is the " +
+        "text collision CA1724 flags. It is harmless in practice: Dynamic is a type and System.Dynamic is a " +
+        "namespace, so 'using System.Dynamic;' plus a call to 'Dynamitey.Dynamic.InvokeGet(...)' cannot be " +
+        "ambiguous - the two only collide as text, never as resolved symbols. The class is central, " +
+        "documented, heavily used public API; renaming it now would break every consumer's " +
+        "'using static Dynamitey.Dynamic' or 'Dynamic.InvokeXxx(...)' call site for a purely cosmetic " +
+        "collision. The other two CA1724 sites in this batch are the same story: Expando (collides with " +
+        "the retired System.Runtime.InteropServices.Expando) and Util (Internal/Optimization/Util.cs, " +
+        "collides with the equally retired System.Web.Util) are real, named-for-what-they-do public API " +
+        "colliding only with namespaces from parts of the framework this library doesn't use.")]
     public static class Dynamic
     {
         /// <summary>
