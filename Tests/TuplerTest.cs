@@ -179,11 +179,11 @@ namespace Dynamitey.Tests
             Assert.That((object)Tupler.Index(tup, 19), Is.EqualTo(20));
         }
 
-        // Issue #62: Tupler.HelperIsTuple initialised its `size` out-param to 1 before the
+        // Issue #62: Tupler.HelperIsTuple initialized its `size` out-param to 1 before the
         // null check, so the early-return-on-null path never overwrote it - Size(null) came
         // back 1, and Last(null) computed a valid-looking index from that wrong size instead
         // of being rejected. Every public entry point below now guards its `tuple` parameter
-        // with Guard.NotNull, and the initialiser was changed to 0 (what every non-null
+        // with Guard.NotNull, and the initializer was changed to 0 (what every non-null
         // non-tuple already reported via TupleArgs.TryGetValue's failure case). These tests
         // cover the three cases that used to give three different kinds of answer: null,
         // a non-null non-tuple, and a real tuple.
