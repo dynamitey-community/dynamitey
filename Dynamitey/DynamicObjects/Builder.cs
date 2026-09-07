@@ -98,6 +98,25 @@ namespace Dynamitey.DynamicObjects
         /// Generates Object, use by calling with named arguments <code>builder.Object(Prop1:"test",Prop2:"test")</code>
         /// returns new object;
         /// </summary>
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "IBuilder.Object is the fluent-builder property that returns the object under construction - " +
+            "'builder.Object' is the whole point of the name, reading naturally at the call site. CA1716 " +
+            "exists for multi-language interop safety against a hard reserved keyword; 'Object' is not one " +
+            "in C#, the only language the DLR marshals these dynamic calls through. The same reasoning covers " +
+            "the other six CA1716 sites in this batch: Get (DynamicObjects.Get - names what the proxy does), " +
+            "ILinq<TSource>.Select/Single (mirror LINQ's own Enumerable.Select/Single so the proxy reads as a " +
+            "drop-in stand-in for LINQ - renaming to dodge the keyword would break that mirroring for no " +
+            "gain), and Return<TR> (InlineLambdas.cs, T4-generated - names the fluent lambda-typing helper for " +
+            "what it returns). All are declared public API (PublicAPI.Unshipped.txt); renaming any of them is " +
+            "a breaking rename this batch is not authorized to make.")]
+        [SuppressMessage("Naming", "CA1720:Identifiers should not contain type names", Justification =
+            "CA1720 flags an identifier containing a type name because it can misleadingly imply a member IS " +
+            "of that type. Object here is exactly what it says - a property returning the newly built proxy " +
+            "object - so the name is accurate, not misleading, and reads naturally as 'builder.Object'. The " +
+            "concrete implementation below (Builder<TObjectPrototype>.Object) carries the identical " +
+            "suppression for the identical reason, as does ILinq<TSource>.Single (LinqInstanceProxy.cs) which " +
+            "mirrors LINQ's own Enumerable.Single. All are declared public API; renaming is the breaking " +
+            "change this batch may not make.")]
         dynamic Object { get; }
 
         /// <summary>
@@ -131,7 +150,9 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Build factory storage
         /// </summary>
-       
+
+        [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+            "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
 		protected IDictionary<string,Activate?> _buildType;
 
         /// <summary>
@@ -269,6 +290,8 @@ namespace Dynamitey.DynamicObjects
         /// Creates a Prototype object.
         /// </summary>
         /// <value>The object.</value>
+        [SuppressMessage("Naming", "CA1720:Identifiers should not contain type names", Justification =
+            "See IBuilder.Object above; identical reasoning - this is that interface member's implementation.")]
         public dynamic Object { get; }
 
         /// <summary>
@@ -301,9 +324,12 @@ namespace Dynamitey.DynamicObjects
         ///<summary>
         /// Trampoline for builder
         ///</summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. BuilderTrampoline must be public because it " +
+            "overrides DynamicObject.TryInvoke, a public member.")]
         public class BuilderTrampoline<TInnerObjectProtoType> : DynamicObject
         {
-            Builder<TInnerObjectProtoType> _buider;
+            readonly Builder<TInnerObjectProtoType> _buider;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}.BuilderTrampoline"/> class.
@@ -328,6 +354,8 @@ namespace Dynamitey.DynamicObjects
                 "unannotated base member, and the DLR invokes it only after the consumer's own " +
                 "dynamic call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same InvokeHelper call as above; see the IL2026 suppression on this member.")]
+            [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+                "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
             public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
             {
                 if (!_buider._buildType.TryGetValue("Object", out var tBuildType))
@@ -341,9 +369,12 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Trampoline for setup builder
         /// </summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. SetupTrampoline must be public because it " +
+            "overrides DynamicObject.TryInvoke, a public member.")]
         public class SetupTrampoline<TInnerObjectProtoType> : DynamicObject
         {
-			Builder<TInnerObjectProtoType> _buider;
+			readonly Builder<TInnerObjectProtoType> _buider;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}.SetupTrampoline"/> class.
@@ -369,6 +400,8 @@ namespace Dynamitey.DynamicObjects
                 "itself without mismatching the unannotated base member, and the DLR invokes it " +
                 "only after the consumer's own dynamic call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic'-forced construction as above; see the IL2026 suppression on this member.")]
+            [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+                "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
             public override bool TryInvoke(InvokeBinder binder, dynamic?[]? args, out object? result)
             {
 				if (binder.CallInfo.ArgumentNames.Count != binder.CallInfo.ArgumentCount)
@@ -397,6 +430,8 @@ namespace Dynamitey.DynamicObjects
             "itself without mismatching the unannotated base member, and the DLR invokes it " +
             "only after the consumer's own dynamic member assignment already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic'-forced construction as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
 		public override bool TrySetMember(SetMemberBinder binder, dynamic? value){
             if (value != null)
             {
@@ -434,6 +469,8 @@ namespace Dynamitey.DynamicObjects
             "itself without mismatching the unannotated base member, and the DLR invokes it " +
             "only after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             if(!_buildType.TryGetValue(binder.Name, out var tBuildType))
@@ -457,7 +494,7 @@ namespace Dynamitey.DynamicObjects
 
         [RequiresUnreferencedCode("Calls the annotated Activate.Create/Dynamic.InvokeConstructor/Dynamic.InvokeSetAll, and Activator.CreateInstance<TObjectProtoType>(), which requires TObjectProtoType to have a public parameterless constructor for trim analysis.")]
         [RequiresDynamicCode("Dynamic.InvokeConstructor/InvokeSetAll require the DLR's runtime code generation; not supported when AOT-compiled.")]
-        private static object InvokeHelper(CallInfo callinfo, IList<object?> args, Activate? buildType =null)
+        private static object InvokeHelper(CallInfo callinfo, object?[] args, Activate? buildType =null)
         {
            
             bool tSetWithName = true;
@@ -484,8 +521,15 @@ namespace Dynamitey.DynamicObjects
                 {
                     result = Activator.CreateInstance<TObjectProtoType>()!;//Try first because faster but doens't work with optional parameters
                 }
-                catch (Exception)
+                catch (MissingMemberException)
                 {
+                    // Same reasoning, and the same base-class choice, as Builder.cs's
+                    // Activate<T>.Create(): a missing parameterless constructor - e.g. one with only
+                    // optional parameters - is the single documented failure of
+                    // Activator.CreateInstance<T>(), and Dynamitey's own binder can bind it.
+                    // Catching Exception here would also swallow a genuine failure from inside a
+                    // real parameterless constructor and silently invoke it a second time via the
+                    // DLR path (cs/catch-of-all-exceptions).
                     result = Dynamic.InvokeConstructor(typeof (TObjectProtoType))!;
                 }
 

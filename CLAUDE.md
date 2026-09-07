@@ -26,6 +26,13 @@ It is history, not a task list.
   pending a reply. The `upstream` remote's push URL is set to `DISABLED` for
   exactly this reason; do not undo it. Fetching is fine and is how upstream work
   gets pulled in.
+- **Always pass `--repo dynamitey-community/dynamitey --base main` to
+  `gh pr create`.** Because an `upstream` remote exists, `gh` treats this clone as
+  a fork and picks `ekonbenefits:master` as the default base — so a bare
+  `gh pr create` aims a PR at upstream. It fails there today only because that
+  repo rejects the write, which is luck, not a guardrail. `gh repo set-default
+  dynamitey-community/dynamitey` is set locally, but that is per-machine and does
+  not survive a fresh clone; the explicit flags do.
 - **Also avoid incidental writes to upstream.** A clickable link to an
   `ekonbenefits` issue or PR posts a cross-reference event onto their timeline,
   and an `@mention` copied out of upstream text notifies a real person. Put both
@@ -95,28 +102,29 @@ dotnet run -c Release --project Benchmarks -- --list flat
 dotnet run -c Release --project Benchmarks -- --filter '*Tuple*'
 ```
 
-### The test count, because it looks wrong and is not
+### The test count, and why this section names no numbers
 
-Two numbers will not match, and both are fine.
+**Do not pin the executed count in documentation.** It was once pinned at 186 in
+four files, and the first bug fix that added tests made all four wrong at once.
+This section used to illustrate that rule with a worked example — and the
+example itself then rotted, while the rule stayed true. Hence no figures here.
 
-`Tests/*.cs` carries **187** `[Test]` attributes and **10** `[TestCase]`
-attributes. NUnit expands each `[TestCase]` into its own test, so the executed
-count is higher than the `[Test]` count, not lower.
+The bar is *0 failed, 0 skipped, with no category filter*. That survives new
+tests, and a filter reappearing in a test command is the thing actually worth
+catching. CI enforces the skipped half explicitly.
+
+Two counts will not match, and both are fine: `Tests/*.cs` carries `[Test]`
+attributes and `[TestCase]` attributes, and NUnit expands each `[TestCase]` into
+its own test — so the executed count is higher than the `[Test]` count, not
+lower. `[TestCaseSource]` and parameterised fixtures widen the gap further.
 
 One test does not run at all: `TestCodeDomLateTypeBind` in
 `Tests/DynamicObjects.cs`, inside `#if NETFRAMEWORK`. It compiles an assembly at
 runtime with `CSharpCodeProvider`, so it only ever ran on .NET Framework and has
 been unreachable since `net48` was dropped. Tracked in #23.
 
-**Do not pin the executed count in documentation.** It was pinned at 186 in four
-files, and the first bug fix that added tests made all four wrong at once. The
-bar is *0 failed, 0 skipped, with no category filter* — that survives new tests,
-and a filter reappearing in a test command is the thing actually worth catching.
-
-**Where older numbers came from.** Before the `SpeedTest` fixture moved to
-`Benchmarks/` in #9, the source carried 219 `[Test]` attributes and CI needed
-`--filter TestCategory!=Performance` to stay green, which produced 186. So 219
-and "186 under a filter" both describe the tree before #9.
+Coverage is enforced separately — see the floors in `ci.yml` — so "the suite
+passes" and "the suite covers the code" are two different gates here.
 
 ## Continuous integration
 
@@ -124,25 +132,86 @@ Three workflows, all pinned to current action majors:
 
 | Workflow | Does |
 | --- | --- |
-| `ci.yml` | Build and test on Linux, macOS, Windows; `-warnaserror`; TRX artifacts; dry-runs every benchmark |
+| `ci.yml` | Four jobs: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test |
 | `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
-| `dependencies.yml` | Dependency review on PRs; weekly `dotnet list package --vulnerable --include-transitive` |
+| `dependencies.yml` | Three jobs on **different triggers**: dependency review on PRs only; `dotnet list package --vulnerable --include-transitive` on everything; and **OWASP Dependency-Check** weekly and on demand but never on a PR — a cold-cache scan takes about an hour, and it blocks nothing |
 
 `push` only triggers CI on `main`; `pull_request` covers everything else, which
 is what stops every branch push producing a duplicate run. Do not add branches
 to the `push` trigger without a reason.
 
+**A job existing is not the same as a job gating a merge.** Eight checks are
+required by branch protection: the three `Build and test` legs, `Benchmarks
+compile and run`, `AOT smoke test`, `Analyze C#`, `NuGet audit` and `Dependency
+review`. `Code coverage` and `OWASP dependency check` run but are **not**
+required, so a red coverage floor does not block a merge today. Adding a check
+to the required list is a repository settings change, separate from adding the
+job — and adding one that cannot report on a pull request would block every pull
+request permanently, which is why the OWASP job's trigger and the required list
+have to be considered together.
+
 **`-warnaserror` lives in the workflow, not the project files.** The tree builds
-clean with .NET analyzers at `AnalysisLevel=latest`, so any new warning is a
-regression — but a local build stays workable. If a change needs a warning
-suppressed, suppress it narrowly and say why.
+clean, so any new warning is a regression — but a local build stays workable.
+
+## Static analysis, and the conventions around it
+
+Six analyzers run against the shipped library. Getting this wrong is the most
+likely way to be surprised by a red build:
+
+| | |
+| --- | --- |
+| Built-in .NET analyzers | `AnalysisMode=All`, set on `Dynamitey.csproj` rather than solution-wide. Test and benchmark code is not the shipped product, and rules like CA1707 and CA1515 are signal in a library and noise in a fixture |
+| Roslynator, SonarAnalyzer, AsyncFixer, IDisposableAnalyzers | All `PrivateAssets="all"`, so none reaches consumers |
+| PublicApiAnalyzers | Freezes the public surface — see below |
+| CodeQL | Separate, in its own workflow |
+
+**SonarAnalyzer is pinned to 10.5.0.109200 deliberately.** That is the last
+release under LGPL-3.0-only. From 10.6.0.109712 it moved to the SONAR
+Source-Available License, which is not OSI-approved and whose grant excludes
+using AI to interpret the data the tool produces. Do not bump it without
+reading the license.
+
+**The `NoWarn` lists are a documented backlog, not a dumping ground.** Each
+entry is a rule deferred with a reason recorded in the comment above it, and the
+lists are meant to shrink. CA is down to `CA1851`; the SonarAnalyzer list still
+carries about thirty rules, which is the next triage worth doing. A rule *not*
+on a list fails the build immediately, which is the point: the backlog is fixed
+at what already existed and cannot grow.
+
+**Every suppression carries a reason a reviewer can evaluate.** Not "by design"
+and not "false positive" — what the rule protects against, and why that does not
+apply here. Where a rule has many sites, the full reasoning is written once and
+the others point back to it. The same standard applies to dismissed CodeQL
+alerts.
+
+**The public API is frozen.** `Dynamitey/PublicAPI.Shipped.txt` and
+`PublicAPI.Unshipped.txt` declare every public member. Adding or changing one
+fails the build until the change is written into those files, which makes an
+accidental breaking change impossible to merge quietly. Nothing has shipped from
+this fork yet, so `Shipped.txt` holds only its nullable directive and the whole
+surface sits in `Unshipped.txt`; at 4.0.0 the entries move across. This matters
+for #3: with the surface frozen, the rename can be *proven* to have changed
+nothing but names.
+
+**Null validation goes through `Internal.Guard.NotNull`**, not an inline check.
+`ArgumentNullException.ThrowIfNull` does not exist on netstandard2.0, and the
+plain `if`-throw form trips CA1510 on net10.0, so an inline guard needs a
+five-line `#if` block at every site. `.editorconfig` registers the helper with
+CA1062 via `null_check_validation_methods`, so the analyzer accepts the call as
+validation — the rule stays live, only the boilerplate goes.
+
+**Coverage has enforced floors** in `ci.yml` (`MIN_LINE`, `MIN_BRANCH`), set just
+under the real figures so they ratchet rather than trap. Raise them when the real
+number moves up and stays there. Reproduce locally with
+`--settings coverlet.runsettings --collect:"XPlat Code Coverage"`; the runsettings
+restricts the report to the `Dynamitey` assembly, which is what CI measures.
 
 `Directory.Build.props` carries the analyzer settings and NuGet audit config
 (`NuGetAuditMode=all`, `NuGetAuditLevel=low`).
 
-**CodeQL analyses the shipped library only.** `.github/codeql/codeql-config.yml`
+**CodeQL analyzes the shipped library only.** `.github/codeql/codeql-config.yml`
 declares the intent, but for a compiled language `paths-ignore` cannot exclude
-code that was compiled — CodeQL analyses whatever the build extracts. So the
+code that was compiled — CodeQL analyzes whatever the build extracts. So the
 workflow builds `Dynamitey/Dynamitey.csproj` alone rather than the solution. The
 test project deliberately does things static analysis must flag: dynamic calls
 it believes cannot succeed, and casts like `(object)tOut` that look useless but
@@ -229,7 +298,7 @@ arguments.
 
 **Call-site caching.** `Internal/Optimization/BinderHash.cs` keys cached binders
 and `CacheableInvocation.cs` exposes reuse deliberately. Cache state is shared
-across call sites, which is why #13 reports behaviour that changes depending on
+across call sites, which is why #13 reports behavior that changes depending on
 what ran earlier in the process. Any test touching static context must control
 execution order or it will pass for the wrong reason.
 
@@ -237,14 +306,37 @@ execution order or it will pass for the wrong reason.
 arm supplies `GetDefaultThreadCurrentCulture`, called from `Dynamic.cs:869`. The
 filename is misleading; do not delete it on the strength of the name.
 
-`Dynamitey/sn.snk` is upstream's strong-name key, committed. A renamed fork needs
-its own — see #3.
+`Dynamitey/sn.snk` is **this fork's own 2048-bit key**, generated for #3 and
+committed. Upstream's key was removed: a renamed assembly cannot keep using it,
+since the strong name is part of the identity being changed. Committing a signing
+key is normal for open source — it establishes identity, not security. Signing is
+kept rather than dropped because a strong-named assembly may only reference other
+strong-named assemblies, and `netstandard2.0` exists here to serve .NET Framework
+consumers where strong naming is still common.
 
 ## Scope reminders
 
-The library still sets no `PackageId`, `AssemblyName`, or `RootNamespace`, so all
-three default to `Dynamitey` and collide with the original package on nuget.org.
-Its `Company` and `Copyright` still read `Ekon Benefits`. Neither is an oversight
-to fix casually in passing — they are #3 and #6, both of which must land before
-anything is ever published, and #6 carries an Apache-2.0 attribution question
+**The identity is settled (#3), and the split is deliberate.** `PackageId` and
+`AssemblyName` are `Dynamitey.Community`; `RootNamespace` stays **`Dynamitey`**
+and is pinned explicitly so it cannot drift toward `AssemblyName` later.
+
+The collision with the original package is an assembly-identity problem, and the
+assembly name alone fixes it. Keeping the namespace means an existing consumer
+swaps one `PackageReference` line and rebuilds with no source change. Because the
+namespace did not move, the frozen `PublicAPI.*.txt` files were **byte-identical**
+across the rename — which is how the change was proven surface-neutral rather
+than assumed to be.
+
+Two consequences worth knowing before touching this:
+
+- Anything keyed to the **assembly** name must move with it. `coverlet.runsettings`
+  filters `[Dynamitey.Community]*`; getting that wrong silently measures nothing.
+- `ImpromptuInterface` carries a compile-time reference to the *original*
+  `Dynamitey`, so a project with both gets `CS0433` on every shared type. The test
+  project declares upstream's package directly with `Aliases="upstream"` to take it
+  out of the global namespace — it is still needed on disk because
+  `Dynamic.CoerceConvert` late-binds to `Impromptu.DynamicActLike`.
+
+`Company` and `Copyright` still read `Ekon Benefits` — that is #6, which must land
+before anything is published and carries an Apache-2.0 attribution question
 (upstream's copyright is *retained*, not replaced).

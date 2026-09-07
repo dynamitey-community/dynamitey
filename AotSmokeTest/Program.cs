@@ -27,7 +27,7 @@ namespace Dynamitey.AotSmokeTest
     /// under one would prove nothing.
     ///
     /// Exit code 0 means every case behaved as documented. Non-zero means the
-    /// documented behaviour changed, which makes the README and the annotation
+    /// documented behavior changed, which makes the README and the annotation
     /// messages wrong.
     ///
     /// This library can never be trim-safe or AOT-safe; it is built on the DLR.

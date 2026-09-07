@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](License.txt)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 Dynamitey is a .NET library that wraps the Dynamic Language Runtime to do
 runtime dispatch: late binding, currying, partial application, expando objects,
@@ -42,13 +42,59 @@ identity question that comes with it is
 If you depend on Dynamitey today, keep using upstream's 3.0.3. This repository
 is where the work to move it forward is happening, not yet where you get it.
 
+### Installing, and moving from the original package
+
+This fork is configured to pack as **`Dynamitey.Community`**, not `Dynamitey`. The assembly is
+named `Dynamitey.Community` too, so once released it cannot collide with the original package on
+nuget.org — two assemblies claiming one identity resolve to a coin flip that
+surfaces as a runtime `MissingMethodException`.
+
+**The namespace is deliberately unchanged.** Everything still lives in
+`Dynamitey`, so moving from the original package is a one-line change and a
+rebuild:
+
+```diff
+- <PackageReference Include="Dynamitey" Version="3.0.3" />
++ <PackageReference Include="Dynamitey.Community" Version="4.0.0" />
+```
+
+No `using` directive changes, no source edits. The public API is unchanged by the
+rename — it is frozen by `PublicAPI.Shipped.txt`, and those files were byte-identical
+before and after, which is how that claim was checked rather than asserted.
+
+#### If you end up with both packages
+
+A project that references both — most likely by using **ImpromptuInterface**, which
+carries a compile-time reference to the original `Dynamitey` — will get a
+compile-time error rather than a silent runtime failure:
+
+```
+error CS0433: The type 'Invocation' exists in both
+  'Dynamitey.Community, Version=4.0.0.0, ...' and 'Dynamitey, Version=3.0.3.0, ...'
+```
+
+Resolve it by aliasing the one you are not using directly:
+
+```xml
+<PackageReference Include="Dynamitey" Version="3.0.3" Aliases="upstream" />
+```
+
+`Aliases` is honored on a direct `PackageReference` and ignored on a transitive one,
+so the package has to be declared explicitly for this to take effect. This
+repository's own test project does exactly that.
+
+---
+
 ### What has changed since upstream
 
 | | |
 | --- | --- |
 | Target frameworks | `netstandard2.0;net10.0` — `net40` dropped |
 | Tests | `net10.0`, NUnit 4, green on Linux, macOS and Windows |
-| CI | Rebuilt: build and test on three platforms, CodeQL, dependency review and NuGet audit |
+| CI | Rebuilt: build and test on three platforms, code coverage with enforced floors, CodeQL, dependency review, NuGet audit, OWASP Dependency-Check, and AOT and benchmark smoke jobs |
+| Static analysis | .NET analyzers at `AnalysisMode=All`, plus Roslynator, SonarAnalyzer, AsyncFixer, IDisposableAnalyzers and PublicApiAnalyzers. Every remaining suppression carries a written reason |
+| Public API | Frozen by `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` — a change to the public surface fails the build until it is declared |
+| Coverage | 90%+ of lines and 80%+ of branches, enforced in CI |
 | Benchmarks | The old wall-clock `SpeedTest` fixture is now a BenchmarkDotNet project |
 | Dependencies | All current; no known vulnerable or deprecated packages |
 
@@ -56,8 +102,9 @@ is where the work to move it forward is happening, not yet where you get it.
 reaches both .NET Framework 4.6.1–4.8.1 and modern .NET from a single assembly.
 
 The [roadmap](https://github.com/dynamitey-community/dynamitey/issues/10) tracks
-what is planned and in what order. Six issues carried over from upstream are
-labelled [`ported-from-upstream`](https://github.com/dynamitey-community/dynamitey/labels/ported-from-upstream).
+what is planned and in what order. The six issues carried over from upstream,
+labelled [`ported-from-upstream`](https://github.com/dynamitey-community/dynamitey/labels/ported-from-upstream),
+have all been resolved.
 
 ---
 
@@ -70,7 +117,7 @@ this fork carries, and there is no equivalent here yet.
 - Clean syntax for using types from late-bound libraries — [LateType](https://github.com/ekonbenefits/dynamitey/wiki/LateType)
 - Dynamic currying — [Curry](https://github.com/ekonbenefits/dynamitey/wiki/UsageCurry)
 - Manipulation of tuples — [`Tests/TuplerTest.cs`](Tests/TuplerTest.cs)
-- Inline object graph initialisation syntax — [Builder](https://github.com/ekonbenefits/dynamitey/wiki/UsageBuilder)
+- Inline object graph initialization syntax — [Builder](https://github.com/ekonbenefits/dynamitey/wiki/UsageBuilder)
 - `DynamicObject` base types for many things — [Dynamic](https://github.com/ekonbenefits/dynamitey/wiki/UsageDynamic)
 - Extension-to-instance method conversion — [`Tests/Linq.cs`](Tests/Linq.cs)
 
@@ -162,7 +209,25 @@ dotnet test Tests/Tests.csproj -c Release
 ```
 
 The full suite runs with no category filter and must report 0 failed and 0
-skipped. CI additionally builds with `-warnaserror`.
+skipped. CI additionally builds with `-warnaserror`, so any analyzer warning is
+a build failure there even though a local build stays workable.
+
+Coverage is enforced in CI against a floor, so it is worth being able to
+reproduce it before opening a pull request:
+
+```bash
+dotnet test Tests/Tests.csproj -c Release \
+  --settings coverlet.runsettings --collect:"XPlat Code Coverage"
+```
+
+`coverlet.runsettings` restricts the report to the `Dynamitey` assembly, which
+is the figure CI measures — without it the number also covers `SupportLibrary`,
+a fixture that exists only to be called from tests.
+
+Adding a public member fails the build until it is declared in
+`Dynamitey/PublicAPI.Unshipped.txt`. That is deliberate: it makes an accidental
+change to the public surface impossible to merge quietly. The analyzer's own
+code fix will add the entry for you.
 
 Benchmarks are a separate project and never run in CI:
 
@@ -186,9 +251,9 @@ To report a security problem, do **not** open a public issue. See
 
 ---
 
-## Licence and attribution
+## License and attribution
 
-Apache License 2.0. See [License.txt](License.txt) and [NOTICE](NOTICE).
+Apache License 2.0. See [License.txt](LICENSE) and [NOTICE](NOTICE).
 
 Dynamitey was created and maintained by Ekon Benefits. This fork retains that
 copyright and adds its own for changes made after `upstream-baseline`, as

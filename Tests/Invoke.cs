@@ -166,7 +166,19 @@ namespace Dynamitey.Tests
         }
 
         // The same default branch serves ordinary member invocation, so more than
-        // 14 arguments must keep working there too.
+        // 14 arguments must keep working there too. 5-13 fill in the generated
+        // fast-path cases in InvokeHelper.tt's InvokeMemberTargetType that the
+        // rest of the suite never happens to exercise (its other InvokeMember
+        // calls stick to a handful of arguments).
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        [TestCase(8)]
+        [TestCase(9)]
+        [TestCase(10)]
+        [TestCase(11)]
+        [TestCase(12)]
+        [TestCase(13)]
         [TestCase(14)]
         [TestCase(15)]
         [TestCase(20)]
@@ -185,7 +197,20 @@ namespace Dynamitey.Tests
         // InvokeMemberAction's void-returning delegate shape rather than a
         // Func-shaped one - EmitCallSiteFuncType(argTypes, typeof(void)) instead
         // of EmitCallSiteFuncType(argTypes, typeof(TReturn)). Both must build a
-        // delegate type without reaching into ImpromptuInterface.
+        // delegate type without reaching into ImpromptuInterface. 3-13 fill in
+        // the generated fast-path cases in InvokeHelper.tt's InvokeMemberAction
+        // that the rest of the suite never happens to exercise.
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        [TestCase(8)]
+        [TestCase(9)]
+        [TestCase(10)]
+        [TestCase(11)]
+        [TestCase(12)]
+        [TestCase(13)]
         [TestCase(14)]
         [TestCase(15)]
         [TestCase(20)]
@@ -621,6 +646,33 @@ namespace Dynamitey.Tests
 
         }
 
+        // Pins the CA2208 fix in CacheableInvocation.Invoke's "wrong argument count" branch: the
+        // ArgumentException constructor's (message, paramName) arguments used to be transposed, so
+        // Message was literally the string "args" and ParamName was left null. A Get invocation
+        // takes 0 args; calling it with 1 forces that branch.
+        [Test]
+        public void TestCacheableInvocationWrongArgCountExceptionIsWellFormed()
+        {
+            var tCached = new CacheableInvocation(InvocationKind.Get, "Prop1");
+            var tAnon = new PropPoco { Prop1 = "1" };
+
+            var tException = Assert.Throws<ArgumentException>(() => tCached.Invoke(tAnon, "unexpected extra arg"));
+
+            Assert.That(tException.ParamName, Is.EqualTo("args"));
+            Assert.That(tException.Message, Does.StartWith("Incorrect number of Arguments for CachedInvocation, Expected:0"));
+        }
+
+        // Pins the CA2201 fix on CoerceToDelegate's "impossible" branch (System.Exception ->
+        // InvalidOperationException). MulticastDelegate is the one built-in type that reaches it:
+        // it passes the earlier IsAssignableFrom(Delegate) check (its own base type is Delegate),
+        // but unlike every concrete delegate type it has no compiler-generated Invoke method, so
+        // GetMethod("Invoke") really does come back null.
+        [Test]
+        public void CoerceToDelegateThrowsInvalidOperationExceptionWhenDelegateTypeHasNoInvokeMethod()
+        {
+            Assert.Throws<InvalidOperationException>(() => Dynamic.CoerceToDelegate(new object(), typeof(MulticastDelegate)));
+        }
+
         [Test]
         public void TestGetIndexer()
         {
@@ -774,6 +826,30 @@ namespace Dynamitey.Tests
             Assert.That(tOut, Is.EqualTo(tValue.ToString()));
         }
 
+        // Issue #42 gap 4: CacheableInvocation's storedArgs constructor parameter is otherwise
+        // unused anywhere in this codebase. Passing storedArgs whose elements are all plain
+        // values (no InvokeArg among them) used to NRE in the constructor - Util.GetArgsAndNames
+        // returns a null out argNames in exactly that case, and the merge check dereferenced it
+        // unconditionally. This is confirmed dead in production callers, not something anyone
+        // has hit; fixed rather than removed since it's public API on a library with external
+        // consumers, and the fix (skip the merge when there's nothing to merge) is a one-line,
+        // zero-risk correction that keeps the constructor usable for exactly what its
+        // documentation already promises.
+        [Test]
+        public void TestCacheableInvocationStoredArgsWithoutInvokeArgNames()
+        {
+            dynamic tExpando = new ExpandoObject();
+            tExpando.Func = new Func<int, string>(it => it.ToString());
+
+            var tValue = 1;
+
+            var tCachedInvoke = new CacheableInvocation(InvocationKind.InvokeMember, "Func",
+                argCount: 1, storedArgs: new object[] { tValue });
+
+            var tOut = tCachedInvoke.Invoke((object)tExpando, tValue);
+
+            Assert.That(tOut, Is.EqualTo(tValue.ToString()));
+        }
 
         [Test]
         public void TestMethodStaticOverloadingPassAndGetValue()
@@ -1641,43 +1717,74 @@ namespace Dynamitey.Tests
             Assert.That(Dynamic.InvokeBinaryOperator(1, ExpressionType.Add, 2), Is.EqualTo(3));
         }
 
+        // Each `case` body in InvokeUnaryOperator's switch (Dynamic.cs) is its own dynamic call
+        // site with its own compiler-generated, lazily-initialized CallSite field - "site is null,
+        // create and bind it" is one branch, "site already exists" is the other. Calling every
+        // operator exactly once - as this test did before - permanently leaves the second branch
+        // uncovered for each of them; calling each one twice exercises both.
         [Test]
         public void TestInvokeBasicUnaryOperatorsDynamic()
         {
             RunUnaryMockTests(ExpressionType.Not);
+            RunUnaryMockTests(ExpressionType.Not);
+            RunUnaryMockTests(ExpressionType.Negate);
             RunUnaryMockTests(ExpressionType.Negate);
             RunUnaryMockTests(ExpressionType.Increment);
+            RunUnaryMockTests(ExpressionType.Increment);
             RunUnaryMockTests(ExpressionType.Decrement);
-        
+            RunUnaryMockTests(ExpressionType.Decrement);
+
 
 
         }
 
+        // See the comment on TestInvokeBasicUnaryOperatorsDynamic above - same reasoning, for
+        // InvokeBinaryOperator's switch.
         [Test]
         public void TestInvokeBasicBinaryOperatorsDynamic()
         {
             RunBinaryMockTests(ExpressionType.Add);
+            RunBinaryMockTests(ExpressionType.Add);
+            RunBinaryMockTests(ExpressionType.Subtract);
             RunBinaryMockTests(ExpressionType.Subtract);
             RunBinaryMockTests(ExpressionType.Divide);
+            RunBinaryMockTests(ExpressionType.Divide);
             RunBinaryMockTests(ExpressionType.Multiply);
+            RunBinaryMockTests(ExpressionType.Multiply);
+            RunBinaryMockTests(ExpressionType.Modulo);
             RunBinaryMockTests(ExpressionType.Modulo);
 
             RunBinaryMockTests(ExpressionType.And);
+            RunBinaryMockTests(ExpressionType.And);
+            RunBinaryMockTests(ExpressionType.Or);
             RunBinaryMockTests(ExpressionType.Or);
             RunBinaryMockTests(ExpressionType.ExclusiveOr);
+            RunBinaryMockTests(ExpressionType.ExclusiveOr);
             RunBinaryMockTests(ExpressionType.LeftShift);
+            RunBinaryMockTests(ExpressionType.LeftShift);
+            RunBinaryMockTests(ExpressionType.RightShift);
             RunBinaryMockTests(ExpressionType.RightShift);
 
             RunBinaryMockTests(ExpressionType.AddAssign);
+            RunBinaryMockTests(ExpressionType.AddAssign);
+            RunBinaryMockTests(ExpressionType.SubtractAssign);
             RunBinaryMockTests(ExpressionType.SubtractAssign);
             RunBinaryMockTests(ExpressionType.DivideAssign);
+            RunBinaryMockTests(ExpressionType.DivideAssign);
             RunBinaryMockTests(ExpressionType.MultiplyAssign);
+            RunBinaryMockTests(ExpressionType.MultiplyAssign);
+            RunBinaryMockTests(ExpressionType.ModuloAssign);
             RunBinaryMockTests(ExpressionType.ModuloAssign);
 
             RunBinaryMockTests(ExpressionType.AndAssign);
+            RunBinaryMockTests(ExpressionType.AndAssign);
+            RunBinaryMockTests(ExpressionType.OrAssign);
             RunBinaryMockTests(ExpressionType.OrAssign);
             RunBinaryMockTests(ExpressionType.ExclusiveOrAssign);
+            RunBinaryMockTests(ExpressionType.ExclusiveOrAssign);
             RunBinaryMockTests(ExpressionType.LeftShiftAssign);
+            RunBinaryMockTests(ExpressionType.LeftShiftAssign);
+            RunBinaryMockTests(ExpressionType.RightShiftAssign);
             RunBinaryMockTests(ExpressionType.RightShiftAssign);
         }
 

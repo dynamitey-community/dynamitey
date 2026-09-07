@@ -7,6 +7,21 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      # SonarAnalyzer is pinned to 10.5.0.109200 on purpose: it is the last release
+      # under LGPL-3.0-only. From 10.6.0.109712 the package moved to the SONAR
+      # Source-Available License, which is not OSI-approved and whose grant excludes
+      # "employing, using, or engaging artificial intelligence technology ... to
+      # ingest, interpret, analyze ... or interact with the data provided by the
+      # Program" - that is, AI-assisted triage of its own findings, which is how this
+      # repository is maintained.
+      #
+      # Dependabot cannot know that, so without this it proposes the bump every week
+      # and the pull request fails CI on rules the newer version adds. Ignoring the
+      # update outright is clearer than closing the same PR repeatedly. Revisit only
+      # if the license changes; the reasoning also lives beside the PackageReference
+      # in Dynamitey.csproj.
+      - dependency-name: "SonarAnalyzer.CSharp"
     groups:
       # One PR for the test and benchmark tooling rather than five. These move
       # together and none of them ships to consumers.

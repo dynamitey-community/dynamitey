@@ -19,12 +19,12 @@ using System.Collections.Generic;
 
 namespace Dynamitey.Internal.Optimization
 {
-    internal class BareBonesList<T>: ICollection<T>
+    internal sealed class BareBonesList<T>: ICollection<T>
     {
-        private T[] _list;
+        private readonly T[] _list;
         private int _addIndex;
-   
-        private int _length;
+
+        private readonly int _length;
 
 
         /// <summary>
@@ -81,12 +81,16 @@ namespace Dynamitey.Internal.Optimization
         }
 
 
-        internal class BareBonesEnumerator : IEnumerator<T>
+        // Sealed because Dispose here is not virtual, so a derived type could not
+        // participate in disposal correctly (IDISP025). Free to do: the type is
+        // internal and nested in an internal class, so nothing outside this
+        // assembly could have derived from it.
+        internal sealed class BareBonesEnumerator : IEnumerator<T>
 
         {
-            private T[] _list;
+            private readonly T[] _list;
             private int _enumerateInex = -1;
-            private int _length;
+            private readonly int _length;
 
             public BareBonesEnumerator(T[] list, int length)
             {

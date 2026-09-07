@@ -30,6 +30,11 @@ namespace Dynamitey
         /// <returns></returns>
         [RequiresUnreferencedCode("Invokes function through 'dynamic', resolved via the DLR binder; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("The 'dynamic' invocation binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
+        [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification =
+            "Same internal-plumbing reasoning as Curry's mirroring operator (Internal/Curry.cs): PartialApply " +
+            "is documented as \"Internal method for subsequent invocations of Dynamic.Curry\" in its own class " +
+            "summary, the pipe result is already reachable by invoking the value directly, and no test in " +
+            "this repository exercises the `|` syntax.")]
         public static dynamic operator |(dynamic argument, PartialApply function)
         {
            return ((dynamic)function)(argument);
@@ -51,6 +56,8 @@ namespace Dynamitey
             "after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same DLR invocation as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object? result)
         {
             result = null;
@@ -77,6 +84,8 @@ namespace Dynamitey
             "conversion already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.CoerceToDelegate call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryConvert(ConvertBinder binder, out object? result)
         {
             result = Dynamic.CoerceToDelegate(this, binder.Type);
@@ -132,6 +141,8 @@ namespace Dynamitey
         /// Gets the args.
         /// </summary>
         /// <value>The args.</value>
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification =
+            "Public API, breaking to reshape - see Invocation.Args (Invocation.cs) for the full reasoning.")]
         public object?[] Args => _args;
 
         /// <summary>
@@ -146,7 +157,7 @@ namespace Dynamitey
         /// <value>The kind of the invocation.</value>
         public InvocationKind InvocationKind => _invocationKind;
 
-        private IDictionary<int, CacheableInvocation> _cacheableInvocation = new Dictionary<int, CacheableInvocation>();
+        private readonly Dictionary<int, CacheableInvocation> _cacheableInvocation = new Dictionary<int, CacheableInvocation>();
 #pragma warning disable 1734
         /// <summary>
         /// Provides the implementation for operations that invoke an object. Classes derived from the <see cref="T:System.Dynamic.DynamicObject"/> class can override this method to specify dynamic behavior for operations such as invoking an object or a delegate.
@@ -165,6 +176,8 @@ namespace Dynamitey
             "the consumer's own dynamic invocation already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same FastDynamicInvoke/Invocation.Invoke calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
         {
             var tNamedArgs = Util.NameArgsIfNecessary(binder.CallInfo, args!);
@@ -214,6 +227,15 @@ namespace Dynamitey
     /// <summary>
     /// Partial Application Proxy
     /// </summary>
+    [SuppressMessage("Design", "CA1040:Avoid empty interfaces", Justification =
+        "IPartialApply is a deliberately empty marker interface: PartialApply and Curry both implement it " +
+        "purely so a consumer can test 'x is IPartialApply' to recognize 'this is one of Dynamitey's " +
+        "partial-application proxies', without depending on either concrete type by name and without a " +
+        "reflection-by-type-name check. CA1040's usual alternative - a custom attribute - can't do that: an " +
+        "attribute isn't checkable with 'is'/pattern-matching or usable as a generic type constraint, only " +
+        "discoverable via reflection at each call site, which is slower and more code at every use than the " +
+        "interface check it would replace. It is declared public API (PublicAPI.Unshipped.txt); giving it a " +
+        "member now, or removing it, both change what a consumer's 'is IPartialApply' check evaluates.")]
     public interface IPartialApply
     {
     }

@@ -25,7 +25,7 @@ What you actually ran, and what it said. Not "tests pass" — the numbers.
 
 - [ ] `dotnet build -c Release -warnaserror` — 0 warnings, 0 errors
 - [ ] `dotnet test Tests/Tests.csproj -c Release` — **0 failed, 0 skipped**, with no `--filter`. Paste the counts.
-- [ ] New behaviour has a test, or this changes no behaviour
+- [ ] New behavior has a test, or this changes no behavior
 
 ## Checks worth a second look
 

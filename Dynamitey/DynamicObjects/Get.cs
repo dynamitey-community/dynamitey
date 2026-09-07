@@ -28,7 +28,9 @@ namespace Dynamitey.DynamicObjects
     /// Dynamic Proxy that exposes any properties of objects, and can massage results based on interface
     /// </summary>
 
-   
+
+    [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+        "See IBuilder.Object (Builder.cs); identical reasoning. Get names exactly what this proxy does.")]
     public class Get:BaseForwarder
     {
      
@@ -69,6 +71,8 @@ namespace Dynamitey.DynamicObjects
             "member, and the DLR invokes it only after the consumer's own dynamic call site " +
             "already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object? result)
         {
             if (base.TryGetMember(binder, out result))
@@ -94,6 +98,8 @@ namespace Dynamitey.DynamicObjects
             "member, and the DLR invokes it only after the consumer's own dynamic call site " +
             "already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object?[]? args, out object? result)
         {
 
@@ -108,10 +114,14 @@ namespace Dynamitey.DynamicObjects
                 {
                     return false;
                 }
+                // The cast comes before the null check (matching BaseDictionary.TryInvokeMember's
+                // same pattern) rather than after it: `as` on a null value is already null, so the
+                // result is identical either way, but casting first is what keeps CA1508 from
+                // mistakenly flagging the later `tDel != null` as dead code.
+                var tDel = result as Delegate;
                 if (result == null)
                     return false;
-                var tDel = result as Delegate;
-                if (!binder.CallInfo.ArgumentNames.Any() && tDel != null)
+                if (binder.CallInfo.ArgumentNames.Count == 0 && tDel != null)
                 {
                     try
                     {

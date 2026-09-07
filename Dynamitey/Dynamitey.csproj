@@ -2,6 +2,24 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+
+    <!-- Identity, set explicitly rather than defaulted from the project name (#3).
+         PackageId and AssemblyName move so this fork cannot collide with the
+         original package on nuget.org: two assemblies claiming one identity resolve
+         to a coin flip that surfaces as a runtime MissingMethodException.
+
+         RootNamespace deliberately does NOT move, and is pinned here so it cannot
+         drift toward AssemblyName later. The collision is an assembly-identity
+         problem and the assembly name alone fixes it. Keeping the namespace means an
+         existing consumer swaps one PackageReference line and rebuilds, with no
+         source change - which is what a continuation of a dormant library should
+         offer. A project that somehow references both now gets CS0433 at compile
+         time, which is explicit and rare, instead of today's silent runtime failure.
+         Microsoft's own Microsoft.Bcl.* packages ship System.* namespaces for the
+         same reason. -->
+    <PackageId>Dynamitey.Community</PackageId>
+    <AssemblyName>Dynamitey.Community</AssemblyName>
+    <RootNamespace>Dynamitey</RootNamespace>
     <Nullable>enable</Nullable>
     <!-- netstandard2.0's default LangVersion (7.3, driven off the TFM) predates both
          nullable reference types (C# 8) and the `is not null` pattern (C# 9) used
@@ -16,10 +34,20 @@
     <RepositoryUrl>https://github.com/dynamitey-community/dynamitey.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>dynamic metaprogramming dlr reflection currying tuples expando latetypes</PackageTags>
     <IncludeSymbols>True</IncludeSymbols>
     <IncludeSource>True</IncludeSource>
+    <!-- sn.snk is this fork's own 2048-bit key, generated for #3. It replaced
+         upstream's committed key, which a renamed assembly cannot keep using -
+         the strong name is part of the identity being changed. Committing it is
+         normal for open source: a strong name establishes identity, not security,
+         and anyone can re-sign a fork with their own.
+
+         Signing is kept rather than dropped because a strong-named assembly may
+         only reference other strong-named assemblies, and netstandard2.0 exists
+         here precisely to serve .NET Framework consumers, where strong naming is
+         still common. Dropping it would break them on upgrade. -->
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>sn.snk</AssemblyOriginatorKeyFile>
     <DelaySign>False</DelaySign>
@@ -39,11 +67,44 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Analyzers, all dev-only: PrivateAssets="all" keeps every one of them out
+         of the produced package, so a consumer never inherits them. Their
+         findings and the rules currently deferred are documented in the NoWarn
+         blocks further down. -->
+    <PackageReference Include="AsyncFixer" Version="2.1.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <!-- Computes Version, AssemblyVersion, FileVersion and InformationalVersion
          from git history and tags. Build-time only: PrivateAssets="all" keeps it
          out of the produced package's dependencies. Configured by GitVersion.yml
          at the repository root. Replaces the hardcoded Version.props. -->
     <PackageReference Include="GitVersion.MsBuild" Version="6.*" PrivateAssets="all" />
+    <PackageReference Include="IDisposableAnalyzers" Version="4.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Roslynator.Analyzers" Version="5.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- Pinned to 10.5.0.109200 deliberately: it is the last release under
+         LGPL-3.0-only. From 10.6.0.109712 the package moved to the SONAR
+         Source-Available License, which is not OSI-approved and whose grant
+         excludes "employing, using, or engaging artificial intelligence
+         technology ... to ingest, interpret, analyze ... or interact with the
+         data provided by the Program" - that is, AI-assisted triage of its own
+         findings, which is how this repository works. Being open source does not
+         change that; the license has no such carve-out. The pin costs almost
+         nothing: 10.33 reports 93 findings here against 10.5's 90. -->
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.5.0.109200">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
 
@@ -66,7 +127,7 @@
          puts it in the package; PackagePath places it at the package root, matching
          PackageReadmeFile above. Visible="false" keeps it out of the Solution Explorer
          "Dynamitey" project node, since the file physically lives one level up. -->
-    <None Include="..\Readme.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="..\README.md" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -103,4 +164,321 @@
     </Compile>
   </ItemGroup>
 
+
+  <ItemGroup>
+    <!-- The declared public API surface, one entry per public member, read by
+         Microsoft.CodeAnalysis.PublicApiAnalyzers. Any change to the surface
+         fails the build until the change is written into these files, which
+         makes an accidental breaking change impossible to merge quietly.
+
+         Shipped holds the surface of the last release; Unshipped holds what
+         has been added since. This fork has not released yet, so Shipped is
+         empty apart from its nullable directive and the entire surface sits in
+         Unshipped. At 4.0.0 the Unshipped entries move across, and from then on
+         the split carries its usual meaning. -->
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Every built-in .NET analyzer rule, not just the default subset. Scoped
+         to this project rather than set in Directory.Build.props because the
+         test and benchmark projects are not the shipped product: rules like
+         CA1707 (no underscores in names) and CA1515 (make types internal) are
+         signal here and noise in a test fixture. Solution-wide this setting
+         reports 566 findings; scoped to the library it reports 218. -->
+    <AnalysisMode>All</AnalysisMode>
+
+    <!-- THE BACKLOG. Every rule below currently fires on this twelve-year-old
+         codebase, and each is silenced only until it has been triaged. This
+         list is meant to shrink: a batch of work removes one or more entries,
+         fixing the real defects and suppressing the deliberate design choices
+         at the call site with a written reason - the same standard used for the
+         dismissed CodeQL alerts.
+
+         It is written here, rather than left as tolerated warnings, so the
+         -warnaserror gate in CI stays on the whole time. A new violation of a
+         rule NOT on this list fails the build immediately, which is the point:
+         the backlog is fixed at what already existed and cannot grow.
+
+         Counts are unique (file, line, rule), measured against THIS project
+         alone. An earlier revision of this comment mixed in numbers taken from
+         a solution-wide run, which inflated several of them - CA1822 read 56
+         against a real 1, CA1707 44 against 1 - because test and benchmark code
+         trips rules that a library trips rarely or never. The figures below are
+         re-measured from a clean build of Dynamitey.csproj by itself.
+
+         Deliberately still deferred after triage (batch 1, performance rules):
+           CA1851 (3)  multiple enumerations of an IEnumerable, all three in
+                       Tupler.ToTuple. That method takes a bare IEnumerable from
+                       an arbitrary caller and cannot prove the source is safe to
+                       enumerate more than once; materialising it once (the only
+                       fix that satisfies the rule) would change results for a
+                       genuinely single-pass source instead of just costing more
+                       CPU, which is out of bounds for an analyzer-driven change.
+
+         Resolved in batch 3 (design/naming rules, triaged off the backlog -
+         removed from NoWarn below, each finding either fixed or suppressed at
+         its call site with a written reason; see PublicAPI.Unshipped.txt for
+         confirmation every suppressed site is declared public API):
+           CA1000 (36) static members on generic types - this IS the library's
+                       core static-factory pattern. Full reasoning on
+                       Build<TObjectPrototype>.NewObject (Builder.cs); every
+                       other site (NewList, and Return<TR>'s 34 T4-generated
+                       overloads in InlineLambdas.cs/.tt) points back to it.
+           CA1034 (8)  nested public types, each forced public by a compiler
+                       pattern (AwaitableResult.Awaiter) or by overriding a
+                       public DynamicObject member (BuilderTrampoline,
+                       SetupTrampoline, ConstructorForward, Invoker,
+                       OverloadInvoker), or scoped to one owner
+                       (AddRemoveMarker, MissingTypeException). Full reasoning
+                       on AwaitableResult.Awaiter.
+           CA1716 (7)  identifier matches a language keyword, not a keyword in
+                       C# itself and chosen to mirror a familiar API (LINQ's
+                       Select/Single, a builder's .Object). Full reasoning on
+                       IBuilder.Object (DynamicObjects/Builder.cs).
+           CA1720 (4)  identifier contains a type name, and is not misleading -
+                       same IBuilder.Object/ILinq<TSource>.Single sites as
+                       CA1716 above; full reasoning alongside it.
+           CA1724 (3)  type name conflicts with a namespace this library
+                       doesn't use (System.Dynamic, the retired
+                       System.Runtime.InteropServices.Expando, System.Web.Util).
+                       Full reasoning on Dynamic.cs.
+           CA1711 (2)  incorrect type-name suffix - BaseDictionary previews the
+                       shape its two IDictionary-implementing subclasses build
+                       on; ThisDelegate is a helper class *about* a delegate
+                       family, not a delegate. Full reasoning on
+                       DynamicObjects/BaseDictionary.cs.
+           CA1040 (1)  IPartialApply, an intentionally-empty marker interface
+                       checkable via `is` - PartialApply.cs.
+           CA1707 (1)  String_OR_InvokeMemberName's underscores spell out its
+                       three-word discriminated-union contract - InvokeMemberName.cs.
+           CA1710 (1)  List implements real collection interfaces but is named
+                       to match its Dictionary/Expando siblings, not them -
+                       DynamicObjects/List.cs.
+           CA1725 (1)  FIXED, not suppressed: InvokeSetters.TryInvoke's
+                       rawArgs parameter renamed to args to match
+                       DynamicObject.TryInvoke's own parameter name, like
+                       every other Try* override in this codebase already did.
+                       Safe to rename freely - InvokeSetters' only constructor
+                       is internal, so no external assembly can ever construct
+                       an instance to call it on by name - and the type hasn't
+                       shipped yet (PublicAPI.Unshipped.txt).
+
+         Resolved in batch 4 (mostly real fixes, unlike batch 3 - removed from
+         NoWarn below; each finding fixed or suppressed at its call site with a
+         written reason):
+           CA1810 (3)  FIXED: static field initialization moved into field
+                       initializers (a helper method per field where the old
+                       .cctor body had a try/catch), removing the explicit
+                       static constructor - Dynamic.cs, Internal/Optimization/
+                       InvokeHelper.cs (generated - edited via the .tt and
+                       regenerated), Internal/Optimization/Util.cs.
+           CA1812 (3)  Internal/Optimization/InvokeHelper-Regular.cs.
+                       IsEventBinderDummy and InvokeConstructorDummy FIXED:
+                       made static: both are referenced only as typeof(...)
+                       cache keys passed to CreateCallSite, never `new`'d, and
+                       typeof() works the same on a static class. DummmyNull
+                       SUPPRESSED, not deleted: an exhaustive repository-wide
+                       search (including the .tt templates) found zero
+                       references anywhere, not even a typeof() use - genuinely
+                       dead code by every check available, but this batch's
+                       standing rule for CA1812 in a DLR library is evidence-
+                       based suppression over deletion, because reflection or
+                       an emitted call site can instantiate a type in ways a
+                       search cannot see. Left as a candidate for a future
+                       issue to actually remove.
+           CA2201 (4)  FIXED, and an OBSERVABLE BEHAVIOR CHANGE (see the batch
+                       4 release notes): Dynamic.cs's four `throw new
+                       Exception(...)` sites now throw FormatException (the
+                       three "Could Not Parse" parse-failure sites in
+                       InvokeSetChain/InvokeGetChain) or InvalidOperationException
+                       (CoerceToDelegate's "Impossible!" invariant check).
+           CA2208 (1)  FIXED, and an OBSERVABLE BEHAVIOR CHANGE (see the batch
+                       4 release notes): CacheableInvocation.Invoke's
+                       ArgumentException constructor arguments were transposed
+                       - message and paramName were swapped, so Message was
+                       literally the string "args" and ParamName was always
+                       null. Reordered to match the real (message, paramName)
+                       constructor.
+           CA1508 (1)  FIXED, no behavior change: DynamicObjects/Get.cs
+                       reorders `var tDel = result as Delegate;` before the
+                       `if (result == null) return false;` null check (matching
+                       BaseDictionary.TryInvokeMember's already-working order
+                       for the identical pattern) rather than after it. `as` on
+                       null is already null, so the result is identical either
+                       way - only the order silences the analyzer's mistaken
+                       "always false" reading of `tDel != null`.
+           CA1032 (1)  SUPPRESSED: LateType.MissingTypeException - same
+                       reasoning as its existing RCS1194 suppression
+                       immediately above it (LateType.cs): the standard
+                       parameterless/(string message) constructors don't fit an
+                       exception whose one string parameter is the type name.
+           CA1065 (1)  SUPPRESSED: LateType.CallTarget (LateType.cs) - overlaps
+                       SonarAnalyzer S2372 ("property getter that throws"),
+                       already in the Sonar half of this backlog and
+                       deliberately deferred there; resolving one by reshaping
+                       CallTarget from a property to a method would just
+                       reopen the other, the same trap batch 2 hit with CA1062
+                       vs S3877.
+           CA1305 (1)  FIXED, no behavior change: LateType.MissingTypeException's
+                       String.Format call now passes CultureInfo.InvariantCulture
+                       explicitly. The formatted argument is a string, whose
+                       formatting is not culture-sensitive, so the produced
+                       message is byte-for-byte the same as before.
+           CA1033 (1)  FIXED: DynamicObjects/RegexMatch.cs's RegexMatch class is
+                       now sealed - the fix CA1033 itself names as non-breaking
+                       here, since RegexMatch hasn't shipped
+                       (PublicAPI.Unshipped.txt) and nothing in this repository
+                       derives from it.
+           CA1307 (2)  FIXED, no behavior change: Internal/Optimization/
+                       BinderHash.cs and InvokeMemberName.cs both call
+                       Name.GetHashCode(StringComparison.Ordinal) on net10.0 -
+                       proven to compute the exact same hash as the
+                       parameterless overload, so no observable change, just
+                       the explicit comparison type the rule asks for. Guarded
+                       by #if NETSTANDARD2_0 falling back to the parameterless
+                       call there: that overload doesn't exist on
+                       netstandard2.0's string surface (added in .NET Core
+                       2.1), which is also why CA1307 itself only ever fired
+                       for the net10.0 leg of the multi-target build.
+           CA1024 (2)  SUPPRESSED, both public API: FauxType.GetMemberNames
+                       (abstract; every override would need to change too) and
+                       Internal/Compat/Net40.GetDefaultThreadCurrentCulture
+                       (public API despite the "Internal" namespace) - same
+                       public-API-freeze reasoning as the CA1819 sites below.
+           CA1819 (3)  SUPPRESSED, all three public API and out of scope for an
+                       analyzer-driven breaking change: Invocation.Args (full
+                       reasoning there), InvokeMemberName.GenericArgs,
+                       PartialApply.Args.
+           CA1822 (1)  SUPPRESSED, proven load-bearing: Tupler.cs's private
+                       TuplerFix.Create exists solely so ToTuple can bind to it
+                       as an *instance* member through
+                       Dynamic.InvokeMember(TuplerHelper, "Create", ...) for
+                       the >7-arity tuple path. Tried marking it static:
+                       DynamicListToTuplet8 fails with a RuntimeBinderException
+                       ("cannot be accessed with an instance reference") -
+                       the DLR's C#-compatible binder does not allow invoking a
+                       static method through instance syntax.
+           CA1019 (2)  SUPPRESSED: Internal/Compat/NullableAttributesPolyfill.cs's
+                       MemberNotNullAttribute(string) and
+                       MemberNotNullWhenAttribute(bool, string) constructors.
+                       Both funnel into the same Members string[] property
+                       their params-array sibling constructor sets directly;
+                       satisfying CA1019 literally would mean adding a second,
+                       single-string property the real
+                       System.Diagnostics.CodeAnalysis.MemberNotNullAttribute
+                       (.NET Core 3.0+/netstandard2.1) does not have either,
+                       which would make this netstandard2.0 polyfill less
+                       faithful to the shape it exists to mirror, not more.
+           CA1031 (4)  SUPPRESSED, all four: matches to the type-probe and
+                       boolean-probe patterns issue #50 already established.
+                       Dynamic.cs's two static-field probes (now
+                       ProbeComObjectType/ProbeTypeConverterAttributeSL, moved
+                       out of the old .cctor for CA1810 above) and
+                       LateType.FindType are name-based type-resolution
+                       probes where several distinct exception types all mean
+                       "treat as absent"; Dynamic.IsDBNull is a boolean probe
+                       with a symmetric safe default ("can't tell" and "not
+                       DBNull" collapse to the same false). Full reasoning on
+                       Dynamic.ProbeComObjectType; every other site points back
+                       to it or to the IsDBNull boolean-probe variant.
+
+         Resolved in batch 5, the last batch except CA1851 (public API judgment
+         calls, right up against the 4.0.0 freeze - removed from NoWarn below):
+           CA1051 (11) SUPPRESSED, all eleven: every finding is a protected field
+                       on a public class - BaseDictionary._dictionary,
+                       Builder._buildType, five fields on ExtensionToInstanceProxy's
+                       nested Invoker, BaseSingleInstancesFactory's two fields
+                       (Factory.cs), RealType.TargetType, and List._list. Each is
+                       a deliberate subclass extension point; turning any of them
+                       into a property is a binary breaking change for an external
+                       subclass that reads or assigns the field directly. Full
+                       reasoning on BaseDictionary._dictionary; every other site
+                       points back to it.
+           CA2227 (1)  SUPPRESSED: Recorder.Recording has a protected, not public,
+                       setter - the same subclass extension-point pattern as
+                       CA1051 above, letting a Recorder subclass replace the
+                       recording. Declared public API (PublicAPI.Unshipped.txt);
+                       dropping the setter is a breaking change for that subclass.
+           CA1002 (1)  SUPPRESSED: ILinq<TSource>.ToList() deliberately mirrors
+                       System.Linq.Enumerable's real extension-method surface
+                       member-for-member, including its List<T> return type;
+                       changing just this one member to satisfy CA1002 would
+                       break that mirroring, and it is declared public API besides.
+           CA2225 (12) Judged per type rather than applied mechanically - adding a
+                       named alternate is purely additive, but growing the public
+                       surface right before the freeze is only worth it where a
+                       consumer genuinely holds and converts the type by hand:
+                       ADDED (8, all recorded in PublicAPI.Unshipped.txt):
+                         FauxType/RealType (DynamicObjects/FauxType.cs) - a real,
+                         tested public feature (Impromptu.cs's FauxTypeTest,
+                         Dynamic.ApplyEquivalentType) for describing a member
+                         shape without a real Type. FauxType.FromType and
+                         RealType.FromType mirror the two Type-to-{Faux,Real}Type
+                         conversions; RealType.ToType() is the only way an
+                         external caller reads TargetType back out at all, since
+                         the field is protected (CA1051 above).
+                         InvokeArg/InvokeArg&lt;T&gt; (InvokeArg.cs) - real,
+                         actively-used named-argument type (Tests/PrivateTest.cs,
+                         Tests/Invoke.cs); FromKeyValuePair mirrors each type's
+                         explicit KeyValuePair conversion.
+                         StaticContext (InvokeContext.cs) - the idiomatic
+                         `(StaticContext)typeof(Foo)` cast is exercised directly
+                         in Tests/Curry.cs and Tests/Invoke.cs to target a static
+                         method; FromType mirrors it.
+                         InvokeMemberName/String_OR_InvokeMemberName
+                         (InvokeMemberName.cs) - the type behind the string
+                         parameter of every InvokeMember-family overload
+                         (Dynamic.InvokeMember and siblings); FromString mirrors
+                         each type's implicit string conversion, preserving the
+                         null-vs-empty-array GenericArgs distinction the class's
+                         own doc comment calls out, which the existing
+                         constructor does not.
+                       SUPPRESSED (4): BaseForwarder.AddRemoveMarker's operator +
+                         and - (DynamicObjects/BaseForwarder.cs) are internal DLR
+                         plumbing - constructed only internally (Util.cs), and
+                         the operators are invoked implicitly by the DLR's own
+                         binder for `dynamicForwarder.SomeEvent += handler`, never
+                         called by name. Curry's operator | (Internal/Curry.cs)
+                         and PartialApply's operator | (PartialApply.cs) are the
+                         same pattern: Curry has an internal constructor and is
+                         only ever returned as `dynamic`, PartialApply's own XML
+                         summary calls it "Internal method for subsequent
+                         invocations of Dynamic.Curry", the pipe result is
+                         already reachable by invoking the value directly, and no
+                         test in the suite exercises the `|` syntax on either.
+    -->
+    <NoWarn>$(NoWarn);CA1851</NoWarn>
+
+    <!-- Sonar's share of the backlog: 90 findings across 31 rules, on the same
+         terms as the CA list above. Its signal is different in kind - it found
+         the swapped NewItems/OldItems in List's Replace notification (#59),
+         which the test suite, CodeQL and the CA rules had all passed over.
+
+         Real defects, expected to end as fixes:
+           S1481 (8)  unused local variables
+           S125  (5)  commented-out code
+           S112  (4)  System.Exception thrown directly
+           S2094 (3)  empty classes
+           S1854 (2)  dead stores
+           S1144 (1)  unused private method
+           S2372 (1)  property getter that throws
+           S1871 (1)  two switch arms with identical bodies
+         Overlaps something already known:
+           S2743 (12) static field in a generic type - the same design CA1000
+                      flags 36 times, seen by a second tool, not 12 new problems
+           S3897 (6) / S4035 (5) IEquatable<T> on the types #52 just settled
+         Style or preference:
+           S4136 (11) overloads not adjacent, S6608 (6) indexer over ElementAt,
+           and singletons of S101, S907, S927, S1133, S2219, S2223, S2325, S2328,
+           S3011, S3218, S3247, S3260, S3265, S3267, S3963, S4019, S4050
+
+         S2234 is deliberately NOT on the list. It has exactly one instance, the
+         Replace transposition at List.cs:326, and #60 fixed it - so the rule
+         that caught a real bug is live, and a new transposition anywhere in this
+         project fails the build. -->
+    <NoWarn>$(NoWarn);S101;S112;S125;S907;S927;S1133;S1144;S1481;S1854;S1871;S2094;S2219;S2223;S2325;S2328;S2372;S2743;S3011;S3218;S3247;S3260;S3265;S3267;S3897;S3963;S4019;S4035;S4050;S4136;S6608</NoWarn>
+
+  </PropertyGroup>
 </Project>

@@ -5,7 +5,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="10.0.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- ImpromptuInterface is needed at RUNTIME only: Dynamic.CoerceConvert late-binds
+         to Impromptu.DynamicActLike to duck-type a value into an interface, so without
+         the package on disk that path cannot resolve.
+
+         It carries a compile-time reference to the ORIGINAL Dynamitey 3.0.3 from
+         nuget.org, which since #3 is a different assembly identity from this fork.
+         Both would then contribute the same type names and every shared type becomes
+         CS0433 ambiguous. Aliasing the transitive assembly takes it out of the global
+         namespace, so this project's own types resolve unambiguously while the package
+         stays on disk for the late-bound call to find. -->
     <PackageReference Include="ImpromptuInterface" Version="8.0.*" />
+    <!-- Declared directly, and only so the alias applies: Aliases is honored on a direct
+         PackageReference but ignored on a transitive one. This is test-only (IsPackable is
+         false), so nothing here reaches the produced package. -->
+    <PackageReference Include="Dynamitey" Version="3.0.3" Aliases="upstream" />
     <PackageReference Include="NUnit" Version="4.6.1" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="NUnit.Analyzers" Version="4.14.0">

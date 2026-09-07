@@ -32,16 +32,26 @@ namespace Dynamitey
 
     public static class Tupler
     {
-        private class TuplerFix
+        private sealed class TuplerFix
         {
+            // CA1822 is wrong here: this method exists solely so ToTuple can bind to it as an
+            // *instance* member through Dynamic.InvokeMember(TuplerHelper, "Create", ...) - the
+            // DLR's C#-compatible binder resolves "obj.Member(args)" the same way the C# compiler
+            // does, which does not allow invoking a static method through instance syntax. Verified
+            // by trying it: marking this static makes DynamicListToTuplet8 fail with
+            // "Member '...Create<...>' cannot be accessed with an instance reference; qualify it
+            // with a type name instead" (RuntimeBinderException), i.e. marking it static breaks the
+            // >7-arity tuple path this whole helper class exists for.
+            [SuppressMessage("Performance", "CA1822:Mark members as static", Justification =
+                "See the comment on this method - static breaks the DLR instance dispatch it exists for.")]
             private Tuple<T1, T2, T3, T4, T5, T6, T7, T8> Create<T1, T2, T3, T4, T5, T6, T7, T8>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, T8 item8) where T8 : notnull
             {
                 return new Tuple<T1, T2, T3, T4, T5, T6, T7, T8>(item1, item2, item3, item4, item5, item6, item7, item8);
             }
         }
        
-        private static TuplerFix TuplerHelper = new TuplerFix();
-        private static InvokeContext StaticTuple = InvokeContext.CreateStatic(typeof (Tuple));
+        private static readonly TuplerFix TuplerHelper = new TuplerFix();
+        private static readonly InvokeContext StaticTuple = InvokeContext.CreateStatic(typeof (Tuple));
 
         /// <summary>
         /// Creates a Tuple with arg runtime types.
@@ -85,6 +95,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic First(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return Index(tuple, 0);
         }
 
@@ -97,6 +108,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Second(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return Index(tuple, 1);
         }
 
@@ -109,6 +121,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Last(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return Index(tuple, Size(tuple)-1);
         }
 
@@ -121,6 +134,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static IList<dynamic> ToList(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
 
             var list = new List<dynamic>();
             HelperToList(list, tuple, safe:false);
@@ -158,6 +172,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Index(object tuple, int index)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return HelperIndex(tuple, index, false);
         }
 
@@ -204,7 +219,7 @@ namespace Dynamitey
         private static bool HelperIsTuple(object? target, [NotNullWhen(true)] out Type? type, out Type genericeType, out int size, bool safe)
         {
             genericeType = typeof(object);
-            size = 1;
+            size = 0;
             type = null;
             if (target == null)
                 return false;
@@ -227,18 +242,16 @@ namespace Dynamitey
         /// <returns></returns>
         public static int Size(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return HelperSize(tuple, false);
         }
 
         private static int HelperSize(object tuple, bool safe)
         {
-            if (HelperIsTuple(tuple, out var type, out var genericType, out var size, safe))
+            if (HelperIsTuple(tuple, out var type, out var genericType, out var size, safe) && size == 8)
             {
-                if (size == 8)
-                {
-                    var lasttype = type.GetTypeInfo().GetGenericArguments()[7];
-                    size = size + HelperSize(lasttype, true) - 1;
-                }
+                var lasttype = type.GetTypeInfo().GetGenericArguments()[7];
+                size = size + HelperSize(lasttype, true) - 1;
             }
             return size;
         }

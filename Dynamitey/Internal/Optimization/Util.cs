@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  Copyright 2011  Ekon Benefits
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,20 +32,15 @@ namespace Dynamitey.Internal.Optimization
     /// <summary>
     /// Utility Class
     /// </summary>
+    [SuppressMessage("Naming", "CA1724:Type names should not match namespaces", Justification =
+        "See Dynamic.cs; identical reasoning. Util collides only with the retired System.Web.Util " +
+        "namespace, which this library doesn't use.")]
     public static class Util
     {
         /// <summary>
         /// Is Current Runtime Mono?
         /// </summary>
-        public static readonly bool IsMono;
-
-        static Util()
-        {
-            IsMono = Type.GetType("Mono.Runtime") != null;
-
-
-        }
-   
+        public static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
 
 
         /// <summary>
@@ -55,7 +50,7 @@ namespace Dynamitey.Internal.Optimization
         /// <returns>
         /// 	<c>true</c> if [is anonymous type] [the specified target]; otherwise, <c>false</c>.
         /// </returns>
-        public static bool IsAnonymousType(object target)
+        public static bool IsAnonymousType(object? target)
         {
             if (target == null)
                 return false;
@@ -77,6 +72,8 @@ namespace Dynamitey.Internal.Optimization
         /// <returns></returns>
         public static object?[] NameArgsIfNecessary(CallInfo callInfo, object?[] args)
         {
+            Guard.NotNull(callInfo);
+
             object?[] tArgs;
             if (callInfo.ArgumentNames.Count == 0)
                 tArgs = args;
@@ -102,9 +99,7 @@ namespace Dynamitey.Internal.Optimization
             if (tInvokeContext != null)
             {
                 staticContext = tInvokeContext.StaticContext;
-                // InvokeContext.Context is null only via its (target, context) constructor called
-                // with a null context - a documented gap in that type, not introduced here.
-                context = tInvokeContext.Context!;
+                context = tInvokeContext.Context;
                 context = context.FixContext();
                 return tInvokeContext.Target;
             }
@@ -122,6 +117,8 @@ namespace Dynamitey.Internal.Optimization
         /// <returns></returns>
         public static Type FixContext(this Type context)
         {
+            Guard.NotNull(context);
+
             if (context.IsArray)
             {
                 return typeof (object);

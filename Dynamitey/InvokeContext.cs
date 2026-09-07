@@ -40,6 +40,17 @@ namespace Dynamitey
         }
 
         /// <summary>
+        /// Named alternate for the explicit conversion from <see cref="Type"/> above, for callers
+        /// in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The result of the conversion.</returns>
+        public static StaticContext FromType(Type type)
+        {
+            return new StaticContext(type);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="StaticContext"/> class.
         /// </summary>
         /// <param name="target">The target.</param>
@@ -80,12 +91,10 @@ namespace Dynamitey
         /// <value>The target.</value>
         public object Target { get; protected set; }
         /// <summary>
-        /// Gets or sets the context. <see langword="null"/> only when constructed via the
-        /// (target, context) overload with a <see langword="null"/> context - see that
-        /// constructor's remarks.
+        /// Gets or sets the context.
         /// </summary>
         /// <value>The context.</value>
-        public Type? Context { get; protected set; }
+        public Type Context { get; protected set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether [static context].
@@ -115,9 +124,9 @@ namespace Dynamitey
         /// </summary>
         /// <param name="target">The target.</param>
         /// <param name="context">
-        /// The context. Passing <see langword="null"/> leaves <see cref="Context"/> null too,
-        /// rather than defaulting it from <paramref name="target"/> the way the
-        /// (target, staticContext, context) overload does.
+        /// The context. Passing <see langword="null"/> defaults <see cref="Context"/> from
+        /// <paramref name="target"/>'s own type, the same as the (target, staticContext, context)
+        /// overload defaults it to <paramref name="target"/> itself when given a null context.
         /// </param>
         public InvokeContext(object target, object? context)
         {
@@ -128,7 +137,7 @@ namespace Dynamitey
                 context = context.GetType();
             }
 
-            Context = (Type?)context;
+            Context = (Type?)context ?? (target as Type ?? target.GetType());
         }
     }
 }

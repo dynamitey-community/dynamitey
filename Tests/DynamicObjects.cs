@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -184,6 +186,69 @@ namespace Dynamitey.Tests
             Assert.That((object)tNew.Action4(4), Is.EqualTo("test4"));
         }
 
+        // Issue #50 (cs/reference-equality-with-object). BaseDictionary.SetProperty used to decide
+        // whether a set actually changed the value with `!=`, which on `object` is reference
+        // equality: re-assigning a property to an independently-boxed value with the same content
+        // (not the same box) would still look "changed" and fire a spurious PropertyChanged.
+        [Test]
+        public void SetPropertyDoesNotRaiseChangeForContentEqualDifferentReferenceValue()
+        {
+            dynamic tNew = new DynamicObjects.Dictionary();
+            var tChanges = new List<string>();
+            ((INotifyPropertyChanged)tNew).PropertyChanged += (s, e) => tChanges.Add(e.PropertyName!);
+
+            tNew.Value = 5;
+            tChanges.Clear();
+
+            object tStoredValue = tNew.Value;
+            object tSameContentDifferentBox = 5;
+            // Sanity check on the premise: boxing always allocates, so these are genuinely two
+            // different objects with the same content, not the same reference.
+            Assert.That(ReferenceEquals(tStoredValue, tSameContentDifferentBox), Is.False);
+
+            tNew.Value = tSameContentDifferentBox;
+            Assert.That(tChanges, Is.Empty, "Setting an equal-by-value, different-reference value must not raise PropertyChanged.");
+
+            tNew.Value = 6;
+            Assert.That(tChanges, Is.EqualTo(new[] { "Value", "Item[]" }), "Setting a genuinely different value must still raise PropertyChanged.");
+        }
+
+        // Issue #50 (cs/reference-equality-with-object). BaseDictionary.Remove(KeyValuePair) used
+        // `==` on the value, which on `object` is reference equality: removing by a
+        // content-equal-but-differently-boxed value would silently leave the entry in place.
+        [Test]
+        public void RemoveKeyValuePairUsesValueEquality()
+        {
+            IDictionary<string, object> tDict = new DynamicObjects.Dictionary();
+            tDict["Test"] = 5;
+
+            object tSameContentDifferentBox = 5;
+            Assert.That(ReferenceEquals(tDict["Test"], tSameContentDifferentBox), Is.False);
+
+            var tRemoved = tDict.Remove(new KeyValuePair<string, object>("Test", tSameContentDifferentBox));
+
+            Assert.That(tDict.ContainsKey("Test"), Is.False);
+            // Every path of this method used to return false, so even a successful removal
+            // reported failure. ICollection<T>.Remove is documented to return whether the item
+            // was removed, and callers branch on it.
+            Assert.That(tRemoved, Is.True, "A successful removal must report true.");
+        }
+
+        [Test]
+        public void RemoveKeyValuePairReportsFalseWhenValueDoesNotMatch()
+        {
+            IDictionary<string, object> tDict = new DynamicObjects.Dictionary();
+            tDict["Test"] = 5;
+
+            var tRemoved = tDict.Remove(new KeyValuePair<string, object>("Test", 6));
+
+            Assert.That(tRemoved, Is.False, "A value mismatch must report false.");
+            Assert.That(tDict.ContainsKey("Test"), Is.True, "A value mismatch must leave the entry in place.");
+            Assert.That(
+                tDict.Remove(new KeyValuePair<string, object>("Absent", 5)), Is.False,
+                "A missing key must report false.");
+        }
+
         [Test]
         public void ForwardMethodsTest()
         {
@@ -364,6 +429,221 @@ namespace Dynamitey.Tests
             Assert.That(tDictionary, Is.EqualTo(tNotDynamic));
         }
 
+        // Issue #52. These types compare by backing-store identity, not by content: they are
+        // mutable views over a store someone else owns, so two wrappers over one store are one
+        // value. Dictionary already worked this way; List returned false even for two wrappers
+        // over the same IList, because Equals(List) opened with base.Equals(other), which resolves
+        // to BaseDictionary.Equals(object) and type-tests against typeof(Dictionary) - so for a
+        // List it compared the backing dictionary against the List itself, and the element
+        // comparison after it was unreachable.
+        [Test]
+        public void DictionariesOverTheSameBackingStoreAreEqual()
+        {
+            var tBacking = new Dictionary<string, object> { { "A", 1 } };
+
+            object tOne = new DynamicObjects.Dictionary(tBacking);
+            object tTwo = new DynamicObjects.Dictionary(tBacking);
+
+            Assert.That(tOne, Is.Not.SameAs(tTwo), "the two instances must be distinct objects, not the same reference.");
+            Assert.That(tOne.Equals(tTwo), Is.True);
+            Assert.That(tTwo.Equals(tOne), Is.True);
+            Assert.That(tOne.GetHashCode(), Is.EqualTo(tTwo.GetHashCode()));
+        }
+
+        [Test]
+        public void DictionariesOverSeparateStoresWithEqualContentAreNotEqual()
+        {
+            object tOne = new DynamicObjects.Dictionary(new Dictionary<string, object> { { "A", 1 } });
+            object tTwo = new DynamicObjects.Dictionary(new Dictionary<string, object> { { "A", 1 } });
+
+            Assert.That(tOne.Equals(tTwo), Is.False,
+                "Equal content over separate stores is deliberately not equal - content comparison would force a content-derived hash on a mutable type.");
+        }
+
+        // A List has two backing stores, elements and dynamic properties, and both must be shared
+        // for the two wrappers to be the same value. The constructor gives each instance a fresh
+        // property dictionary unless 'members' is passed, so sharing both takes both arguments.
+        [Test]
+        public void ListsOverTheSameBackingStoresAreEqual()
+        {
+            var tElements = new List<object> { 1, 2, 3 };
+            var tMembers = new Dictionary<string, object> { { "Prop", "x" } };
+
+            object tOne = new DynamicObjects.List(tElements, tMembers);
+            object tTwo = new DynamicObjects.List(tElements, tMembers);
+
+            Assert.That(tOne, Is.Not.SameAs(tTwo), "the two instances must be distinct objects, not the same reference.");
+            Assert.That(tOne.Equals(tTwo), Is.True, "Two views over the same element list and the same property dictionary are one value.");
+            Assert.That(tTwo.Equals(tOne), Is.True);
+            Assert.That(tOne.GetHashCode(), Is.EqualTo(tTwo.GetHashCode()));
+        }
+
+        // Guards against "simplifying" Equals down to the element list alone: the dynamic
+        // properties are part of the value, so sharing only the elements is not enough.
+        [Test]
+        public void ListsSharingOnlyTheirElementsAreNotEqual()
+        {
+            var tElements = new List<object> { 1, 2, 3 };
+
+            object tOne = new DynamicObjects.List(tElements, new Dictionary<string, object> { { "Prop", "x" } });
+            object tTwo = new DynamicObjects.List(tElements, new Dictionary<string, object> { { "Prop", "x" } });
+
+            Assert.That(tOne.Equals(tTwo), Is.False);
+            Assert.That(tTwo.Equals(tOne), Is.False);
+        }
+
+        [Test]
+        public void ListsOverSeparateStoresWithEqualContentAreNotEqual()
+        {
+            var tMembers = new Dictionary<string, object>();
+
+            object tOne = new DynamicObjects.List(new List<object> { 1, 2, 3 }, tMembers);
+            object tTwo = new DynamicObjects.List(new List<object> { 1, 2, 3 }, tMembers);
+
+            Assert.That(tOne.Equals(tTwo), Is.False);
+        }
+
+        [Test]
+        public void ListIsNotEqualToNullOrToAnUnrelatedType()
+        {
+            object tList = new DynamicObjects.List(new List<object> { 1 });
+
+            Assert.That(tList.Equals(null), Is.False);
+            Assert.That(tList.Equals("not a list"), Is.False);
+            Assert.That(tList.Equals(new DynamicObjects.Dictionary()), Is.False);
+        }
+
+        // Issue #59. The Replace notification passed its two values to
+        // NotifyCollectionChangedEventArgs in the wrong order, so NewItems carried the value that
+        // had just been removed and OldItems the one that replaced it. Both parameters are
+        // object?, so the transposition compiled cleanly and was invisible to every other check
+        // here - the type system, the suite, CodeQL, and the .NET analyzers all passed it.
+        // A bound control was the only thing that would have shown it, by displaying the discarded
+        // value. These tests assert the event's contents, which is the only place it is visible in
+        // process.
+        private static NotifyCollectionChangedEventArgs CaptureCollectionChange(
+            DynamicObjects.List list, Action<DynamicObjects.List> act, NotifyCollectionChangedAction expected)
+        {
+            NotifyCollectionChangedEventArgs tCaptured = null;
+            NotifyCollectionChangedEventHandler tHandler = (s, e) =>
+            {
+                if (e.Action == expected) tCaptured = e;
+            };
+
+            ((INotifyCollectionChanged)list).CollectionChanged += tHandler;
+            try
+            {
+                act(list);
+            }
+            finally
+            {
+                ((INotifyCollectionChanged)list).CollectionChanged -= tHandler;
+            }
+
+            Assert.That(tCaptured, Is.Not.Null, $"No {expected} notification was raised.");
+            return tCaptured;
+        }
+
+        [Test]
+        public void ReplaceNotificationReportsNewAndOldItemsTheRightWayRound()
+        {
+            var tList = new DynamicObjects.List(new object[] { "first", "second" });
+
+            var tEvent = CaptureCollectionChange(
+                tList, it => it[0] = "REPLACEMENT", NotifyCollectionChangedAction.Replace);
+
+            Assert.That(tEvent.NewItems[0], Is.EqualTo("REPLACEMENT"),
+                "NewItems must carry the value that replaced the old one - a bound control reads this to update itself.");
+            Assert.That(tEvent.OldItems[0], Is.EqualTo("first"),
+                "OldItems must carry the value that was removed.");
+            Assert.That(tEvent.OldStartingIndex, Is.EqualTo(0));
+        }
+
+        // The other three actions were always correct. Asserting them stops a future edit to this
+        // switch from fixing one arm and breaking another, which is exactly what happened here.
+        //
+        // These three build on a List<object> rather than an object[] on purpose. The constructor
+        // keeps whatever IList<object> it is handed as the backing store, and an array satisfies
+        // that interface while being fixed-size - so Add, RemoveAt and Clear throw
+        // NotSupportedException on an array-backed instance. Indexer assignment does not, which is
+        // why the Replace test above can use an array.
+        [Test]
+        public void AddNotificationReportsTheAddedItem()
+        {
+            var tList = new DynamicObjects.List(new List<object> { "first" });
+
+            var tEvent = CaptureCollectionChange(
+                tList, it => it.Add("added"), NotifyCollectionChangedAction.Add);
+
+            Assert.That(tEvent.NewItems[0], Is.EqualTo("added"));
+            Assert.That(tEvent.OldItems, Is.Null);
+        }
+
+        [Test]
+        public void RemoveNotificationReportsTheRemovedItem()
+        {
+            var tList = new DynamicObjects.List(new List<object> { "first", "second" });
+
+            var tEvent = CaptureCollectionChange(
+                tList, it => it.RemoveAt(0), NotifyCollectionChangedAction.Remove);
+
+            Assert.That(tEvent.OldItems[0], Is.EqualTo("first"));
+            Assert.That(tEvent.NewItems, Is.Null);
+        }
+
+        [Test]
+        public void ResetNotificationCarriesNeitherItemList()
+        {
+            var tList = new DynamicObjects.List(new List<object> { "first", "second" });
+
+            var tEvent = CaptureCollectionChange(
+                tList, it => it.Clear(), NotifyCollectionChangedAction.Reset);
+
+            Assert.That(tEvent.NewItems, Is.Null);
+            Assert.That(tEvent.OldItems, Is.Null);
+        }
+
+        // A backing store is free to define its own Equals, and the store is whatever the caller
+        // passed, because the fields holding it are interface-typed. The contract is store
+        // *identity*, so a store claiming content equality must not make two distinct wrappers
+        // compare equal. Both Equals implementations used to call the static object.Equals, which
+        // dispatches virtually and so would have adopted the store's own semantics.
+        private class ContentEqualStore : Dictionary<string, object>
+        {
+            public override bool Equals(object obj) => obj is ContentEqualStore;
+
+            public override int GetHashCode() => 0;
+        }
+
+        [Test]
+        public void StoresClaimingContentEqualityDoNotMakeDictionaryWrappersEqual()
+        {
+            var tStoreOne = new ContentEqualStore { { "A", 1 } };
+            var tStoreTwo = new ContentEqualStore { { "A", 1 } };
+
+            // The premise: these two stores are distinct objects that consider themselves equal.
+            Assert.That(ReferenceEquals(tStoreOne, tStoreTwo), Is.False);
+            Assert.That(tStoreOne.Equals(tStoreTwo), Is.True);
+
+            object tOne = new DynamicObjects.Dictionary(tStoreOne);
+            object tTwo = new DynamicObjects.Dictionary(tStoreTwo);
+
+            Assert.That(tOne.Equals(tTwo), Is.False,
+                "The contract is store identity. A store's own Equals must not be able to widen it into content comparison.");
+        }
+
+        [Test]
+        public void StoresClaimingContentEqualityDoNotMakeListWrappersEqual()
+        {
+            var tElements = new List<object> { 1, 2, 3 };
+
+            object tOne = new DynamicObjects.List(tElements, new ContentEqualStore());
+            object tTwo = new DynamicObjects.List(tElements, new ContentEqualStore());
+
+            Assert.That(tOne.Equals(tTwo), Is.False,
+                "Sharing the element list is not enough, and the property stores are distinct objects however they define Equals.");
+        }
+
         [Test]
         public void DynamicAnnonymousWrapper()
         {
@@ -433,6 +713,81 @@ namespace Dynamitey.Tests
 
             Assert.That(tExpandoNamedTest.LeftArm, Is.EqualTo("Rise"));
             Assert.That(tExpandoNamedTest.RightArm, Is.EqualTo("Clamp"));
+        }
+
+        // Test-only type for the two catch-narrowing tests below: its parameterless constructor
+        // always throws, so it can prove a genuine constructor failure is neither swallowed nor
+        // (via a stray fallback re-invocation) run twice.
+        public class ThrowingParameterlessCtorPoco
+        {
+            public static int ConstructAttempts;
+
+            public ThrowingParameterlessCtorPoco()
+            {
+                ConstructAttempts++;
+                throw new InvalidOperationException("boom");
+            }
+        }
+
+        // Issue #50 (cs/catch-of-all-exceptions). Activate<T>.Create() used to catch(Exception)
+        // around Activator.CreateInstance<T>(), narrowed to catch(MissingMemberException) - the one
+        // documented failure of that call, and exactly the "optional-parameter constructor" case the
+        // fallback exists for (see PocoOptConstructor: only a (string,string,string) ctor, all
+        // defaulted).
+        [Test]
+        public void ActivateStillFallsBackForOptionalParameterConstructor()
+        {
+            PocoOptConstructor tResult = new Activate<PocoOptConstructor>().Create();
+
+            Assert.That(tResult.One, Is.EqualTo("-1"));
+            Assert.That(tResult.Two, Is.EqualTo("-2"));
+            Assert.That(tResult.Three, Is.EqualTo("-3"));
+        }
+
+        [Test]
+        public void ActivateDoesNotDoubleInvokeConstructorOnUnrelatedException()
+        {
+            ThrowingParameterlessCtorPoco.ConstructAttempts = 0;
+
+            // Activator.CreateInstance<T>() wraps a throwing constructor's exception in a
+            // TargetInvocationException, which is nowhere in the MissingMemberException hierarchy,
+            // so the narrowed catch must let it propagate rather than treat it as "no
+            // parameterless constructor".
+            Assert.That(() => new Activate<ThrowingParameterlessCtorPoco>().Create(),
+                Throws.InstanceOf<TargetInvocationException>()
+                    .With.InnerException.InstanceOf<InvalidOperationException>());
+
+            // Before the fix, catch(Exception) would swallow that exception and retry via
+            // Dynamic.InvokeConstructor, running the (still-failing) constructor a second time - a
+            // real problem for any constructor with side effects.
+            Assert.That(ThrowingParameterlessCtorPoco.ConstructAttempts, Is.EqualTo(1));
+        }
+
+        // Same two cases again for DynamicObjects.Builder<T>.InvokeHelper, which has the identical
+        // catch(Exception)-around-Activator.CreateInstance<T>() pattern.
+        [Test]
+        public void DynamicBuilderStillFallsBackForOptionalParameterConstructor()
+        {
+            dynamic tNewD = new DynamicObjects.Builder<PocoOptConstructor>();
+
+            PocoOptConstructor tResult = tNewD.Object();
+
+            Assert.That(tResult.One, Is.EqualTo("-1"));
+            Assert.That(tResult.Two, Is.EqualTo("-2"));
+            Assert.That(tResult.Three, Is.EqualTo("-3"));
+        }
+
+        [Test]
+        public void DynamicBuilderDoesNotDoubleInvokeConstructorOnUnrelatedException()
+        {
+            ThrowingParameterlessCtorPoco.ConstructAttempts = 0;
+            dynamic tNewD = new DynamicObjects.Builder<ThrowingParameterlessCtorPoco>();
+
+            Assert.That(() => tNewD.Object(),
+                Throws.InstanceOf<TargetInvocationException>()
+                    .With.InnerException.InstanceOf<InvalidOperationException>());
+
+            Assert.That(ThrowingParameterlessCtorPoco.ConstructAttempts, Is.EqualTo(1));
         }
 
         [Test]

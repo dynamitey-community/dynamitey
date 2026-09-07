@@ -39,6 +39,15 @@ namespace Dynamitey.Internal
             /// <returns></returns>
             [RequiresUnreferencedCode("Invokes function through 'dynamic', resolved via the DLR binder; trimming can remove the member being resolved.")]
             [RequiresDynamicCode("The 'dynamic' invocation binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
+            [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification =
+                "Curry is internal implementation of Dynamic.Curry (see the class summary) with an " +
+                "internal constructor - a consumer never has a statically-typed Curry to write `4 | curry` " +
+                "against; Dynamic.Curry returns it only as `dynamic`, and the same pipe result is already " +
+                "reachable by directly invoking the curried value (`curry(4)`, exercised throughout Tests/" +
+                "Curry.cs) or through the library's own InvokeMember-family API, which is the actual named " +
+                "alternate this library offers non-C# callers. No test in this repository exercises the `|` " +
+                "syntax. Adding a BitwiseOr method would just re-wrap invocation nobody needs a second way " +
+                "to spell; same reasoning covers PartialApply's mirroring operator (PartialApply.cs).")]
             public static dynamic operator |(dynamic argument, Curry function)
             {
                 return ((dynamic)function)(argument);
@@ -73,6 +82,8 @@ namespace Dynamitey.Internal
                 "call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                 "Same DLR invocation as above; see the IL2026 suppression on this member.")]
+            [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+                "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
             public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object? result)
             {
                 result = null;
@@ -99,6 +110,8 @@ namespace Dynamitey.Internal
                 "conversion already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                 "Same Dynamic.CoerceToDelegate call as above; see the IL2026 suppression on this member.")]
+            [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+                "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
             public override bool TryConvert(ConvertBinder binder, out object? result)
             {
                 result = Dynamic.CoerceToDelegate(this, binder.Type);
@@ -122,6 +135,8 @@ namespace Dynamitey.Internal
                "call site already triggered the framework's warning.")]
            [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                "Same PartialApply construction as above; see the IL2026 suppression on this member.")]
+           [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+               "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
            public override bool  TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
            {
                result = new PartialApply(_target, Util.NameArgsIfNecessary(binder.CallInfo, args!), binder.Name, _totalArgCount);
@@ -143,6 +158,8 @@ namespace Dynamitey.Internal
                 "after the consumer's own dynamic call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                 "Same PartialApply construction/invocation as above; see the IL2026 suppression on this member.")]
+            [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+                "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
             public override bool  TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
             {
                 var tCurrying = _target as PartialApply;

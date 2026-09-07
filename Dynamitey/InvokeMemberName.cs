@@ -1,15 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
 namespace Dynamitey
 {
-  
+
 
     /// <summary>
     /// String or InvokeMemberName
     /// </summary>
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification =
+        "String_OR_InvokeMemberName's name literally IS its contract: it's a poor-man's discriminated union " +
+        "predating C#'s union-type proposals, accepting either a bare string or an InvokeMemberName via " +
+        "implicit conversion operators, so an InvokeMember overload can take 'a name, optionally with named-" +
+        "argument metadata' without two overloads. The underscores spell out the three logical words - " +
+        "String, OR, InvokeMemberName - at a glance; collapsing them to StringOrInvokeMemberName trades that " +
+        "readability for a cosmetic style rule. It is declared public API that appears in the signature of " +
+        "every InvokeMember-family overload (Dynamic.InvokeMember, InvokeMemberAsync, InvokeMemberAction, " +
+        "CreateCallSite, Invocation.Create, CacheableInvocation.CreateCall, and more); renaming it now is a " +
+        "breaking change across all of them, which this batch is not authorized to make.")]
     public abstract class String_OR_InvokeMemberName
     {
         /// <summary>
@@ -22,6 +33,17 @@ namespace Dynamitey
             // name can be null here (e.g. PartialApply representing a direct, member-less
             // invocation via Invocation.Name); InvokeMemberName.Name is otherwise non-null, so
             // this is a deliberate, pre-existing exception to that rather than a new one.
+            return new InvokeMemberName(name!, null);
+        }
+
+        /// <summary>
+        /// Named alternate for the implicit conversion from <see cref="string"/> above, for callers
+        /// in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns>The result of the conversion.</returns>
+        public static String_OR_InvokeMemberName FromString(string? name)
+        {
             return new InvokeMemberName(name!, null);
         }
 
@@ -39,6 +61,8 @@ namespace Dynamitey
         /// (e.g. via the implicit <see cref="string"/> conversion), as distinct from an empty array.
         /// </summary>
         /// <value>The generic args.</value>
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification =
+            "Public API, breaking to reshape - see Invocation.Args (Invocation.cs) for the full reasoning.")]
         public Type[]? GenericArgs { get; protected set; }
 
         /// <summary>
@@ -77,6 +101,17 @@ namespace Dynamitey
             return new InvokeMemberName(name,null);
         }
 
+        /// <summary>
+        /// Named alternate for the implicit conversion from <see cref="string"/> above, for callers
+        /// in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns>The result of the conversion.</returns>
+        public static new InvokeMemberName FromString(string name)
+        {
+            return new InvokeMemberName(name, null);
+        }
+
        
         /// <summary>
         /// Initializes a new instance of the <see cref="InvokeMemberName"/> class.
@@ -97,7 +132,7 @@ namespace Dynamitey
         public InvokeMemberName(string name, bool isSpecialName)
         {
             Name = name;
-            GenericArgs = new Type[]{};
+            GenericArgs = Array.Empty<Type>();
             IsSpecialName = isSpecialName;
         }
 
@@ -157,7 +192,16 @@ namespace Dynamitey
         {
             unchecked
             {
-                return (GenericArgs != null ? GenericArgs.Length.GetHashCode() * 397 : 0) ^ (Name.GetHashCode());
+                // int.GetHashCode() is the identity transform (cs/useless-gethashcode-call); using
+                // Length directly is the same value without the redundant call.
+                // Name.GetHashCode(StringComparison.Ordinal) rather than the parameterless overload
+                // (CA1307): see the identical reasoning, including the netstandard2.0 conditional,
+                // on BinderHash.GetHashCode (Internal/Optimization/BinderHash.cs).
+#if NETSTANDARD2_0
+                return (GenericArgs != null ? GenericArgs.Length * 397 : 0) ^ (Name.GetHashCode());
+#else
+                return (GenericArgs != null ? GenericArgs.Length * 397 : 0) ^ (Name.GetHashCode(StringComparison.Ordinal));
+#endif
             }
         }
     }

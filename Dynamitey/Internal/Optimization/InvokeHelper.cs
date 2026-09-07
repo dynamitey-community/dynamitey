@@ -179,17 +179,11 @@ namespace Dynamitey.Internal.Optimization {
     {
 
 
-        internal static readonly Type[] FuncKinds;
-        internal static readonly Type[] ActionKinds;
-		internal static readonly Type[] TupleKinds;
-
-		internal static readonly IDictionary<Type,int> FuncArgs;
-		internal static readonly IDictionary<Type,int> ActionArgs;
-		internal static readonly IDictionary<Type,int> TupleArgs;
-
-        static InvokeHelper()
-        {
-            FuncKinds = new []
+        // Field initializers rather than an explicit static constructor (CA1810): C# runs static
+        // field initializers in declaration order, so FuncArgs/ActionArgs/TupleArgs still see the
+        // fully-built FuncKinds/ActionKinds/TupleKinds arrays they Zip against, exactly as the old
+        // .cctor body did line by line.
+        internal static readonly Type[] FuncKinds = new []
                             {
 								typeof(Func<>), //0
 								typeof(Func<,>), //1
@@ -210,7 +204,7 @@ namespace Dynamitey.Internal.Optimization {
 								typeof(Func<,,,,,,,,,,,,,,,,>), //16
                             };
 
-            ActionKinds = new []
+        internal static readonly Type[] ActionKinds = new []
                             {
                                 typeof(Action), //0
 								typeof(Action<>), //1
@@ -231,7 +225,7 @@ namespace Dynamitey.Internal.Optimization {
 								typeof(Action<,,,,,,,,,,,,,,,>), //16
                             };
 
-			TupleKinds = new []
+		internal static readonly Type[] TupleKinds = new []
                             {
 								typeof(Tuple<>), //1
 								typeof(Tuple<,>), //2
@@ -243,13 +237,9 @@ namespace Dynamitey.Internal.Optimization {
 								typeof(Tuple<,,,,,,,>), //8
                             };
 
-
-			FuncArgs = FuncKinds.Zip(Enumerable.Range(0, FuncKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
-            ActionArgs = ActionKinds.Zip(Enumerable.Range(0, ActionKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
-			TupleArgs = TupleKinds.Zip(Enumerable.Range(1, ActionKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
-
-		
-        }
+		internal static readonly IDictionary<Type,int> FuncArgs = FuncKinds.Zip(Enumerable.Range(0, FuncKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
+        internal static readonly IDictionary<Type,int> ActionArgs = ActionKinds.Zip(Enumerable.Range(0, ActionKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
+		internal static readonly IDictionary<Type,int> TupleArgs = TupleKinds.Zip(Enumerable.Range(1, TupleKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
 
 		[RequiresUnreferencedCode("Reads tuple.ItemN/tuple.Rest through 'dynamic' member access; trimming can remove those properties from the tuple's concrete type.")]
 		[RequiresDynamicCode("The 'dynamic' member access binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]

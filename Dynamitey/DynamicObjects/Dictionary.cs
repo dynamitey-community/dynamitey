@@ -75,8 +75,11 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         public void Clear()
         {
-            var tKeys = Keys;
-           
+            // ToList, because Keys is a live view over _dictionary: without the copy it is
+            // already empty by the time the notification loop below runs, and PropertyChanged
+            // never fires for anything. A bound control was left showing properties that no
+            // longer existed.
+            var tKeys = Keys.ToList();
 
             _dictionary.Clear();
 
@@ -138,6 +141,8 @@ namespace Dynamitey.DynamicObjects
             "after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same List construction as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
 		public override bool TryInvokeMember (InvokeMemberBinder binder, object?[]? args, out object? result)
 		{
 			if(base.TryInvokeMember (binder, args, out result)){

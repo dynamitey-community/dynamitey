@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Dynamitey.Internal.Compat;
+using Dynamitey.Internal;
 
 namespace Dynamitey.DynamicObjects
 {
@@ -24,6 +25,17 @@ namespace Dynamitey.DynamicObjects
             return new RealType(type);
         }
 
+        /// <summary>
+        /// Named alternate for the implicit conversion from <see cref="Type"/> above, for callers
+        /// in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>A <see cref="RealType"/> wrapping <paramref name="type"/>.</returns>
+        public static FauxType FromType(Type type)
+        {
+            return new RealType(type);
+        }
+
 
         /// <summary>
         /// Gets the members.
@@ -40,6 +52,11 @@ namespace Dynamitey.DynamicObjects
         public abstract Type[] GetContainedTypes();
 
         [RequiresUnreferencedCode("A FauxType wrapping a real Type (RealType) resolves this by reflecting over the target type's members; trimming can remove members it would otherwise report. Overrides on a data-only FauxType (PropretySpecType, or an AggreType composed only of those) don't need this themselves, but must match the abstract declaration.")]
+        [SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification =
+            "GetMemberNames is declared public API (PublicAPI.Unshipped.txt) and abstract: turning " +
+            "it into a property is a breaking signature change for this member and every override " +
+            "(RealType, PropretySpecType, AggreType), out of scope for an analyzer-driven cleanup - " +
+            "same public-API-freeze reasoning as the CA1819 sites (see Invocation.Args, Invocation.cs).")]
         public abstract IEnumerable<string> GetMemberNames();
 
         /// <summary>
@@ -86,7 +103,7 @@ namespace Dynamitey.DynamicObjects
 
         public override Type[] GetContainedTypes()
         {
-            return new Type []{};
+            return Array.Empty<Type>();
         }
     }
 
@@ -101,9 +118,27 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns></returns>
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "This is a user-defined implicit conversion operator. Adding a null guard here to " +
+            "satisfy CA1062 immediately trips SonarAnalyzer's S3877, which flags a conversion " +
+            "operator that throws: a conversion is expected to succeed or fail through the type " +
+            "system, not surprise the caller with an exception. Rather than open a second backlog " +
+            "entry to re-suppress S3877, this stays as the pre-existing NullReferenceException-on-" +
+            "null behavior; CA1062 is suppressed instead of guarded.")]
          public static implicit operator Type(RealType type)
          {
              return type.TargetType;
+         }
+
+         /// <summary>
+         /// Named alternate for the implicit conversion to <see cref="Type"/> above, for callers
+         /// in a language that cannot consume operator overloads. TargetType is protected, so this
+         /// is the only way an external caller reads the wrapped <see cref="Type"/> back out.
+         /// </summary>
+         /// <returns>The wrapped <see cref="Type"/>.</returns>
+         public Type ToType()
+         {
+             return TargetType;
          }
 
          /// <summary>
@@ -116,10 +151,23 @@ namespace Dynamitey.DynamicObjects
              return new RealType(type);
          }
 
+         /// <summary>
+         /// Named alternate for the implicit conversion from <see cref="Type"/> above, for callers
+         /// in a language that cannot consume operator overloads.
+         /// </summary>
+         /// <param name="type">The type.</param>
+         /// <returns>A <see cref="RealType"/> wrapping <paramref name="type"/>.</returns>
+         public static new RealType FromType(Type type)
+         {
+             return new RealType(type);
+         }
+
 
          /// <summary>
          /// The target type
          /// </summary>
+        [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+            "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
         protected readonly Type TargetType;
 
         /// <summary>
@@ -180,6 +228,8 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public static AggreType MakeTypeAppendable(IEquivalentType type)
         {
+            Guard.NotNull(type);
+
             if (type.EquivalentType == null)
             {
                 type.EquivalentType = new AggreType();

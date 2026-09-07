@@ -29,7 +29,16 @@ namespace Dynamitey.DynamicObjects
     /// <summary>
     /// Expando-Type List for dynamic objects
     /// </summary>
-   
+
+    [SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification =
+        "List implements IDictionary<string,object>, IList<object>, IList and INotifyCollectionChanged - " +
+        "real collection interfaces - which is exactly why CA1710 wants its name to end in Dictionary or " +
+        "Collection. It's named List instead because it is the array-like counterpart to " +
+        "DynamicObjects.Dictionary and DynamicObjects.Expando in this same namespace - together they model " +
+        "the three dynamic-object shapes (array, dictionary, expando) - and because List is the name every " +
+        "consumer already knows it by, unchanged since upstream's first release. Renaming it now would " +
+        "also break that matched-set naming with its two siblings for no behavioral gain, and is a breaking " +
+        "rename of declared public API (PublicAPI.Unshipped.txt) this batch is not authorized to make.")]
     public class List : BaseDictionary, IList<object>, IDictionary<string, object>, INotifyCollectionChanged, IList
 
     {
@@ -37,7 +46,9 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Wrapped list
         /// </summary>
-       
+
+        [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+            "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
         protected IList<object> _list;
 
 
@@ -148,6 +159,39 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <value>The count.</value>
         public int Count => _list.Count;
+
+        // This type implements IList<object> over _list AND IDictionary<string, object> over
+        // the inherited _dictionary, and a single public member cannot mean the right thing to
+        // both. Count above is the element count, which is what list-shaped callers expect;
+        // the dictionary side is implemented explicitly here so it reports the property count.
+        //
+        // Getting this wrong was not only a wrong number: LINQ special-cases ICollection<T>, so
+        // Count() and ToList() over the properties read this value rather than enumerating, and
+        // disagreed with the enumerator (issue #69).
+        int ICollection<KeyValuePair<string, object>>.Count => _dictionary.Count;
+
+        /// <summary>
+        /// Clears the dynamic properties, leaving the elements alone.
+        /// </summary>
+        /// <remarks>
+        /// Explicit for the same reason as Count above, and the consequence was worse: the
+        /// public Clear empties the elements, so asking to clear the properties through
+        /// IDictionary or ICollection&lt;KeyValuePair&lt;,&gt;&gt; destroyed the list contents
+        /// and left the properties untouched - the exact opposite of what was asked for.
+        /// Notifications mirror Dictionary.Clear, including snapshotting the keys before the
+        /// clear because Keys is a live view.
+        /// </remarks>
+        void ICollection<KeyValuePair<string, object>>.Clear()
+        {
+            var tKeys = _dictionary.Keys.ToList();
+
+            _dictionary.Clear();
+
+            foreach (var tKey in tKeys)
+            {
+                OnPropertyChanged(tKey);
+            }
+        }
 
 
         /// <summary>
@@ -323,7 +367,12 @@ namespace Dynamitey.DynamicObjects
                         CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, oldItem, oldIndex.GetValueOrDefault()));
                         break;
                     case NotifyCollectionChangedAction.Replace:
-                        CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, oldItem, newItem, oldIndex.GetValueOrDefault()));
+                        // newItem before oldItem: the BCL constructor is
+                        // (action, newItem, oldItem, index), the opposite order to this method's
+                        // own parameter list. Both are object?, so a transposition compiles
+                        // cleanly and only shows up in what a bound control displays - which is
+                        // how it went unnoticed. See issue #59.
+                        CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, newItem, oldItem, oldIndex.GetValueOrDefault()));
                         break;
                     case NotifyCollectionChangedAction.Reset:
                         CollectionChanged(this,new NotifyCollectionChangedEventArgs(action));
@@ -365,15 +414,44 @@ namespace Dynamitey.DynamicObjects
         }
 
         /// <summary>
-        /// Equalses the specified other.
+        /// Determines whether the specified <see cref="List"/> is equal to this instance.
         /// </summary>
         /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <returns>
+        /// <c>true</c> when both instances are views over the same backing stores - the same
+        /// <see cref="IList{T}"/> of elements and the same dictionary of dynamic properties.
+        /// </returns>
+        /// <remarks>
+        /// This is deliberately store identity, not content comparison: these types are mutable
+        /// views over a store someone else owns, so two wrappers over one store are one value,
+        /// while two stores that merely happen to hold equal data are not. Comparing content would
+        /// also force a content-derived <see cref="GetHashCode"/> on a mutable type, which makes an
+        /// instance unfindable in a hash container as soon as it is mutated.
+        /// <para>
+        /// This previously opened with <c>base.Equals(other)</c>, which resolves to
+        /// <see cref="BaseDictionary.Equals(object)"/> - a method whose body type-tests against
+        /// <c>typeof(Dictionary)</c> and so, for a <see cref="List"/>, compared the backing
+        /// dictionary against the <see cref="List"/> itself and returned false. That made the whole
+        /// method return false unconditionally and left the element comparison below it
+        /// unreachable, even for two wrappers over one <see cref="IList{T}"/>. See issue #52.
+        /// </para>
+        /// </remarks>
         public bool Equals(List? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) && Equals(other._list, _list);
+
+            // Compare the backing dictionary directly rather than through base.Equals(object):
+            // both fields are protected, and going through the base method is what routed this
+            // into the typeof(Dictionary) test that made it always false.
+            //
+            // ReferenceEquals, not Equals: these fields are interface-typed, so the concrete store
+            // is whatever the caller passed. The static object.Equals dispatches virtually, so a
+            // store type that overrides Equals with content semantics would silently turn this into
+            // a content comparison - the exact thing this contract exists to avoid. The BCL
+            // collections normally passed here do not override Equals, so this is the same result
+            // for them; it only closes the gap for a store that does.
+            return ReferenceEquals(other._dictionary, _dictionary) && ReferenceEquals(other._list, _list);
         }
 
         /// <summary>

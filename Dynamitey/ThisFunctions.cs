@@ -1,4 +1,4 @@
-﻿
+
 //  Copyright 2010  Ekon Benefits
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Dynamitey.Internal.Compat;
+using Dynamitey.Internal;
 
 namespace Dynamitey
 {
@@ -160,6 +162,9 @@ namespace Dynamitey
 	/// <summary>
     /// Extension method for Dealing with Special Delegate Type
     /// </summary>
+	[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification =
+		"See BaseDictionary (DynamicObjects/BaseDictionary.cs); identical reasoning. ThisDelegate is a " +
+		"static class of helpers about the ThisAction/ThisFunc delegate family, not itself a delegate.")]
 	public static class ThisDelegate{
 		private static readonly HashSet<Type> _specialThisDels = new HashSet<Type>(){
 				typeof(ThisAction),
@@ -220,6 +225,8 @@ namespace Dynamitey
         /// 	<c>true</c> if [is special this delegate] [the specified del]; otherwise, <c>false</c>.
         /// </returns>
 		public static bool IsSpecialThisDelegate(this Delegate del){
+				Guard.NotNull(del);
+
 				var tType =del.GetType();
 				if(!tType.GetTypeInfo().IsGenericType) return false;
 				var tGenDel =del.GetType().GetGenericTypeDefinition();

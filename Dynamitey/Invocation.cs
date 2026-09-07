@@ -140,6 +140,14 @@ namespace Dynamitey
         /// may themselves be <see langword="null"/> - any argument value including null is valid.
         /// </summary>
         /// <value>The args.</value>
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification =
+            "Args is declared public API (PublicAPI.Unshipped.txt): changing its shape to something " +
+            "like IReadOnlyList<object?> to satisfy CA1819 is a breaking signature change for every " +
+            "existing reader of Invocation/CacheableInvocation. PublicApiAnalyzer exists specifically " +
+            "to make a change like that a deliberate, reviewed decision rather than an analyzer-driven " +
+            "side effect, so it's out of scope here - the same batch 3 policy that kept CA1051/CA2225/" +
+            "CA2227/CA1002 off this batch's list. The same reasoning covers the other two public " +
+            "CA1819 sites in this batch - InvokeMemberName.GenericArgs and PartialApply.Args.")]
         public object?[]? Args { get; protected set; }
 
         /// <summary>
@@ -168,19 +176,42 @@ namespace Dynamitey
         }
 
         /// <summary>
-        /// Equalses the specified other.
+        /// Two argument lists match when both are null, or both are non-null with equal contents.
+        /// A null argument list is not the same as an empty one.
+        /// </summary>
+        /// <remarks>
+        /// This replaces "Equals(other.Args, Args) || Enumerable.SequenceEqual(other.Args!, Args!)",
+        /// which threw rather than returning false. `||` short-circuits only when its LEFT side is
+        /// true, so when exactly one of the two was null the reference comparison returned false and
+        /// SequenceEqual then ran against a null - an ArgumentNullException out of Equals, which is
+        /// a hard contract violation: Equals must never throw for a non-null argument. A comment
+        /// above the old expression asserted the short-circuit protected this. It did not (#68).
+        /// </remarks>
+        private static bool ArgsEqual(object?[]? left, object?[]? right)
+        {
+            if (left is null)
+            {
+                return right is null;
+            }
+
+            return right is not null && left.SequenceEqual(right);
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="Invocation"/> is equal to this instance.
         /// </summary>
         /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <returns>
+        /// <c>true</c> when both describe the same call: the same <see cref="Kind"/> and
+        /// <see cref="Name"/>, and argument lists that match by content.
+        /// </returns>
         public bool Equals(Invocation? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            // SequenceEqual requires non-null sequences; Equals(other.Args, Args) is checked first
-            // and short-circuits whenever either is null (true if both null, false if only one is -
-            // matching the pre-existing null-tolerant behavior), so SequenceEqual only ever runs
-            // with both non-null.
-            return Equals(other.Kind, Kind) && Equals(other.Name, Name) && (Equals(other.Args, Args) || Enumerable.SequenceEqual(other.Args!, Args!));
+            return Equals(other.Kind, Kind)
+                && Equals(other.Name, Name)
+                && ArgsEqual(other.Args, Args);
         }
 
         /// <summary>
@@ -210,7 +241,28 @@ namespace Dynamitey
             {
                 int result = Kind.GetHashCode();
                 result = (result*397) ^ (Name != null ? Name.GetHashCode() : 0);
-                result = (result*397) ^ (Args != null ? Args.GetHashCode() : 0);
+
+                // Hash the arguments' CONTENTS, because Equals compares them by content.
+                // This previously read "Args.GetHashCode()", which for object[] is reference
+                // identity - so two invocations built from separate but equal argument arrays
+                // compared equal and hashed differently, breaking the Equals/GetHashCode
+                // contract and making Invocation unusable as a dictionary key (#68).
+                //
+                // Length + 1 rather than Length so a null argument list and an empty one, which
+                // Equals treats as different, do not collide on the obvious input.
+                if (Args is null)
+                {
+                    result = result*397;
+                }
+                else
+                {
+                    result = (result*397) ^ (Args.Length + 1);
+                    foreach (var tArg in Args)
+                    {
+                        result = (result*397) ^ (tArg?.GetHashCode() ?? 0);
+                    }
+                }
+
                 return result;
             }
         }
@@ -228,6 +280,11 @@ namespace Dynamitey
         // unenforced contract (e.g. Kind.Get needs Name; most Kinds need args), not something
         // introduced here. The `!` suppressions below preserve that exact pre-existing behavior
         // (an NRE if the contract is violated) rather than adding new checks.
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "args is deliberately unchecked here - see the comment immediately above this " +
+            "attribute. Which Kind values need args at all varies (Kind.Get never touches it), so " +
+            "a blanket null guard would reject calls that are legitimate today; the pre-existing " +
+            "per-Kind NRE-on-misuse contract is being kept as-is rather than tightened by this pass.")]
         public virtual object? Invoke(object target, params object?[]? args)
         {
             switch (Kind)

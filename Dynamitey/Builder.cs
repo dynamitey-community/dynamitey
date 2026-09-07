@@ -112,12 +112,27 @@ namespace Dynamitey
         /// Gets the new object builder.
         /// </summary>
         /// <value>The new.</value>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification =
+            "CA1000 exists because a static member on a generic type gets a separate copy per closed generic " +
+            "type, reachable only by naming that closed type - both of which are exactly what " +
+            "Build<TObjectPrototype> is for. NewObject/NewList are meant to be called as Build<Foo>.NewObject: " +
+            "the per-T copy is a deliberate per-prototype-type cache (a lazily-built dynamic proxy factory " +
+            "for that specific TObjectPrototype), not an accident, and naming the closed type at the call " +
+            "site is how the fluent builder syntax reads. A non-generic Build.NewObject<T>() alternative " +
+            "would have to do that caching itself behind a Type-keyed dictionary, trading a compile-time- " +
+            "resolved static field for a runtime lookup on every call - worse, not better. Return<TR> " +
+            "(InlineLambdas.cs, T4-generated) is the same pattern for the same reason; see the per-site " +
+            "suppressions there. Both are declared public API (PublicAPI.Unshipped.txt) with 53 dependent " +
+            "packages already consuming this exact shape, so moving away from the static-generic-factory " +
+            "pattern now is the breaking change this batch is not authorized to make.")]
         public static dynamic NewObject => _typedBuilder;
 
         /// <summary>
         /// Gets the new list builder.
         /// </summary>
         /// <value>The new list.</value>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification =
+            "See NewObject immediately above; identical reasoning - same per-T cache pattern.")]
         public static dynamic NewList => _typedListBuilder;
     }
 
@@ -136,11 +151,7 @@ namespace Dynamitey
             Type = type;
 
             var tArg = args.OfType<Func<object[]>>().SingleOrDefault();
-            if (tArg != null)
-                Arguments = tArg;
-            else
-                Arguments = () => args;
-            
+            Arguments = tArg != null ? tArg : () => args;
         }
 
 
@@ -217,7 +228,7 @@ namespace Dynamitey
         {
             var tArgs = Arguments();
 
-            if(tArgs.Any())
+            if(tArgs.Length != 0)
                 return base.Create();
 
 
@@ -226,8 +237,20 @@ namespace Dynamitey
             {
                 tObjectPrototype = Activator.CreateInstance<TObjectPrototype>();//Try first because it's really fast, but won't work with optional parameters
             }
-            catch (Exception)
+            catch (MissingMemberException)
             {
+                // The one documented failure mode of Activator.CreateInstance<T>() is exactly the
+                // "no parameterless constructor" case this method exists to work around (e.g. a
+                // constructor with only optional parameters); Dynamitey's own binder can bind that.
+                // Catching Exception here would also swallow a genuine failure from inside a real
+                // parameterless constructor and silently invoke it a second time via the DLR path
+                // (cs/catch-of-all-exceptions).
+                //
+                // MissingMemberException, not its MissingMethodException subclass: the documented
+                // exception is MissingMethodException, but the same docs direct reduced-surface
+                // targets to catch the base class instead, and netstandard2.0 is one. The base is
+                // still narrow - it can only mean "the member is absent", never "the constructor
+                // threw", which arrives as TargetInvocationException and must keep propagating.
                 tObjectPrototype = Dynamic.InvokeConstructor(typeof(TObjectPrototype))!;
             }
             return tObjectPrototype!;

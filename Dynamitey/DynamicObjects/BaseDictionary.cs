@@ -30,7 +30,17 @@ namespace Dynamitey.DynamicObjects
     /// Base class of Expando-Type objects
     /// </summary>
 
-   
+    [SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification =
+        "CA1711 flags a 'Dictionary'/'Delegate' suffix that implies the type IS one when it doesn't " +
+        "implement or derive from that shape, so a consumer's first guess about its API would be wrong. " +
+        "BaseDictionary's suffix previews the shape accurately: it supplies the INotifyPropertyChanged plus " +
+        "DynamicObject property-as-key overrides that its two concrete subclasses, Dictionary and List, " +
+        "build IDictionary<string,object> on top of - it just doesn't implement IDictionary itself, which " +
+        "is the base class's job to leave open. The other CA1711 site in this batch, ThisFunctions.cs's " +
+        "ThisDelegate, is the same story in reverse: it's a static class of helpers *about* the ThisAction/" +
+        "ThisFunc delegate family, not itself a delegate, named the way a helper class for a type family " +
+        "conventionally is. Renaming either is a breaking rename of declared public API (PublicAPI.Unshipped.txt) " +
+        "with no behavior change, which this batch is not authorized to make.")]
     public abstract class BaseDictionary : BaseObject, INotifyPropertyChanged
     {
         /// <summary>
@@ -40,6 +50,17 @@ namespace Dynamitey.DynamicObjects
         // IDictionary<string, object> - not object? - so this has to match that public contract.
         // SetProperty below (which every nullable DynamicObject override funnels through) is the
         // one place that bridges a value the DLR may hand us as null into this non-null storage.
+        [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+            "A protected field on a public class, deliberately: it's the extension point Dictionary " +
+            "and List (the two concrete subclasses) build on, and every other CA1051 site in this " +
+            "batch is the same pattern - Builder._buildType, the five protected fields on " +
+            "ExtensionToInstanceProxy.Invoker (Name, Parent, OverloadTypes, GenericParams, " +
+            "GenericMethodParameters), " +
+            "Factory's two BaseSingleInstancesFactory fields, FauxType.RealType's " +
+            "TargetType, and List's own _list. Turning any of them into a property is a binary breaking " +
+            "change for an external subclass that reads or assigns the field directly - the very thing " +
+            "they're declared protected to allow - for no behavioral gain, so this is a suppression " +
+            "rather than a fix. Full reasoning here; every other site points back to it.")]
         protected IDictionary<string,object> _dictionary;
 
 
@@ -56,10 +77,10 @@ namespace Dynamitey.DynamicObjects
                 return;
             }
 
-            if(dict is IDictionary<string,object>) //Don't need to enumerate if it's the right type.
-                _dictionary = (IDictionary<string,object>)dict;
-            else
-                _dictionary = dict.ToDictionary(k => k.Key, v => v.Value);
+            //Don't need to enumerate if it's the right type.
+            _dictionary = dict is IDictionary<string, object> tDict
+                ? tDict
+                : dict.ToDictionary(k => k.Key, v => v.Value);
         }
 
         /// <summary>
@@ -109,6 +130,15 @@ namespace Dynamitey.DynamicObjects
             "member access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same MassageResultBasedOnInterface call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "This is a DynamicObject Try* override: the DLR is its only caller and always supplies " +
+            "a real, non-null binder (and argument array, where present) - application code cannot " +
+            "reach this override with a null argument through any public API. The base class also " +
+            "declares these parameters non-nullable, so annotating one nullable here to add a guard " +
+            "clause would be a CS8765 mismatch with the override; and guarding a parameter that stays " +
+            "non-nullable would just be dead code, since the DLR never passes null. Left unguarded " +
+            "deliberately, not overlooked. Every other Try*-override CA1062 suppression in this " +
+            "codebase points back to this comment rather than repeating it.")]
         public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
 
@@ -138,6 +168,8 @@ namespace Dynamitey.DynamicObjects
             "the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same InvokeMethodDelegate/Dynamic.Invoke/MassageResultBasedOnInterface calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             if (_dictionary.TryGetValue(binder.Name, out result))
@@ -145,7 +177,7 @@ namespace Dynamitey.DynamicObjects
                 var tFunc = result as Delegate;
                 if (result == null)
                     return false;
-                if (!binder.CallInfo.ArgumentNames.Any() && tFunc != null)
+                if (binder.CallInfo.ArgumentNames.Count == 0 && tFunc != null)
                 {
                     try
                     {
@@ -186,9 +218,11 @@ namespace Dynamitey.DynamicObjects
         /// <returns>
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.)
         /// </returns>
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
-       
+
             SetProperty(binder.Name,value);
             return true;
         }
@@ -231,13 +265,19 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public bool Remove(KeyValuePair<string, object> item)
         {
-            if (TryGetValue(item.Key, out var tValue))
+            // Value comparison, not the key's: object's own == is reference equality, which
+            // would almost never match a boxed value type or an independently-built string
+            // with equal content (cs/reference-equality-with-object). ICollection<KVP>.Remove
+            // is documented to compare values structurally.
+            if (TryGetValue(item.Key, out var tValue) && Equals(item.Value, tValue))
             {
-                if (item.Value == tValue)
-                {
-                    Remove(item.Key);
-                }
+                // Returning the removal's own result, not an unconditional false: every path used
+                // to return false, so a successful removal reported failure. Not a CodeQL alert,
+                // but the equality fix above is what makes this path reachable at all for the
+                // ordinary boxed-value case, so leaving it wrong would ship a newly-live bug.
+                return Remove(item.Key);
             }
+
             return false;
         }
 
@@ -297,7 +337,11 @@ namespace Dynamitey.DynamicObjects
         /// <param name="value">The value.</param>
         protected void SetProperty(string key, object? value)
         {
-            if (!_dictionary.TryGetValue(key, out var tOldValue) || value != tOldValue)
+            // Equals, not !=: object's own != is reference equality, which would treat two
+            // independently-built but content-equal values (a re-boxed int, a concatenated
+            // string) as "changed" and fire a spurious PropertyChanged on every set
+            // (cs/reference-equality-with-object).
+            if (!_dictionary.TryGetValue(key, out var tOldValue) || !Equals(value, tOldValue))
             {
                 // _dictionary's value type is non-null to match Dictionary's public
                 // IDictionary<string, object>, but the DLR can hand TrySetMember a null value;
@@ -327,15 +371,32 @@ namespace Dynamitey.DynamicObjects
         public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
-        /// Equalses the specified other.
+        /// Determines whether the specified <see cref="Dictionary"/> is equal to this instance.
         /// </summary>
         /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <returns>
+        /// <c>true</c> when both instances are views over the same backing dictionary.
+        /// </returns>
+        /// <remarks>
+        /// Store identity, not content comparison. These types are mutable views over a dictionary
+        /// someone else owns, so two wrappers over one store are one value, while two stores that
+        /// merely hold equal data are not - and <see cref="GetHashCode"/> matches, returning the
+        /// backing store's hash. Comparing content would instead require a content-derived hash on
+        /// a mutable type, which makes an instance unfindable in a hash container the moment it is
+        /// mutated. <see cref="List"/> documents and now implements the same contract; see issue #52.
+        /// </remarks>
         public bool Equals(Dictionary? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other._dictionary, _dictionary);
+
+            // ReferenceEquals, not the static object.Equals this used to call: _dictionary is
+            // interface-typed, so the concrete store is whatever the caller passed, and
+            // object.Equals dispatches virtually. A store type overriding Equals with content
+            // semantics would silently turn this into a content comparison - the very thing this
+            // contract exists to avoid. The BCL dictionaries normally passed here do not override
+            // Equals, so the result is unchanged for them.
+            return ReferenceEquals(other._dictionary, _dictionary);
         }
 
         /// <summary>
@@ -350,7 +411,7 @@ namespace Dynamitey.DynamicObjects
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != typeof (Dictionary)) return _dictionary.Equals(obj);
-            return Equals((Dictionary) ((object) ((Dictionary) obj)));
+            return Equals((Dictionary) obj);
         }
 
         /// <summary>

@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using System.Text;
+using Dynamitey.Internal.Optimization;
 
 
 namespace Dynamitey.DynamicObjects
@@ -39,9 +40,9 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         [RequiresUnreferencedCode("Constructs the annotated LinqInstanceProxy.")]
         [RequiresDynamicCode("Constructs the annotated LinqInstanceProxy, which requires the DLR's runtime code generation.")]
-        protected override ExtensionToInstanceProxy CreateSelf(object? target, Type extendedType, Type[] staticTypes, Type[]? instanceHints)
+        protected override ExtensionToInstanceProxy CreateSelf(object target, Type extendedType, Type[] staticTypes, Type[]? instanceHints)
         {
-            return new LinqInstanceProxy(target!);
+            return new LinqInstanceProxy(target);
         }
 
 
@@ -49,15 +50,22 @@ namespace Dynamitey.DynamicObjects
         /// Gets the enumerator.
         /// </summary>
         /// <returns></returns>
-        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
-            "Invokes CallTarget.GetEnumerator() through 'dynamic' (DLR). This implements " +
-            "IEnumerable<object>.GetEnumerator(), which isn't annotated, so this method can't " +
-            "carry [RequiresUnreferencedCode] itself without mismatching that interface member; " +
-            "the actionable warning already lives on any consumer using this type through 'dynamic'.")]
-        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic' invocation as above; see the IL2026 suppression on this member.")]
         public IEnumerator<object> GetEnumerator()
         {
-            return ((dynamic) CallTarget!).GetEnumerator();
+            // CallTarget is the InvokeContext wrapper the base ExtensionToInstanceProxy
+            // constructor installed, not the raw target, and InvokeContext doesn't implement
+            // IDynamicMetaObjectProvider or GetEnumerator itself - so it has to be unwrapped
+            // first via Util.GetTargetContext, the same helper every other member on this type
+            // routes through. Unwrapping alone isn't enough, though: a List<int> target's
+            // GetEnumerator() returns List<int>.Enumerator, i.e. IEnumerator<int>, and
+            // IEnumerator<T> covariance doesn't apply to value-type arguments, so an implicit
+            // conversion to IEnumerator<object> would still fail to compile/bind for value-type
+            // sequences. Going through the non-generic IEnumerable and Enumerable.Cast<object>()
+            // instead handles generic and legacy non-generic sequences alike, and boxing
+            // value-type elements is exactly what this type's declared IEnumerable<object>
+            // already implies.
+            var tTarget = Util.GetTargetContext(CallTarget!, out Type _, out bool _);
+            return ((IEnumerable) tTarget).Cast<object>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -155,7 +163,11 @@ namespace Dynamitey.DynamicObjects
         IOrderedLinq<TSource> OrderByDescending<TKey>(Func<TSource, TKey> keySelector);
         IOrderedLinq<TSource> OrderByDescending<TKey>(Func<TSource, TKey> keySelector, IComparer<TKey> comparer);
         ILinq<TSource> Reverse();
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Select mirrors Enumerable.Select.")]
         ILinq<TResult> Select<TResult>(Func<TSource, TResult> selector);
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Select mirrors Enumerable.Select.")]
         ILinq<TResult> Select<TResult>(Func<TSource, Int32, TResult> selector);
         ILinq<TResult> SelectMany<TResult>(Func<TSource, IEnumerable<TResult>> selector);
         ILinq<TResult> SelectMany<TResult>(Func<TSource, Int32, IEnumerable<TResult>> selector);
@@ -163,7 +175,15 @@ namespace Dynamitey.DynamicObjects
         ILinq<TResult> SelectMany<TCollection, TResult>(Func<TSource, IEnumerable<TCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector);
         Boolean SequenceEqual(IEnumerable<TSource> second);
         Boolean SequenceEqual(IEnumerable<TSource> second, IEqualityComparer<TSource> comparer);
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Single mirrors Enumerable.Single.")]
+        [SuppressMessage("Naming", "CA1720:Identifiers should not contain type names", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Single mirrors Enumerable.Single.")]
         TSource Single();
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Single mirrors Enumerable.Single.")]
+        [SuppressMessage("Naming", "CA1720:Identifiers should not contain type names", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Single mirrors Enumerable.Single.")]
         TSource Single(Func<TSource, Boolean> predicate);
         TSource SingleOrDefault();
         TSource SingleOrDefault(Func<TSource, Boolean> predicate);
@@ -188,6 +208,13 @@ namespace Dynamitey.DynamicObjects
         Dictionary<TKey, TSource> ToDictionary<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) where TKey : notnull;
         Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector) where TKey : notnull;
         Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer) where TKey : notnull;
+        [SuppressMessage("Design", "CA1002:Do not expose generic lists", Justification =
+            "ILinq<TSource> deliberately mirrors System.Linq.Enumerable's real extension-method surface " +
+            "member-for-member (see the Sum/Take/ToDictionary/ToLookup/Zip signatures around it) so a " +
+            "consumer working through the dynamic Linq proxy sees the same shape LINQ itself has. The " +
+            "real Enumerable.ToList<T>() returns List<T>, not Collection<T>; changing this one member to " +
+            "satisfy CA1002 would break that mirroring for no benefit, and it is declared public API " +
+            "(PublicAPI.Unshipped.txt) besides.")]
         List<TSource> ToList();
         ILookup<TKey, TSource> ToLookup<TKey>(Func<TSource, TKey> keySelector);
         ILookup<TKey, TSource> ToLookup<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer);

@@ -23,7 +23,7 @@ than a contractual commitment:
 
 | | |
 | --- | --- |
-| Acknowledgement | within 7 days |
+| Acknowledgment | within 7 days |
 | Initial assessment | within 30 days |
 | Fix or a decision not to fix | depends on severity and complexity |
 

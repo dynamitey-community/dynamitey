@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  Copyright 2011 Ekon Benefits
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ using System.Text;
 using Dynamitey.Internal.Optimization;
 using Microsoft.CSharp;
 using Microsoft.CSharp.RuntimeBinder;
+using Dynamitey.Internal;
 
 namespace Dynamitey.DynamicObjects
 {
@@ -53,6 +54,9 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Marks whether we are adding or removing the delegate
         /// </summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. AddRemoveMarker is an operator-only helper " +
+            "scoped to BaseForwarder's own add/remove syntax and has no meaning outside it.")]
         public class AddRemoveMarker
         {
             /// <summary>
@@ -61,8 +65,18 @@ namespace Dynamitey.DynamicObjects
             /// <param name="left">The left.</param>
             /// <param name="right">The right.</param>
             /// <returns>The result of the operator.</returns>
+            [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification =
+                "AddRemoveMarker is internal DLR plumbing, not a type a consumer converts by hand: it is " +
+                "only ever constructed internally (Util.cs, BaseForwarder.TryGetMember) and these operators " +
+                "are invoked implicitly by the DLR's own binder when a consumer writes `dynamicForwarder." +
+                "SomeEvent += handler` on a DynamicObject - the C# compiler lowers that to `marker = marker " +
+                "+ handler` and hands it to the binder, never to a named method a caller would choose to " +
+                "call instead. Adding an Add/Subtract method here is surface nobody would use; full " +
+                "reasoning also covers the mirroring operator - below.")]
             public static AddRemoveMarker operator +(AddRemoveMarker left, object right)
             {
+                Guard.NotNull(left);
+
                 left.Delegate = right;
                 left.IsAdding = true;
 
@@ -75,8 +89,12 @@ namespace Dynamitey.DynamicObjects
             /// <param name="left">The left.</param>
             /// <param name="right">The right.</param>
             /// <returns>The result of the operator.</returns>
+            [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification =
+                "Same internal-plumbing reasoning as operator + above.")]
             public static AddRemoveMarker operator -(AddRemoveMarker left, object right)
             {
+                Guard.NotNull(left);
+
                 left.Delegate = right;
                 left.IsAdding = false;
 
@@ -124,13 +142,20 @@ namespace Dynamitey.DynamicObjects
         public override IEnumerable<string> GetDynamicMemberNames()
         {
            
-                var tDyanmic = Dynamic.GetMemberNames(CallTarget!, dynamicOnly: true);
-                if (!tDyanmic.Any())
-                {
-                    return Dynamic.GetMemberNames(CallTarget!);
-                }
-            
-            return base.GetDynamicMemberNames();
+            // The branches used to be inverted: when the target DID report dynamic members
+            // this returned base.GetDynamicMemberNames() - DynamicObject's own, always empty -
+            // discarding the list it had just computed, so a forwarder over an ExpandoObject
+            // reported nothing (issue #67). Dynamic members when there are any, the full
+            // member list otherwise.
+            //
+            // Materialized once rather than enumerated twice: Dynamic.GetMemberNames returns a
+            // lazy sequence, so testing it and then returning it would resolve the target's
+            // members through the DLR a second time.
+            var tDynamic = Dynamic.GetMemberNames(CallTarget!, dynamicOnly: true).ToList();
+
+            return tDynamic.Count > 0
+                ? tDynamic
+                : Dynamic.GetMemberNames(CallTarget!);
         }
 
 
@@ -165,6 +190,8 @@ namespace Dynamitey.DynamicObjects
             "consumer's own dynamic member access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeIsEvent/InvokeGet calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             if (CallTarget == null)
@@ -210,6 +237,8 @@ namespace Dynamitey.DynamicObjects
             "call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.Invoke/InvokeAction calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
         {
             if (CallTarget == null)
@@ -256,6 +285,8 @@ namespace Dynamitey.DynamicObjects
             "after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeGet/InvokeMember/InvokeMemberAction calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             if (CallTarget == null)
@@ -347,6 +378,8 @@ namespace Dynamitey.DynamicObjects
             "triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.* calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
             if (CallTarget == null)
@@ -396,6 +429,8 @@ namespace Dynamitey.DynamicObjects
             "indexer access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeGetIndex call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryGetIndex(GetIndexBinder binder, object?[]? indexes, out object result)
         {
             if (CallTarget == null)
@@ -434,6 +469,8 @@ namespace Dynamitey.DynamicObjects
             "indexer assignment already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.InvokeSetIndex call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TrySetIndex(SetIndexBinder binder, object?[]? indexes, object? value)
         {
             if (CallTarget == null)
@@ -480,8 +517,19 @@ namespace Dynamitey.DynamicObjects
         {
             if (ReferenceEquals(null, obj)) return ReferenceEquals(null, CallTarget);
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (BaseForwarder)) return false;
-            return Equals((BaseForwarder) obj);
+
+            // "is BaseForwarder", not a GetType() comparison. This used to read
+            // "obj.GetType() != typeof(BaseForwarder)", and BaseForwarder is abstract - no
+            // instance's runtime type is ever equal to it - so the guard was unconditionally
+            // true and the typed overload below was unreachable (issue #67).
+            //
+            // A GetType()-based test would also be wrong here, because it would make a Get
+            // unequal to a Recorder wrapping the same target while GetHashCode still returned
+            // the same value for both. The typed Equals(BaseForwarder) compares only
+            // CallTarget, and GetHashCode hashes only CallTarget, so equality is target-based
+            // and must not consider the wrapper's own type.
+            if (!(obj is BaseForwarder tOther)) return false;
+            return Equals(tOther);
         }
 
         /// <summary>

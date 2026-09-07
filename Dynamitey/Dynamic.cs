@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  Copyright 2010  Ekon Benefits
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,6 +62,19 @@ namespace Dynamitey
     /// (<see cref="Curry(object,int?)"/>, <see cref="InvokeSetAll"/>) stay non-nullable <c>dynamic</c>.
     /// </para>
     /// </remarks>
+    [SuppressMessage("Naming", "CA1724:Type names should not match namespaces", Justification =
+        "Dynamic is Dynamitey's main dispatch entry point (InvokeMember, InvokeGet, InvokeSet, " +
+        "InvokeConstructor, and friends) and has been the library's public entry point since upstream's " +
+        "first release; it happens to share its name with the BCL's System.Dynamic namespace, which is the " +
+        "text collision CA1724 flags. It is harmless in practice: Dynamic is a type and System.Dynamic is a " +
+        "namespace, so 'using System.Dynamic;' plus a call to 'Dynamitey.Dynamic.InvokeGet(...)' cannot be " +
+        "ambiguous - the two only collide as text, never as resolved symbols. The class is central, " +
+        "documented, heavily used public API; renaming it now would break every consumer's " +
+        "'using static Dynamitey.Dynamic' or 'Dynamic.InvokeXxx(...)' call site for a purely cosmetic " +
+        "collision. The other two CA1724 sites in this batch are the same story: Expando (collides with " +
+        "the retired System.Runtime.InteropServices.Expando) and Util (Internal/Optimization/Util.cs, " +
+        "collides with the equally retired System.Web.Util) are real, named-for-what-they-do public API " +
+        "colliding only with namespaces from parts of the framework this library doesn't use.")]
     public static class Dynamic
     {
         /// <summary>
@@ -110,33 +123,55 @@ namespace Dynamitey
             get => _typeDescriptor ?? (_typeDescriptor = new DynamicObjects.LateType("System.ComponentModel.TypeDescriptor, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"));
         }
 
-        private static readonly Type? ComObjectType;
+        // Field initializers rather than an explicit static constructor (CA1810): each probe is
+        // now a static method the field initializer calls straight away, in the same declaration
+        // order the old .cctor body ran them in, so the two remain independent of each other exactly
+        // as before.
+        private static readonly Type? ComObjectType = ProbeComObjectType();
         // ReSharper disable once MemberCanBePrivate.Global
-        internal static readonly Type? TypeConverterAttributeSL;
+        internal static readonly Type? TypeConverterAttributeSL = ProbeTypeConverterAttributeSL();
 
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
-            "The two Assembly.GetType/Type.GetType calls below resolve an optional type by name and " +
-            "are wrapped in try/catch specifically because the type may legitimately be absent. A " +
-            "static constructor has no caller to warn at and runs unconditionally regardless of " +
-            "whether these optional features are ever used.")]
-        static Dynamic()
+            "Resolves an optional type by name via Assembly.GetType and is wrapped in try/catch " +
+            "specifically because the type may legitimately be absent. A static field initializer " +
+            "has no caller to warn at and runs unconditionally regardless of whether this optional " +
+            "feature is ever used.")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
+            "Deliberately broad (cs/catch-of-all-exceptions), and this is the first of several CA1031 " +
+            "sites in this batch with the same shape: a name-based probe for an optional type, where " +
+            "Assembly.GetType/Type.GetType can throw several different exceptions (ArgumentException, " +
+            "FileNotFoundException, BadImageFormatException, ...) for \"can't resolve this\", not just " +
+            "the \"not found\" case that throwOnError:false alone suppresses - any of them means " +
+            "\"treat as absent\", which is what issue #50 already established for probes of this " +
+            "shape. Narrowing the catch would let an unanticipated resolution failure propagate " +
+            "instead of falling back to \"absent\", which is an observable behavior change this " +
+            "batch's rules forbid making on an analyzer's say-so.")]
+        private static Type? ProbeComObjectType()
         {
             try
             {
-                ComObjectType = typeof(object).GetTypeInfo().Assembly.GetType("System.__ComObject");
+                return typeof(object).GetTypeInfo().Assembly.GetType("System.__ComObject");
             }
             catch
             {
-                ComObjectType = null;
+                return null;
             }
+        }
+
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "Same reasoning as ProbeComObjectType above: resolves an optional type by name and is " +
+            "wrapped in try/catch for the same reason.")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
+            "Same type-probe reasoning as ProbeComObjectType above.")]
+        private static Type? ProbeTypeConverterAttributeSL()
+        {
             try
             {
-                TypeConverterAttributeSL
-                    = Type.GetType("System.ComponentModel.TypeConverter, System, Version=5.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", false);  
+                return Type.GetType("System.ComponentModel.TypeConverter, System, Version=5.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", false);
             }
             catch
             {
-                TypeConverterAttributeSL = null;
+                return null;
             }
         }
         
@@ -157,10 +192,17 @@ namespace Dynamitey
         /// <seealso cref="CreateCallSite{T}"/>
         [RequiresUnreferencedCode("Builds a raw DLR CallSite from a caller-supplied binder; the binder resolves its target member by name at each call, and trimming can remove that member. Advanced/low-level API - prefer InvokeMember/InvokeGet/etc.")]
         [RequiresDynamicCode("Creating a CallSite - and, for delegate shapes with more than 14 parameters, emitting the delegate type itself via Reflection.Emit - requires the DLR's runtime code generation and is not supported when AOT-compiled.")]
+        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters",
+            Justification = "Pre-existing public surface inherited from upstream 3.0.3. The rule guards against a "
+                + "later version adding optional parameters to an overload set, which silently breaks binary "
+                + "compatibility for already-compiled callers. Removing the optional parameters now would itself "
+                + "be that break. Frozen instead: the PublicAPI declaration files record this shape, so any "
+                + "future change to it has to be written down before it can build.")]
         public static CallSite CreateCallSite(Type delegateType, CallSiteBinder binder, String_OR_InvokeMemberName name,
                                               Type context, string?[]? argNames = null, bool staticContext = false,
                                               bool isEvent = false) =>
-            InvokeHelper.CreateCallSite(delegateType, binder.GetType(), InvokeHelper.Unknown, 
+            binder is null ? throw new ArgumentNullException(nameof(binder)) :
+            InvokeHelper.CreateCallSite(delegateType, binder.GetType(), InvokeHelper.Unknown,
                 () => binder, (InvokeMemberName)name, context, argNames, staticContext, isEvent);
 
         /// <summary>
@@ -198,10 +240,17 @@ namespace Dynamitey
         /// <seealso cref="CreateCallSite"/>
         [RequiresUnreferencedCode("Builds a raw DLR CallSite from a caller-supplied binder; the binder resolves its target member by name at each call, and trimming can remove that member. Advanced/low-level API - prefer InvokeMember/InvokeGet/etc.")]
         [RequiresDynamicCode("Creating a CallSite<T> requires the DLR's runtime code generation to produce the binding rule; not supported when AOT-compiled.")]
+        [SuppressMessage("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters",
+            Justification = "Pre-existing public surface inherited from upstream 3.0.3. The rule guards against a "
+                + "later version adding optional parameters to an overload set, which silently breaks binary "
+                + "compatibility for already-compiled callers. Removing the optional parameters now would itself "
+                + "be that break. Frozen instead: the PublicAPI declaration files record this shape, so any "
+                + "future change to it has to be written down before it can build.")]
         public static CallSite<T> CreateCallSite<T>(CallSiteBinder binder, String_OR_InvokeMemberName name, Type context,
                                                     string?[]? argNames = null, bool staticContext = false,
-                                                    bool isEvent = false) where T : class 
-            => InvokeHelper.CreateCallSite<T>(binder.GetType(), InvokeHelper.Unknown, 
+                                                    bool isEvent = false) where T : class
+            => binder is null ? throw new ArgumentNullException(nameof(binder)) :
+               InvokeHelper.CreateCallSite<T>(binder.GetType(), InvokeHelper.Unknown,
                 () => binder, (InvokeMemberName) name, context, argNames, staticContext, isEvent);
 
 
@@ -214,6 +263,8 @@ namespace Dynamitey
         [RequiresDynamicCode("Each LINQ-style call through the returned proxy binds through the DLR and, for multi-generic-argument methods, may build the closed generic method at runtime; not supported when AOT-compiled.")]
         public static dynamic Linq(object enumerable)
         {
+            Guard.NotNull(enumerable);
+
             if (enumerable
                 .GetType()
                 .GetTypeInfo()
@@ -326,6 +377,13 @@ namespace Dynamitey
         /// </remarks>
         [RequiresUnreferencedCode("Calls InvokeMember, which resolves 'name' via the DLR binder and can fail against a trimmed target.")]
         [RequiresDynamicCode("Calls InvokeMember, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+        [SuppressMessage("AsyncUsage", "AsyncFixer01:Unnecessary async/await usage",
+            Justification = "Not unnecessary here, and applying it would change observable behavior twice over. "
+                + "InvokeMember runs synchronously before the await and can throw RuntimeBinderException; because "
+                + "this method is async that exception is captured into the returned Task and surfaces when the "
+                + "caller awaits. Returning the inner task directly would instead throw at the call site, before "
+                + "anyone awaits it. It would also discard the ConfigureAwait(false), handing context capture to "
+                + "the caller's await. The rule is about allocation overhead and does not account for either.")]
         public static async Task<object?> InvokeMemberAsync(object target, String_OR_InvokeMemberName name, params object?[] args)
         {
             object? result = InvokeMember(target, name, args);
@@ -552,6 +610,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static object? InvokeSetIndex(object target, params object?[] indexesThenValue)
         {
+            Guard.NotNull(indexesThenValue);
             if (indexesThenValue.Length < 2)
             {
                 throw new ArgumentException("Requires at least one index and one value", nameof(indexesThenValue));
@@ -680,7 +739,7 @@ namespace Dynamitey
                     tTarget = InvokeGetIndex(tTarget, tStringIndexer);
                 else
                 {
-                    throw new Exception($"Could Not Parse :'{propertyChain}'");
+                    throw new FormatException($"Could Not Parse :'{propertyChain}'");
                 }
             }
 
@@ -697,7 +756,7 @@ namespace Dynamitey
             if (tSetStringIndexer != null)
                 return InvokeSetIndex(tTarget, tSetStringIndexer, value);
             
-            throw new Exception($"Could Not Parse :'{propertyChain}'");
+            throw new FormatException($"Could Not Parse :'{propertyChain}'");
         }
 
            
@@ -808,7 +867,7 @@ namespace Dynamitey
                     tTarget = InvokeGetIndex(tTarget, tStringIndexer);
                 else
                 {
-                    throw new Exception($"Could Not Parse :'{propertyChain}'");
+                    throw new FormatException($"Could Not Parse :'{propertyChain}'");
                 }
             }
             return tTarget;
@@ -910,7 +969,7 @@ namespace Dynamitey
         /// <returns></returns>
         [RequiresUnreferencedCode("Falls back to Expression.Lambda(...).Compile() and, for a plain Action/Func-shaped delegate whose parameters are all reference types, to invoking invokeableObject through the DLR; trimming can remove the member the compiled expression or DLR call resolves.")]
         [RequiresDynamicCode("Expression.Lambda(...).Compile() and the DLR invocation path both generate code at runtime; not supported when AOT-compiled.")]
-        public static dynamic? CoerceToDelegate(object invokeableObject, Type delegateType)
+        public static dynamic? CoerceToDelegate(object? invokeableObject, Type delegateType)
             {
                 var delegateTypeInfo = delegateType.GetTypeInfo();
                 if (!typeof(Delegate).GetTypeInfo().IsAssignableFrom(delegateTypeInfo.BaseType))
@@ -920,15 +979,20 @@ namespace Dynamitey
                 var tDelMethodInfo = delegateTypeInfo.GetMethod("Invoke");
                 if (tDelMethodInfo is null)
                 {
-                    throw new Exception("This Delegate Didn't have and Invoke method! Impossible!");
+                    throw new InvalidOperationException("This Delegate Didn't have an Invoke method! Impossible!");
                 }
                 var tReturnType = tDelMethodInfo.ReturnType;
                 var tAction = tReturnType == typeof(void);
                 var tParams = tDelMethodInfo.GetParameters();
                 var tLength = tDelMethodInfo.GetParameters().Length;
+                // invokeableObject is genuinely allowed to be null here (see its nullable
+                // parameter annotation above); WrapAction/WrapFunc only close over it and hand it
+                // to a delegate the caller may never invoke, so a null flows through unharmed. The
+                // `!`s below match every other deliberate-null forward in this file rather than
+                // widening WrapAction/WrapFunc's own parameter types.
                 Delegate tBaseDelegate = tAction
-                                             ? InvokeHelper.WrapAction(invokeableObject, tLength)
-                                             : InvokeHelper.WrapFunc(tReturnType, invokeableObject, tLength);
+                                             ? InvokeHelper.WrapAction(invokeableObject!, tLength)
+                                             : InvokeHelper.WrapFunc(tReturnType, invokeableObject!, tLength);
 
 
                 if (InvokeHelper.IsActionOrFunc(delegateType) &&
@@ -981,6 +1045,14 @@ namespace Dynamitey
         /// </returns>
         [RequiresUnreferencedCode("Resolves System.Convert.IsDBNull dynamically (via a late-bound Convert reference) rather than calling it directly; trimming Convert's public surface breaks this.")]
         [RequiresDynamicCode("Constructing the underlying LateType and making the late-bound call both require the DLR's runtime code generation; not supported when AOT-compiled.")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
+            "Deliberately broad (cs/catch-of-all-exceptions): the expected failure is " +
+            "RuntimeBinderException when trimming has removed Convert.IsDBNull (see the " +
+            "[RequiresUnreferencedCode] above), but this is a boolean probe with a safe default " +
+            "either way - \"can't tell\" and \"not DBNull\" collapse to the same false, the same " +
+            "symmetric-default shape issue #50 established. Narrowing the catch would let some " +
+            "other failure propagate instead of returning that default, changing observable " +
+            "behavior for no benefit.")]
         public static bool IsDBNull(object? value)
         {
 
@@ -991,6 +1063,10 @@ namespace Dynamitey
             }
             catch
             {
+                // Deliberately broad (cs/catch-of-all-exceptions): the expected failure is
+                // RuntimeBinderException when trimming has removed Convert.IsDBNull (see the
+                // [RequiresUnreferencedCode] above), but this is a boolean probe with a safe
+                // default either way - "can't tell" and "not DBNull" collapse to the same false.
                 return false;
             }
         }
@@ -1004,10 +1080,12 @@ namespace Dynamitey
         [RequiresDynamicCode("ConvertEach's DLR conversion path requires runtime code generation; not supported when AOT-compiled.")]
         public static void ApplyEquivalentType(DynamicObjects.IEquivalentType target, params Type[] types)
         {
-            if(types.Length == 1)
-                target.EquivalentType = types.First();
-            else
-                target.EquivalentType = new DynamicObjects.AggreType(types.ConvertEach<DynamicObjects.FauxType>().ToArray());
+            Guard.NotNull(target);
+            Guard.NotNull(types);
+
+            target.EquivalentType = types.Length == 1
+                ? types.First()
+                : new DynamicObjects.AggreType(types.ConvertEach<DynamicObjects.FauxType>().ToArray());
           
         }
 
@@ -1050,6 +1128,8 @@ namespace Dynamitey
         [RequiresDynamicCode("The CoerceToDelegate and Impromptu.DynamicActLike paths require the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic? CoerceConvert(object? target, Type type)
         {
+            Guard.NotNull(type);
+
             var typeInfo = type.GetTypeInfo();
             if (target != null && !typeInfo.IsInstanceOfType(target) && !IsDBNull(target))
             {
@@ -1170,6 +1250,8 @@ namespace Dynamitey
         [RequiresDynamicCode("For more than 14 arguments, building the call site emits a delegate type via Reflection.Emit; for 14 or fewer, it binds through Microsoft.CSharp.RuntimeBinder. Both require the DLR's runtime code generation. On a runtime without Reflection.Emit (AOT-compiled, trimmed, or mobile/WebAssembly), more than 14 arguments throws PlatformNotSupportedException instead - see issue #27; 14 or fewer still requires the DLR itself and is not supported when AOT-compiled.")]
         public static dynamic? InvokeConstructor(Type type, params object?[] args)
         {
+            Guard.NotNull(args);
+
             var tValue = type.GetTypeInfo().IsValueType;
             if (tValue && args.Length == 0)  //dynamic invocation doesn't see constructors of value types
             {
@@ -1194,6 +1276,9 @@ namespace Dynamitey
         [RequiresDynamicCode("The DLR invocation path requires runtime code generation; not supported when AOT-compiled.")]
 		public static object? FastDynamicInvoke(this Delegate del, params object?[] args)
 		{
+            Guard.NotNull(del);
+            Guard.NotNull(args);
+
             if (del.GetMethodInfo().ReturnType != typeof(void))
             {
                 return InvokeHelper.FastDynamicInvokeReturn(del, args!);
@@ -1234,6 +1319,8 @@ namespace Dynamitey
         [RequiresDynamicCode("The late-bound ComBinder path goes through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         public static IEnumerable<string> GetMemberNames(object target, bool dynamicOnly = false)
         {
+            Guard.NotNull(target);
+
             var tList = new List<string>();
             if (!dynamicOnly)
             {

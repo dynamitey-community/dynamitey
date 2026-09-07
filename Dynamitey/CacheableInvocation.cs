@@ -89,17 +89,15 @@ namespace Dynamitey
             _convertType = convertType;
             _convertExplicit = convertExplicit;
 
-            _argNames = argNames ?? new string?[] {};
+            _argNames = argNames ?? Array.Empty<string?>();
 
             if (storedArgs != null)
             {
                 _argCount = storedArgs.Length;
                 Args = Util.GetArgsAndNames(storedArgs, out var tArgNames);
-                // Pre-existing gap (not introduced here, not fixed): GetArgsAndNames returns a
-                // null tArgNames whenever none of storedArgs was an InvokeArg, and this branch
-                // dereferences it unconditionally. No caller in this codebase actually passes
-                // storedArgs, so it's never been exercised either way.
-                if (_argNames.Length < tArgNames!.Length)
+                // GetArgsAndNames returns a null tArgNames when none of storedArgs was an
+                // InvokeArg - i.e. there are no names to merge in, so _argNames is left as-is.
+                if (tArgNames != null && _argNames.Length < tArgNames.Length)
                 {
                     _argNames = tArgNames;
                 }
@@ -136,15 +134,14 @@ namespace Dynamitey
                     _argCount = 0;
                     break;
                 default:
-                    // _argNames is null only via the dead storedArgs branch above.
-                    _argCount = Math.Max(argCount, _argNames!.Length);
+                    _argCount = Math.Max(argCount, _argNames.Length);
                     break;
             }
 
             if (_argCount > 0)//setup argName array
             {
                 var tBlank = new string?[_argCount];
-                if (_argNames!.Length != 0)
+                if (_argNames.Length != 0)
                     Array.Copy(_argNames, 0, tBlank, tBlank.Length - _argNames.Length, _argNames.Length);
                 else
                     tBlank = null;
@@ -154,7 +151,7 @@ namespace Dynamitey
 
             if (context != null)
             {
-                var dummy = context.GetTargetContext(out _context, out _staticContext); //lgtm [cs/useless-assignment-to-local]
+                context.GetTargetContext(out _context, out _staticContext);
             }
             else
             {
@@ -175,7 +172,7 @@ namespace Dynamitey
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other)
                 && other._argCount == _argCount
-                && (_argNames ?? new string?[] { }).SequenceEqual(other._argNames ?? new string?[] { })
+                && (_argNames ?? Array.Empty<string?>()).SequenceEqual(other._argNames ?? Array.Empty<string?>())
                 && other._staticContext.Equals(_staticContext)
                 && Equals(other._context, _context) 
                 && other._convertExplicit.Equals(_convertExplicit)
@@ -246,23 +243,29 @@ namespace Dynamitey
                 switch (Kind)
                 {
                     case InvocationKind.Convert:
-                        if (args.Length > 0)
-                        {
-                            if (!Equals(args[0], _convertType))
-                                throw new ArgumentException("CacheableInvocation can't change conversion type on invoke.", nameof(args));
-                        }
-                        if (args.Length > 1)
-                        {
-                            if(!Equals(args[1], _convertExplicit))
-                                throw new ArgumentException("CacheableInvocation can't change explicit/implicit conversion on invoke.", nameof(args));
-                        }
+                        if (args.Length > 0 && !Equals(args[0], _convertType))
+                            throw new ArgumentException("CacheableInvocation can't change conversion type on invoke.", nameof(args));
+                        if (args.Length > 1 && !Equals(args[1], _convertExplicit))
+                            throw new ArgumentException("CacheableInvocation can't change explicit/implicit conversion on invoke.", nameof(args));
 
                         if(args.Length > 2)
                             goto default;
                         break;
                     default:
-                        throw new ArgumentException("args",
-                            $"Incorrect number of Arguments for CachedInvocation, Expected:{_argCount}");
+                        // CA2208: the two ArgumentException(string message, string paramName)
+                        // arguments were transposed, so the exception described itself backwards.
+                        // Verified by construction rather than by reading the overload:
+                        //   before  ParamName = "Incorrect number of Arguments for CachedInvocation,
+                        //                        Expected:N"
+                        //           Message   = "args (Parameter 'Incorrect number of Arguments...')"
+                        //   after   ParamName = "args"
+                        //           Message   = "Incorrect number of Arguments... (Parameter 'args')"
+                        // ParamName was never null - it carried the description - which is why the
+                        // exception still looked plausible in a log and survived this long.
+                        // Fixing the order is an observable change; see the batch 4 release notes.
+                        throw new ArgumentException(
+                            $"Incorrect number of Arguments for CachedInvocation, Expected:{_argCount}",
+                            nameof(args));
                 }
             }
 

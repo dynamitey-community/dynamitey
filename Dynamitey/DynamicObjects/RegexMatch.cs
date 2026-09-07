@@ -30,7 +30,12 @@ namespace Dynamitey.DynamicObjects
     /// <summary>
     /// A Dynamic Regex Match
     /// </summary>
-    public class RegexMatch : BaseObject, IRegexMatch
+    // Sealed to satisfy CA1033 (IRegexMatch.Value is implemented explicitly, which the rule flags
+    // unless the class is sealed or the member is otherwise reachable from a derived class).
+    // Sealing is the fix CA1033 itself names as non-breaking here: RegexMatch hasn't shipped
+    // (PublicAPI.Unshipped.txt) and nothing in this repository derives from it, so there is no
+    // subclass that could ever need to reach IRegexMatch.Value non-explicitly.
+    public sealed class RegexMatch : BaseObject, IRegexMatch
     {
        
         private readonly Match _match;
@@ -74,6 +79,8 @@ namespace Dynamitey.DynamicObjects
             "and the DLR invokes it only after the consumer's own dynamic member access already " +
             "triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
        public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             var tGroup = _match.Groups[binder.Name];
