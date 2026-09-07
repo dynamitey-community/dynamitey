@@ -7,8 +7,8 @@ using NUnit.Framework;
 namespace Dynamitey.Tests
 {
     /// <summary>
-    /// FluentRegex and RegexMatch had no coverage at all before this file - every member below
-    /// is exercised for the first time.
+    /// FluentRegex and RegexMatch previously had only guard-path coverage (e.g. null-regex checks);
+    /// this fixture exercises their functional behavior (matching, group access, enumeration, etc.).
     /// </summary>
     [TestFixture]
     public class RegexMatchTest : Helper
