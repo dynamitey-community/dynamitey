@@ -38,7 +38,7 @@ jobs:
 
       # Manual build mode rather than autobuild: this solution multi-targets, and
       # autobuild picks one leg without saying which.
-      - name: Initialise CodeQL
+      - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: csharp
@@ -47,14 +47,14 @@ jobs:
           config-file: ./.github/codeql/codeql-config.yml
 
       # Only the shipped library is built, and therefore only the shipped library
-      # is extracted and analysed. paths-ignore in the config file cannot do this
-      # on its own: for compiled languages CodeQL analyses whatever the build
+      # is extracted and analyzed. paths-ignore in the config file cannot do this
+      # on its own: for compiled languages CodeQL analyzes whatever the build
       # produces, so excluding a project means not building it. See the config
       # file for why Tests/ and Benchmarks/ are out of scope.
       - name: Build
         run: dotnet build Dynamitey/Dynamitey.csproj --configuration Release
 
-      - name: Analyse
+      - name: Analyze
         uses: github/codeql-action/analyze@v4
         with:
           category: /language:csharp

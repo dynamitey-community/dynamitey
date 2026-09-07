@@ -3,7 +3,7 @@
 // ("return del;"). The suite never called most of the arities. These tests
 // call every Arguments/ThisAndArguments overload directly: each asserts the
 // returned delegate is reference-equal to the one passed in (the actual
-// behaviour of an identity function - if a future edit ever started
+// behavior of an identity function - if a future edit ever started
 // wrapping or cloning the delegate instead, this would catch it) and then
 // invokes the result to confirm it still forwards arguments correctly.
 using System;

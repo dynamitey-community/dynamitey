@@ -63,4 +63,4 @@ body:
     attributes:
       label: Anything else
       description: |
-        Particularly useful for this library: does the behaviour change depending on what ran before it? Call-site caching is shared, so ordering has been the root cause before.
+        Particularly useful for this library: does the behavior change depending on what ran before it? Call-site caching is shared, so ordering has been the root cause before.

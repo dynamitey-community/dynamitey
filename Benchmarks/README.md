@@ -14,7 +14,7 @@ workflow only compiles this project so it cannot rot.
 
 ## Running
 
-Always in Release. BenchmarkDotNet refuses to run an unoptimised build.
+Always in Release. BenchmarkDotNet refuses to run an unoptimized build.
 
 ```bash
 dotnet run -c Release --project Benchmarks -- --list flat     # what exists

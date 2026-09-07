@@ -144,7 +144,7 @@ namespace Dynamitey
             "the \"not found\" case that throwOnError:false alone suppresses - any of them means " +
             "\"treat as absent\", which is what issue #50 already established for probes of this " +
             "shape. Narrowing the catch would let an unanticipated resolution failure propagate " +
-            "instead of falling back to \"absent\", which is an observable behaviour change this " +
+            "instead of falling back to \"absent\", which is an observable behavior change this " +
             "batch's rules forbid making on an analyzer's say-so.")]
         private static Type? ProbeComObjectType()
         {
@@ -378,7 +378,7 @@ namespace Dynamitey
         [RequiresUnreferencedCode("Calls InvokeMember, which resolves 'name' via the DLR binder and can fail against a trimmed target.")]
         [RequiresDynamicCode("Calls InvokeMember, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         [SuppressMessage("AsyncUsage", "AsyncFixer01:Unnecessary async/await usage",
-            Justification = "Not unnecessary here, and applying it would change observable behaviour twice over. "
+            Justification = "Not unnecessary here, and applying it would change observable behavior twice over. "
                 + "InvokeMember runs synchronously before the await and can throw RuntimeBinderException; because "
                 + "this method is async that exception is captured into the returned Task and surfaces when the "
                 + "caller awaits. Returning the inner task directly would instead throw at the call site, before "
@@ -1052,7 +1052,7 @@ namespace Dynamitey
             "either way - \"can't tell\" and \"not DBNull\" collapse to the same false, the same " +
             "symmetric-default shape issue #50 established. Narrowing the catch would let some " +
             "other failure propagate instead of returning that default, changing observable " +
-            "behaviour for no benefit.")]
+            "behavior for no benefit.")]
         public static bool IsDBNull(object? value)
         {
 

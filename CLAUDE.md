@@ -159,7 +159,7 @@ likely way to be surprised by a red build:
 release under LGPL-3.0-only. From 10.6.0.109712 it moved to the SONAR
 Source-Available License, which is not OSI-approved and whose grant excludes
 using AI to interpret the data the tool produces. Do not bump it without
-reading the licence.
+reading the license.
 
 **The `NoWarn` lists are a documented backlog, not a dumping ground.** Each
 entry is a rule deferred with a reason recorded in the comment above it, and the
@@ -199,9 +199,9 @@ restricts the report to the `Dynamitey` assembly, which is what CI measures.
 `Directory.Build.props` carries the analyzer settings and NuGet audit config
 (`NuGetAuditMode=all`, `NuGetAuditLevel=low`).
 
-**CodeQL analyses the shipped library only.** `.github/codeql/codeql-config.yml`
+**CodeQL analyzes the shipped library only.** `.github/codeql/codeql-config.yml`
 declares the intent, but for a compiled language `paths-ignore` cannot exclude
-code that was compiled — CodeQL analyses whatever the build extracts. So the
+code that was compiled — CodeQL analyzes whatever the build extracts. So the
 workflow builds `Dynamitey/Dynamitey.csproj` alone rather than the solution. The
 test project deliberately does things static analysis must flag: dynamic calls
 it believes cannot succeed, and casts like `(object)tOut` that look useless but
@@ -288,7 +288,7 @@ arguments.
 
 **Call-site caching.** `Internal/Optimization/BinderHash.cs` keys cached binders
 and `CacheableInvocation.cs` exposes reuse deliberately. Cache state is shared
-across call sites, which is why #13 reports behaviour that changes depending on
+across call sites, which is why #13 reports behavior that changes depending on
 what ran earlier in the process. Any test touching static context must control
 execution order or it will pass for the wrong reason.
 

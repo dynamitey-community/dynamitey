@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE.md)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 Dynamitey is a .NET library that wraps the Dynamic Language Runtime to do
 runtime dispatch: late binding, currying, partial application, expando objects,
@@ -74,7 +74,7 @@ this fork carries, and there is no equivalent here yet.
 - Clean syntax for using types from late-bound libraries — [LateType](https://github.com/ekonbenefits/dynamitey/wiki/LateType)
 - Dynamic currying — [Curry](https://github.com/ekonbenefits/dynamitey/wiki/UsageCurry)
 - Manipulation of tuples — [`Tests/TuplerTest.cs`](Tests/TuplerTest.cs)
-- Inline object graph initialisation syntax — [Builder](https://github.com/ekonbenefits/dynamitey/wiki/UsageBuilder)
+- Inline object graph initialization syntax — [Builder](https://github.com/ekonbenefits/dynamitey/wiki/UsageBuilder)
 - `DynamicObject` base types for many things — [Dynamic](https://github.com/ekonbenefits/dynamitey/wiki/UsageDynamic)
 - Extension-to-instance method conversion — [`Tests/Linq.cs`](Tests/Linq.cs)
 
@@ -208,9 +208,9 @@ To report a security problem, do **not** open a public issue. See
 
 ---
 
-## Licence and attribution
+## License and attribution
 
-Apache License 2.0. See [License.txt](LICENSE.md) and [NOTICE](NOTICE).
+Apache License 2.0. See [License.txt](LICENSE) and [NOTICE](NOTICE).
 
 Dynamitey was created and maintained by Ekon Benefits. This fork retains that
 copyright and adds its own for changes made after `upstream-baseline`, as

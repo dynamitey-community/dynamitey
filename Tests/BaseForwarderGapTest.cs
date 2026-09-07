@@ -204,7 +204,7 @@ namespace Dynamitey.Tests
         // the `tDyanmic` list it just computed. So a forwarder wrapping an ExpandoObject (or
         // any other genuinely dynamic target) always reports zero dynamic member names; only
         // the "target has no dynamic members, fall back to reflection" branch actually
-        // returns anything. This test pins the current (buggy, always-empty) behaviour rather
+        // returns anything. This test pins the current (buggy, always-empty) behavior rather
         // than papering over it - see the coverage task's report for the write-up.
         [Test]
         public void TestForwarderGetDynamicMemberNamesFromDynamicTargetIsAlwaysEmpty()
@@ -243,7 +243,7 @@ namespace Dynamitey.Tests
         // of ever reaching `Equals((BaseForwarder)obj)`. The strongly-typed
         // Equals(BaseForwarder?) overload (tested above) is correct; only the
         // object.Equals(object?) override is broken. This test pins the current
-        // (buggy) behaviour rather than papering over it - see the coverage task's
+        // (buggy) behavior rather than papering over it - see the coverage task's
         // report for the write-up.
         [Test]
         public void TestForwarderEqualsObjectOverloadNeverMatchesConcreteSubclassInstances()

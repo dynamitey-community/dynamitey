@@ -32,7 +32,7 @@ both .NET Framework and modern .NET from one assembly, and upstream has 53
 dependent packages. Please do not "simplify" it away.
 
 **Call-site caching is shared across sites.** `BinderHash.cs` and
-`CacheableInvocation.cs` mean behaviour can depend on what ran earlier in the
+`CacheableInvocation.cs` mean behavior can depend on what ran earlier in the
 process — see
 [#13](https://github.com/dynamitey-community/dynamitey/issues/13). A test
 touching static context must control its own ordering or it will pass for the
@@ -64,7 +64,7 @@ item.
 
 ## Tests
 
-New behaviour needs a test. For the ported upstream bugs
+New behavior needs a test. For the ported upstream bugs
 ([`ported-from-upstream`](https://github.com/dynamitey-community/dynamitey/labels/ported-from-upstream)),
 a failing test that reproduces the report is a genuinely useful contribution on
 its own, even without a fix — several of those issues have sat for years with
@@ -101,9 +101,9 @@ why a clone is better for anything you intend to test.
 
 There is no CLA. Contributions are under Apache-2.0, the same as the project.
 
-## Licence
+## License
 
 By contributing you agree your work is licensed under the Apache License 2.0.
-See [LICENSE.md](LICENSE.md) and [NOTICE](NOTICE). Do not add code you did not
-write or that carries an incompatible licence — this project's attribution chain
+See [LICENSE](LICENSE) and [NOTICE](NOTICE). Do not add code you did not
+write or that carries an incompatible license — this project's attribution chain
 back to the original authors matters, and is recorded in NOTICE.

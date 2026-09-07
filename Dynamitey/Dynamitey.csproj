@@ -71,7 +71,7 @@
          technology ... to ingest, interpret, analyze ... or interact with the
          data provided by the Program" - that is, AI-assisted triage of its own
          findings, which is how this repository works. Being open source does not
-         change that; the licence has no such carve-out. The pin costs almost
+         change that; the license has no such carve-out. The pin costs almost
          nothing: 10.33 reports 93 findings here against 10.5's 90. -->
     <PackageReference Include="SonarAnalyzer.CSharp" Version="10.5.0.109200">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -260,20 +260,20 @@
                        an emitted call site can instantiate a type in ways a
                        search cannot see. Left as a candidate for a future
                        issue to actually remove.
-           CA2201 (4)  FIXED, and an OBSERVABLE BEHAVIOUR CHANGE (see the batch
+           CA2201 (4)  FIXED, and an OBSERVABLE BEHAVIOR CHANGE (see the batch
                        4 release notes): Dynamic.cs's four `throw new
                        Exception(...)` sites now throw FormatException (the
                        three "Could Not Parse" parse-failure sites in
                        InvokeSetChain/InvokeGetChain) or InvalidOperationException
                        (CoerceToDelegate's "Impossible!" invariant check).
-           CA2208 (1)  FIXED, and an OBSERVABLE BEHAVIOUR CHANGE (see the batch
+           CA2208 (1)  FIXED, and an OBSERVABLE BEHAVIOR CHANGE (see the batch
                        4 release notes): CacheableInvocation.Invoke's
                        ArgumentException constructor arguments were transposed
                        - message and paramName were swapped, so Message was
                        literally the string "args" and ParamName was always
                        null. Reordered to match the real (message, paramName)
                        constructor.
-           CA1508 (1)  FIXED, no behaviour change: DynamicObjects/Get.cs
+           CA1508 (1)  FIXED, no behavior change: DynamicObjects/Get.cs
                        reorders `var tDel = result as Delegate;` before the
                        `if (result == null) return false;` null check (matching
                        BaseDictionary.TryInvokeMember's already-working order
@@ -293,7 +293,7 @@
                        CallTarget from a property to a method would just
                        reopen the other, the same trap batch 2 hit with CA1062
                        vs S3877.
-           CA1305 (1)  FIXED, no behaviour change: LateType.MissingTypeException's
+           CA1305 (1)  FIXED, no behavior change: LateType.MissingTypeException's
                        String.Format call now passes CultureInfo.InvariantCulture
                        explicitly. The formatted argument is a string, whose
                        formatting is not culture-sensitive, so the produced
@@ -303,7 +303,7 @@
                        here, since RegexMatch hasn't shipped
                        (PublicAPI.Unshipped.txt) and nothing in this repository
                        derives from it.
-           CA1307 (2)  FIXED, no behaviour change: Internal/Optimization/
+           CA1307 (2)  FIXED, no behavior change: Internal/Optimization/
                        BinderHash.cs and InvokeMemberName.cs both call
                        Name.GetHashCode(StringComparison.Ordinal) on net10.0 -
                        proven to compute the exact same hash as the
@@ -356,7 +356,7 @@
                        Dynamic.ProbeComObjectType; every other site points back
                        to it or to the IsDBNull boolean-probe variant.
 
-         Resolved in batch 5, the last batch except CA1851 (public API judgement
+         Resolved in batch 5, the last batch except CA1851 (public API judgment
          calls, right up against the 4.0.0 freeze - removed from NoWarn below):
            CA1051 (11) SUPPRESSED, all eleven: every finding is a protected field
                        on a public class - BaseDictionary._dictionary,
