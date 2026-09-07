@@ -40,15 +40,7 @@ namespace Dynamitey.Internal.Optimization
         /// <summary>
         /// Is Current Runtime Mono?
         /// </summary>
-        public static readonly bool IsMono;
-
-        static Util()
-        {
-            IsMono = Type.GetType("Mono.Runtime") != null;
-
-
-        }
-   
+        public static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
 
 
         /// <summary>
