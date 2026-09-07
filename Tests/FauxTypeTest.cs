@@ -7,10 +7,9 @@ using NUnit.Framework;
 namespace Dynamitey.Tests
 {
     /// <summary>
-    /// Carried over from the former Impromptu fixture, which was removed with the
-    /// ImpromptuInterface dependency in #3. This test never used ImpromptuInterface - it
-    /// exercises FauxType, PropretySpecType and RealType, all of which are this library's
-    /// own types - so it survives the removal unchanged.
+    /// Carried over from the former Impromptu fixture, which was removed in #3.
+    /// This test never used ImpromptuInterface - it exercises FauxType, PropretySpecType and RealType,
+    /// all of which are this library's own types - so it survives unchanged.
     /// </summary>
     [TestFixture]
     public class FauxTypeTests : Helper
