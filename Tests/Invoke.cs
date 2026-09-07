@@ -166,7 +166,19 @@ namespace Dynamitey.Tests
         }
 
         // The same default branch serves ordinary member invocation, so more than
-        // 14 arguments must keep working there too.
+        // 14 arguments must keep working there too. 5-13 fill in the generated
+        // fast-path cases in InvokeHelper.tt's InvokeMemberTargetType that the
+        // rest of the suite never happens to exercise (its other InvokeMember
+        // calls stick to a handful of arguments).
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        [TestCase(8)]
+        [TestCase(9)]
+        [TestCase(10)]
+        [TestCase(11)]
+        [TestCase(12)]
+        [TestCase(13)]
         [TestCase(14)]
         [TestCase(15)]
         [TestCase(20)]
@@ -185,7 +197,20 @@ namespace Dynamitey.Tests
         // InvokeMemberAction's void-returning delegate shape rather than a
         // Func-shaped one - EmitCallSiteFuncType(argTypes, typeof(void)) instead
         // of EmitCallSiteFuncType(argTypes, typeof(TReturn)). Both must build a
-        // delegate type without reaching into ImpromptuInterface.
+        // delegate type without reaching into ImpromptuInterface. 3-13 fill in
+        // the generated fast-path cases in InvokeHelper.tt's InvokeMemberAction
+        // that the rest of the suite never happens to exercise.
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        [TestCase(8)]
+        [TestCase(9)]
+        [TestCase(10)]
+        [TestCase(11)]
+        [TestCase(12)]
+        [TestCase(13)]
         [TestCase(14)]
         [TestCase(15)]
         [TestCase(20)]
