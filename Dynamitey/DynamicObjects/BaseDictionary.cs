@@ -30,7 +30,17 @@ namespace Dynamitey.DynamicObjects
     /// Base class of Expando-Type objects
     /// </summary>
 
-   
+    [SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification =
+        "CA1711 flags a 'Dictionary'/'Delegate' suffix that implies the type IS one when it doesn't " +
+        "implement or derive from that shape, so a consumer's first guess about its API would be wrong. " +
+        "BaseDictionary's suffix previews the shape accurately: it supplies the INotifyPropertyChanged plus " +
+        "DynamicObject property-as-key overrides that its two concrete subclasses, Dictionary and List, " +
+        "build IDictionary<string,object> on top of - it just doesn't implement IDictionary itself, which " +
+        "is the base class's job to leave open. The other CA1711 site in this batch, ThisFunctions.cs's " +
+        "ThisDelegate, is the same story in reverse: it's a static class of helpers *about* the ThisAction/" +
+        "ThisFunc delegate family, not itself a delegate, named the way a helper class for a type family " +
+        "conventionally is. Renaming either is a breaking rename of declared public API (PublicAPI.Unshipped.txt) " +
+        "with no behavior change, which this batch is not authorized to make.")]
     public abstract class BaseDictionary : BaseObject, INotifyPropertyChanged
     {
         /// <summary>

@@ -26,6 +26,9 @@ namespace Dynamitey.DynamicObjects
                 + "Neither fits: this exception exists to name the type that could not be found, and its single "
                 + "string parameter is that type name, not a message - it is formatted into one. A parameterless "
                 + "overload could only produce a message with no type in it, which is worse than not offering it.")]
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. MissingTypeException's identity only makes " +
+            "sense next to LateType, the class whose lookups throw it.")]
         public class MissingTypeException:Exception
         {
             /// <summary>
@@ -126,6 +129,9 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Forward argument to constructor including named arguments
         /// </summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. ConstructorForward must be public because it " +
+            "overrides DynamicObject.TryInvoke, a public member.")]
         public class ConstructorForward:DynamicObject
         {
             private readonly Type _type;

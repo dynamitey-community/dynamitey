@@ -106,6 +106,9 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Basic Invoker syntax for dynamic generics
         /// </summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. Invoker must be public because it overrides " +
+            "public DynamicObject members (TryGetIndex, TryGetMember, TryInvoke).")]
         public class Invoker:BaseObject
         {
             /// <summary>
@@ -290,6 +293,9 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Overload Invoker
         /// </summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. OverloadInvoker must be public because it " +
+            "overrides public DynamicObject members and derives from the equally-public Invoker above.")]
         public class OverloadInvoker:Invoker
         {
             [RequiresUnreferencedCode("Calls the annotated Invoker constructor, which reflects over parent.InstanceHints' methods by name.")]

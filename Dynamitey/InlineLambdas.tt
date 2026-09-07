@@ -15,6 +15,7 @@
 //    limitations under the License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Dynamitey
@@ -24,14 +25,21 @@ namespace Dynamitey
     /// Fluent Class for writing inline lambdass
     /// </summary>
     /// <typeparam name="TR">The type of the R.</typeparam>
+    [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+        "See IBuilder.Object (Builder.cs); identical reasoning. Return<TR> names the fluent lambda-typing " +
+        "helper for what it returns.")]
     public static class Return<TR>
     {
-		
+
 		/// <summary>
         /// Arguments
         /// </summary>
         /// <param name="del">The lambda.</param>
         /// <returns>The lambda.</returns>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification =
+            "See Build<TObjectPrototype>.NewObject (Builder.cs); identical static-factory-on-generic-type " +
+            "pattern. Every Arguments/ThisAndArguments overload below (T4-generated for arities 1-16) " +
+            "carries the same suppression for the same reason.")]
         public static Func<TR> Arguments(Func<TR> del)
         {
             return del;
@@ -43,6 +51,8 @@ namespace Dynamitey
         /// </summary>
         /// <param name="del">The del.</param>
         /// <returns></returns>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification =
+            "See Return<TR>.Arguments(Func<TR>) above; identical reasoning.")]
         public static ThisFunc<TR> ThisAndArguments(ThisFunc<TR> del)
         {
             return del;
@@ -67,6 +77,8 @@ namespace Dynamitey
 <# } #>
         /// <param name="del">The lambdas.</param>
         /// <returns></returns>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification =
+            "See Return<TR>.Arguments(Func<TR>) above; identical reasoning.")]
         public static Func<<#=tFuncTArgs#>,TR> Arguments<<# Write(tFuncTArgs); #>>(Func<<#=tFuncTArgs#>,TR> del)
         {
             return del;
@@ -80,6 +92,8 @@ namespace Dynamitey
 <# } #>
         /// <param name="del">The del.</param>
         /// <returns></returns>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification =
+            "See Return<TR>.Arguments(Func<TR>) above; identical reasoning.")]
         public static ThisFunc<TR,<#=tFuncTArgs#>> ThisAndArguments<<# Write(tFuncTArgs); #>>(ThisFunc<TR,<#=tFuncTArgs#>> del)
         {
             return del;

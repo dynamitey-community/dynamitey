@@ -112,12 +112,27 @@ namespace Dynamitey
         /// Gets the new object builder.
         /// </summary>
         /// <value>The new.</value>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification =
+            "CA1000 exists because a static member on a generic type gets a separate copy per closed generic " +
+            "type, reachable only by naming that closed type - both of which are exactly what " +
+            "Build<TObjectPrototype> is for. NewObject/NewList are meant to be called as Build<Foo>.NewObject: " +
+            "the per-T copy is a deliberate per-prototype-type cache (a lazily-built dynamic proxy factory " +
+            "for that specific TObjectPrototype), not an accident, and naming the closed type at the call " +
+            "site is how the fluent builder syntax reads. A non-generic Build.NewObject<T>() alternative " +
+            "would have to do that caching itself behind a Type-keyed dictionary, trading a compile-time- " +
+            "resolved static field for a runtime lookup on every call - worse, not better. Return<TR> " +
+            "(InlineLambdas.cs, T4-generated) is the same pattern for the same reason; see the per-site " +
+            "suppressions there. Both are declared public API (PublicAPI.Unshipped.txt) with 53 dependent " +
+            "packages already consuming this exact shape, so moving away from the static-generic-factory " +
+            "pattern now is the breaking change this batch is not authorized to make.")]
         public static dynamic NewObject => _typedBuilder;
 
         /// <summary>
         /// Gets the new list builder.
         /// </summary>
         /// <value>The new list.</value>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification =
+            "See NewObject immediately above; identical reasoning - same per-T cache pattern.")]
         public static dynamic NewList => _typedListBuilder;
     }
 

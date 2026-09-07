@@ -32,6 +32,9 @@ namespace Dynamitey.Internal.Optimization
     /// <summary>
     /// Utility Class
     /// </summary>
+    [SuppressMessage("Naming", "CA1724:Type names should not match namespaces", Justification =
+        "See Dynamic.cs; identical reasoning. Util collides only with the retired System.Web.Util " +
+        "namespace, which this library doesn't use.")]
     public static class Util
     {
         /// <summary>

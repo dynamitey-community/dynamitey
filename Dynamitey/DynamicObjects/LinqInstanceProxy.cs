@@ -155,7 +155,11 @@ namespace Dynamitey.DynamicObjects
         IOrderedLinq<TSource> OrderByDescending<TKey>(Func<TSource, TKey> keySelector);
         IOrderedLinq<TSource> OrderByDescending<TKey>(Func<TSource, TKey> keySelector, IComparer<TKey> comparer);
         ILinq<TSource> Reverse();
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Select mirrors Enumerable.Select.")]
         ILinq<TResult> Select<TResult>(Func<TSource, TResult> selector);
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Select mirrors Enumerable.Select.")]
         ILinq<TResult> Select<TResult>(Func<TSource, Int32, TResult> selector);
         ILinq<TResult> SelectMany<TResult>(Func<TSource, IEnumerable<TResult>> selector);
         ILinq<TResult> SelectMany<TResult>(Func<TSource, Int32, IEnumerable<TResult>> selector);
@@ -163,7 +167,15 @@ namespace Dynamitey.DynamicObjects
         ILinq<TResult> SelectMany<TCollection, TResult>(Func<TSource, IEnumerable<TCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector);
         Boolean SequenceEqual(IEnumerable<TSource> second);
         Boolean SequenceEqual(IEnumerable<TSource> second, IEqualityComparer<TSource> comparer);
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Single mirrors Enumerable.Single.")]
+        [SuppressMessage("Naming", "CA1720:Identifiers should not contain type names", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Single mirrors Enumerable.Single.")]
         TSource Single();
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Single mirrors Enumerable.Single.")]
+        [SuppressMessage("Naming", "CA1720:Identifiers should not contain type names", Justification =
+            "See IBuilder.Object (Builder.cs); identical reasoning. Single mirrors Enumerable.Single.")]
         TSource Single(Func<TSource, Boolean> predicate);
         TSource SingleOrDefault();
         TSource SingleOrDefault(Func<TSource, Boolean> predicate);

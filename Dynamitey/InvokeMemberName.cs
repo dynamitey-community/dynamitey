@@ -1,15 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
 namespace Dynamitey
 {
-  
+
 
     /// <summary>
     /// String or InvokeMemberName
     /// </summary>
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification =
+        "String_OR_InvokeMemberName's name literally IS its contract: it's a poor-man's discriminated union " +
+        "predating C#'s union-type proposals, accepting either a bare string or an InvokeMemberName via " +
+        "implicit conversion operators, so an InvokeMember overload can take 'a name, optionally with named-" +
+        "argument metadata' without two overloads. The underscores spell out the three logical words - " +
+        "String, OR, InvokeMemberName - at a glance; collapsing them to StringOrInvokeMemberName trades that " +
+        "readability for a cosmetic style rule. It is declared public API that appears in the signature of " +
+        "every InvokeMember-family overload (Dynamic.InvokeMember, InvokeMemberAsync, InvokeMemberAction, " +
+        "CreateCallSite, Invocation.Create, CacheableInvocation.CreateCall, and more); renaming it now is a " +
+        "breaking change across all of them, which this batch is not authorized to make.")]
     public abstract class String_OR_InvokeMemberName
     {
         /// <summary>

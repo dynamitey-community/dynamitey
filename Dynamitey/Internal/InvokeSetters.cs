@@ -46,16 +46,16 @@ namespace Dynamitey.Internal
             "Same 'dynamic'/Dynamic.InvokeGet/InvokeSetChain calls as above; see the IL2026 suppression on this member.")]
         [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember " +
-            "(and the in-body comment on rawArgs immediately below); see that member.")]
-        public override bool TryInvoke(InvokeBinder binder, object?[]? rawArgs, out object? result)
+            "(and the in-body comment immediately below); see that member.")]
+        public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
         {
             IEnumerable<KeyValuePair<string, object>>? tDict = null;
             object? target = null;
             result = null;
-            // rawArgs is null only per DynamicObject.TryInvoke's own (rarely-null-in-practice)
+            // args is null only per DynamicObject.TryInvoke's own (rarely-null-in-practice)
             // signature; the DLR always supplies a real array, matching every other Try* override
             // in this codebase that forwards args without an explicit null check.
-            var args = rawArgs!;
+            var nonNullArgs = args!;
 
             //Setup Properties as dictionary
             if (binder.CallInfo.ArgumentNames.Count != 0)
@@ -63,31 +63,31 @@ namespace Dynamitey.Internal
 
                 if (binder.CallInfo.ArgumentNames.Count + 1 == binder.CallInfo.ArgumentCount)
                 {
-                    target = args.First();
+                    target = nonNullArgs.First();
                     // The DLR can hand a null named-argument value; the dictionary's value type
                     // stays non-null to match the other branches below, exactly as this untyped
                     // code already did before nullable was enabled.
                     tDict = binder.CallInfo.ArgumentNames
-                        .Zip(args.Skip(1), (key, value) => new { key, value })
+                        .Zip(nonNullArgs.Skip(1), (key, value) => new { key, value })
                         .ToDictionary(k => k.key, v => v.value!);
 
                 }else
                 {
-                    throw new RuntimeBinderException("InvokeSetAll requires first parameter to be target unamed, and all other parameters to be named.");
+                    throw new RuntimeBinderException("InvokeSetAll requires the first argument to be the target, unnamed, and every other argument to be named.");
                 }
             }
-            else if (args.Length == 2)
+            else if (nonNullArgs.Length == 2)
             {
-                target = args[0];
-                if (args[1] is IEnumerable<KeyValuePair<string, object>>)
+                target = nonNullArgs[0];
+                if (nonNullArgs[1] is IEnumerable<KeyValuePair<string, object>>)
                 {
-                    tDict = (IEnumerable<KeyValuePair<string, object>>)args[1]!;
+                    tDict = (IEnumerable<KeyValuePair<string, object>>)nonNullArgs[1]!;
                 }
-                else if (args[1] is IEnumerable
-                        && args[1]!.GetType().GetTypeInfo().IsGenericType
+                else if (nonNullArgs[1] is IEnumerable
+                        && nonNullArgs[1]!.GetType().GetTypeInfo().IsGenericType
                     )
                 {
-                    var tEnumerableArg = (IEnumerable)args[1]!;
+                    var tEnumerableArg = (IEnumerable)nonNullArgs[1]!;
 
                     var tInterface = tEnumerableArg.GetType().GetTypeInfo().GetInterfaces().FirstOrDefault(it=>it.Name =="IEnumerable`1");
                     if(tInterface !=null)
@@ -100,12 +100,12 @@ namespace Dynamitey.Internal
                         }
                     }
                 }
-                else if (Util.IsAnonymousType(args[1]!))
+                else if (Util.IsAnonymousType(nonNullArgs[1]!))
                 {
                     var keyDict = new Dictionary<string, object>();
-                    foreach (var tProp in args[1]!.GetType().GetTypeInfo().GetProperties())
+                    foreach (var tProp in nonNullArgs[1]!.GetType().GetTypeInfo().GetProperties())
                     {
-                        keyDict[tProp.Name] = Dynamic.InvokeGet(args[1]!, tProp.Name)!;
+                        keyDict[tProp.Name] = Dynamic.InvokeGet(nonNullArgs[1]!, tProp.Name)!;
                     }
                     tDict = keyDict;
                 }

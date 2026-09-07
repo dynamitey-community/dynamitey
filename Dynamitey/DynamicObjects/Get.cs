@@ -28,7 +28,9 @@ namespace Dynamitey.DynamicObjects
     /// Dynamic Proxy that exposes any properties of objects, and can massage results based on interface
     /// </summary>
 
-   
+
+    [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+        "See IBuilder.Object (Builder.cs); identical reasoning. Get names exactly what this proxy does.")]
     public class Get:BaseForwarder
     {
      
