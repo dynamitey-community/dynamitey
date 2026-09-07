@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System;
 using Dynamitey.DynamicObjects;
+using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
 
 namespace Dynamitey.Tests
@@ -19,6 +21,23 @@ namespace Dynamitey.Tests
     [TestFixture]
     public class ExtensionToInstanceProxyTest : Helper
     {
+        [Test]
+        public void ConstructingWithAnotherProxyAsTarget_Throws()
+        {
+            dynamic tInner = new ExtensionToInstanceProxy(new ExtProxyTestFooImpl(), typeof(IExtProxyTestFoo),
+                new[] { typeof(ExtProxyTestFooExtensions) });
+
+            Assert.Throws<ArgumentException>(() => new ExtensionToInstanceProxy(tInner, typeof(IExtProxyTestFoo),
+                new[] { typeof(ExtProxyTestFooExtensions) }));
+        }
+
+        [Test]
+        public void ConstructingWithATargetThatDoesNotImplementExtendedType_Throws()
+        {
+            Assert.Throws<ArgumentException>(() => new ExtensionToInstanceProxy(new object(), typeof(IExtProxyTestFoo),
+                new[] { typeof(ExtProxyTestFooExtensions) }));
+        }
+
         // Gap 2: the Invoker nested type dereferenced parent.InstanceHints unconditionally when
         // resolving a member by type (needed for generic overload selection), but InstanceHints is
         // null whenever the proxy was constructed without instanceHints - the constructor's own
@@ -60,6 +79,38 @@ namespace Dynamitey.Tests
                 new[] { typeof(ExtProxyTestFooExtensions) });
 
             Assert.That((string)proxy.BarNull(), Is.Null);
+        }
+
+        // ExtensionToInstanceProxy.Invoker.TryGetMember has two branches beyond the
+        // InstanceHints-less InvalidOperationException gap above: a magic "Overloads" member
+        // (returns an OverloadInvoker) and everything else, which falls through to
+        // DynamicObject's own TryGetMember (always false, since Invoker never sets any
+        // property). A proxy WITH instanceHints - LinqInstanceProxy always supplies them - can
+        // reach the Invoker without hitting gap 2's InvalidOperationException, since member
+        // access without an immediate call has something to reflect over for overload
+        // resolution.
+        [Test]
+        public void InvokerOverloadsMember_ReturnsAnOverloadInvoker()
+        {
+            dynamic linq = new LinqInstanceProxy(new List<int> { 1, 2, 3 });
+
+            dynamic whereInvoker = linq.Where;
+            dynamic overloads = whereInvoker.Overloads;
+
+            Assert.That((object)overloads, Is.InstanceOf<ExtensionToInstanceProxy.OverloadInvoker>());
+        }
+
+        [Test]
+        public void InvokerUnrecognizedMember_FallsThroughToDynamicObjectDefaultAndThrows()
+        {
+            dynamic linq = new LinqInstanceProxy(new List<int> { 1, 2, 3 });
+
+            dynamic whereInvoker = linq.Where;
+
+            Assert.Throws<RuntimeBinderException>(() =>
+            {
+                _ = whereInvoker.NotOverloads;
+            });
         }
     }
 }
