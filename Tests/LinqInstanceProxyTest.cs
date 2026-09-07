@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Dynamitey.DynamicObjects;
 using NUnit.Framework;
@@ -7,21 +8,11 @@ namespace Dynamitey.Tests
     /// <summary>
     /// LinqInstanceProxy had no direct coverage before this file: every existing test reaches
     /// LINQ through other paths. This exercises the constructor (which builds on
-    /// ExtensionToInstanceProxy) and an invoked LINQ extension method (which round-trips
-    /// through CreateSelf back into a LinqInstanceProxy).
+    /// ExtensionToInstanceProxy), an invoked LINQ extension method (which round-trips through
+    /// CreateSelf back into a LinqInstanceProxy), and GetEnumerator() (both the generic and
+    /// explicit-interface forms), which unwraps the InvokeContext stored by the base
+    /// ExtensionToInstanceProxy constructor before enumerating the real target - see issue #82.
     /// </summary>
-    /// <remarks>
-    /// LinqInstanceProxy.GetEnumerator() (both the generic and explicit-interface forms) is
-    /// deliberately not exercised here: it casts CallTarget - the InvokeContext wrapper stored
-    /// by the base ExtensionToInstanceProxy constructor, not the raw target - straight to
-    /// dynamic and calls GetEnumerator() on it. InvokeContext does not implement
-    /// IDynamicMetaObjectProvider, so that call resolves against InvokeContext's own members
-    /// and throws Microsoft.CSharp.RuntimeBinder.RuntimeBinderException: "'Dynamitey.
-    /// InvokeContext' does not contain a definition for 'GetEnumerator'" - for every
-    /// LinqInstanceProxy, unconditionally. Confirmed by writing the direct test (foreach over a
-    /// LinqInstanceProxy / Dynamic.Linq(...) result) and watching it fail with that message
-    /// rather than iterate. Reported rather than fixed or masked, per this task's ground rules.
-    /// </remarks>
     [TestFixture]
     public class LinqInstanceProxyTest : Helper
     {
@@ -44,6 +35,65 @@ namespace Dynamitey.Tests
 
             Assert.That(filtered, Is.InstanceOf<LinqInstanceProxy>());
             Assert.That((int)filtered.Count(), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Foreach_OverDynamicLinqResult_IteratesTheUnderlyingValueTypeSequenceInOrder()
+        {
+            dynamic tLinq = Dynamic.Linq(new List<int> { 1, 2, 3 });
+
+            var tResult = new List<int>();
+            foreach (var it in (IEnumerable)tLinq)
+            {
+                tResult.Add((int)it);
+            }
+
+            Assert.That(tResult, Is.EqualTo(new List<int> { 1, 2, 3 }));
+        }
+
+        [Test]
+        public void Foreach_OverDynamicLinqResult_IteratesTheUnderlyingReferenceTypeSequenceInOrder()
+        {
+            dynamic tLinq = Dynamic.Linq(new List<string> { "a", "b", "c" });
+
+            var tResult = new List<string>();
+            foreach (var it in (IEnumerable)tLinq)
+            {
+                tResult.Add((string)it);
+            }
+
+            Assert.That(tResult, Is.EqualTo(new List<string> { "a", "b", "c" }));
+        }
+
+        [Test]
+        public void GenericGetEnumerator_IteratesTheUnderlyingSequenceInOrder()
+        {
+            IEnumerable<object> tLinq = new LinqInstanceProxy(new List<int> { 1, 2, 3 });
+
+            var tResult = new List<int>();
+            using (var tEnumerator = tLinq.GetEnumerator())
+            {
+                while (tEnumerator.MoveNext())
+                {
+                    tResult.Add((int)tEnumerator.Current);
+                }
+            }
+
+            Assert.That(tResult, Is.EqualTo(new List<int> { 1, 2, 3 }));
+        }
+
+        [Test]
+        public void ExplicitNonGenericGetEnumerator_IteratesTheUnderlyingSequenceInOrder()
+        {
+            IEnumerable tLinq = new LinqInstanceProxy(new List<int> { 1, 2, 3 });
+
+            var tResult = new List<int>();
+            foreach (var it in tLinq)
+            {
+                tResult.Add((int)it);
+            }
+
+            Assert.That(tResult, Is.EqualTo(new List<int> { 1, 2, 3 }));
         }
     }
 }

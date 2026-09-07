@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using System.Text;
+using Dynamitey.Internal.Optimization;
 
 
 namespace Dynamitey.DynamicObjects
@@ -49,15 +50,22 @@ namespace Dynamitey.DynamicObjects
         /// Gets the enumerator.
         /// </summary>
         /// <returns></returns>
-        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
-            "Invokes CallTarget.GetEnumerator() through 'dynamic' (DLR). This implements " +
-            "IEnumerable<object>.GetEnumerator(), which isn't annotated, so this method can't " +
-            "carry [RequiresUnreferencedCode] itself without mismatching that interface member; " +
-            "the actionable warning already lives on any consumer using this type through 'dynamic'.")]
-        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic' invocation as above; see the IL2026 suppression on this member.")]
         public IEnumerator<object> GetEnumerator()
         {
-            return ((dynamic) CallTarget!).GetEnumerator();
+            // CallTarget is the InvokeContext wrapper the base ExtensionToInstanceProxy
+            // constructor installed, not the raw target, and InvokeContext doesn't implement
+            // IDynamicMetaObjectProvider or GetEnumerator itself - so it has to be unwrapped
+            // first via Util.GetTargetContext, the same helper every other member on this type
+            // routes through. Unwrapping alone isn't enough, though: a List<int> target's
+            // GetEnumerator() returns List<int>.Enumerator, i.e. IEnumerator<int>, and
+            // IEnumerator<T> covariance doesn't apply to value-type arguments, so an implicit
+            // conversion to IEnumerator<object> would still fail to compile/bind for value-type
+            // sequences. Going through the non-generic IEnumerable and Enumerable.Cast<object>()
+            // instead handles generic and legacy non-generic sequences alike, and boxing
+            // value-type elements is exactly what this type's declared IEnumerable<object>
+            // already implies.
+            var tTarget = Util.GetTargetContext(CallTarget!, out Type _, out bool _);
+            return ((IEnumerable) tTarget).Cast<object>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
