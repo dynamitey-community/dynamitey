@@ -142,13 +142,20 @@ namespace Dynamitey.DynamicObjects
         public override IEnumerable<string> GetDynamicMemberNames()
         {
            
-                var tDyanmic = Dynamic.GetMemberNames(CallTarget!, dynamicOnly: true);
-                if (!tDyanmic.Any())
-                {
-                    return Dynamic.GetMemberNames(CallTarget!);
-                }
-            
-            return base.GetDynamicMemberNames();
+            // The branches used to be inverted: when the target DID report dynamic members
+            // this returned base.GetDynamicMemberNames() - DynamicObject's own, always empty -
+            // discarding the list it had just computed, so a forwarder over an ExpandoObject
+            // reported nothing (issue #67). Dynamic members when there are any, the full
+            // member list otherwise.
+            //
+            // Materialized once rather than enumerated twice: Dynamic.GetMemberNames returns a
+            // lazy sequence, so testing it and then returning it would resolve the target's
+            // members through the DLR a second time.
+            var tDynamic = Dynamic.GetMemberNames(CallTarget!, dynamicOnly: true).ToList();
+
+            return tDynamic.Count > 0
+                ? tDynamic
+                : Dynamic.GetMemberNames(CallTarget!);
         }
 
 
@@ -510,8 +517,19 @@ namespace Dynamitey.DynamicObjects
         {
             if (ReferenceEquals(null, obj)) return ReferenceEquals(null, CallTarget);
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (BaseForwarder)) return false;
-            return Equals((BaseForwarder) obj);
+
+            // "is BaseForwarder", not a GetType() comparison. This used to read
+            // "obj.GetType() != typeof(BaseForwarder)", and BaseForwarder is abstract - no
+            // instance's runtime type is ever equal to it - so the guard was unconditionally
+            // true and the typed overload below was unreachable (issue #67).
+            //
+            // A GetType()-based test would also be wrong here, because it would make a Get
+            // unequal to a Recorder wrapping the same target while GetHashCode still returned
+            // the same value for both. The typed Equals(BaseForwarder) compares only
+            // CallTarget, and GetHashCode hashes only CallTarget, so equality is target-based
+            // and must not consider the wrapper's own type.
+            if (!(obj is BaseForwarder tOther)) return false;
+            return Equals(tOther);
         }
 
         /// <summary>

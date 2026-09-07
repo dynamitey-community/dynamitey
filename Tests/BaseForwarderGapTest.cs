@@ -197,25 +197,23 @@ namespace Dynamitey.Tests
             Assert.That(tNames, Does.Contain("SomeProp"));
         }
 
-        // BUG (found while writing this coverage): when the wrapped target itself reports
-        // dynamic-only member names (Dynamic.GetMemberNames(..., dynamicOnly: true).Any()
-        // is true), BaseForwarder.GetDynamicMemberNames returns `base.GetDynamicMemberNames()`
-        // - DynamicObject's own default implementation, which is always empty - instead of
-        // the `tDyanmic` list it just computed. So a forwarder wrapping an ExpandoObject (or
-        // any other genuinely dynamic target) always reports zero dynamic member names; only
-        // the "target has no dynamic members, fall back to reflection" branch actually
-        // returns anything. This test pins the current (buggy, always-empty) behavior rather
-        // than papering over it - see the coverage task's report for the write-up.
+        // Issue #67. The branches were inverted: when the target DID report dynamic members
+        // this returned base.GetDynamicMemberNames() - DynamicObject's own, always empty -
+        // discarding the list it had just computed. A forwarder over an ExpandoObject
+        // therefore reported nothing, so a debugger's dynamic view, an
+        // IDynamicMetaObjectProvider consumer, or anything serializing a wrapped expando saw
+        // no members at all.
         [Test]
-        public void TestForwarderGetDynamicMemberNamesFromDynamicTargetIsAlwaysEmpty()
+        public void TestForwarderGetDynamicMemberNamesReportsTheTargetsDynamicMembers()
         {
             dynamic tInner = new ExpandoObject();
             tInner.Foo = "Bar";
+            tInner.Baz = 42;
             var tFwd = new DynamicObjs.TestForwarder((object)tInner);
 
             var tNames = tFwd.GetDynamicMemberNames().ToList();
 
-            Assert.That(tNames, Is.Empty);
+            Assert.That(tNames, Is.EquivalentTo(new[] { "Foo", "Baz" }));
         }
 
         [Test]
@@ -235,31 +233,44 @@ namespace Dynamitey.Tests
             Assert.That(tFwdNull.Equals((Dynamitey.DynamicObjects.BaseForwarder)null), Is.True);
         }
 
-        // BUG (found while writing this coverage): BaseForwarder.Equals(object?) checks
-        // `obj.GetType() != typeof(BaseForwarder)` - a literal comparison against the
-        // *abstract* base type - rather than `obj.GetType() != GetType()`. BaseForwarder
-        // can never be instantiated directly, so that check is false for every real
-        // subclass instance and the method always falls through to `return false` instead
-        // of ever reaching `Equals((BaseForwarder)obj)`. The strongly-typed
-        // Equals(BaseForwarder?) overload (tested above) is correct; only the
-        // object.Equals(object?) override is broken. This test pins the current
-        // (buggy) behavior rather than papering over it - see the coverage task's
-        // report for the write-up.
+        // Issue #67. Equals(object?) used to guard on `obj.GetType() != typeof(BaseForwarder)`
+        // - a literal comparison against the ABSTRACT base type. No instance's runtime type is
+        // ever equal to it, so the guard was unconditionally true and the typed overload
+        // beneath was unreachable: two forwarders over the same target compared unequal.
         [Test]
-        public void TestForwarderEqualsObjectOverloadNeverMatchesConcreteSubclassInstances()
+        public void TestForwarderEqualsObjectOverloadReachesTheTypedOverload()
         {
             var tTarget = new object();
             var tFwd1 = new DynamicObjs.TestForwarder(tTarget);
             var tFwd2 = new DynamicObjs.TestForwarder(tTarget);
+            var tFwdOther = new DynamicObjs.TestForwarder(new object());
             var tFwdNull = new DynamicObjs.TestForwarder(null!);
 
             Assert.That(tFwd1.Equals((object)tFwd1), Is.True, "reference-equal shortcut still works");
             Assert.That(tFwd1.Equals((object)null), Is.False, "CallTarget is non-null, obj is null");
             Assert.That(tFwdNull.Equals((object)null), Is.True, "both CallTarget and obj are null");
 
-            // Would be True under a correct GetType()-based comparison; is False because of
-            // the bug described above.
-            Assert.That(tFwd1.Equals((object)tFwd2), Is.False);
+            Assert.That(tFwd1.Equals((object)tFwd2), Is.True, "same target, so equal - this is what the bug blocked");
+            Assert.That(tFwd1.Equals((object)tFwdOther), Is.False, "different targets are still unequal");
+            Assert.That(tFwd1.Equals((object)"not a forwarder"), Is.False, "an unrelated type is still unequal");
+        }
+
+        // Equality here is target-based and deliberately ignores the wrapper's own type: the
+        // typed Equals compares only CallTarget, and GetHashCode hashes only CallTarget. A
+        // GetType()-based guard would have made these two unequal while still handing them the
+        // same hash code - legal, but it would put Equals(object) at odds with both the typed
+        // overload and the hash.
+        [Test]
+        public void TestForwarderEqualsAcrossDifferentSubclassesWrappingTheSameTarget()
+        {
+            var tTarget = new object();
+            object tOne = new DynamicObjs.TestForwarder(tTarget);
+            object tTwo = new DynamicObjects.Get(tTarget);
+
+            Assert.That(tOne.GetHashCode(), Is.EqualTo(tTwo.GetHashCode()),
+                "premise: both hash their CallTarget, so the hashes already agreed");
+            Assert.That(tOne.Equals(tTwo), Is.True);
+            Assert.That(tTwo.Equals(tOne), Is.True, "and symmetrically");
         }
 
         [Test]
