@@ -178,5 +178,123 @@ namespace Dynamitey.Tests
             var tup = Tupler.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20);
             Assert.That((object)Tupler.Index(tup, 19), Is.EqualTo(20));
         }
+
+        // Issue #62: Tupler.HelperIsTuple initialised its `size` out-param to 1 before the
+        // null check, so the early-return-on-null path never overwrote it - Size(null) came
+        // back 1, and Last(null) computed a valid-looking index from that wrong size instead
+        // of being rejected. Every public entry point below now guards its `tuple` parameter
+        // with Guard.NotNull, and the initialiser was changed to 0 (what every non-null
+        // non-tuple already reported via TupleArgs.TryGetValue's failure case). These tests
+        // cover the three cases that used to give three different kinds of answer: null,
+        // a non-null non-tuple, and a real tuple.
+
+        [Test]
+        public void SizeNullThrowsArgumentNullException()
+        {
+            Assert.That(() => Tupler.Size(null!),
+                Throws.ArgumentNullException.With.Property("ParamName").EqualTo("tuple"));
+        }
+
+        [Test]
+        public void SizeNonTupleReturnsZero()
+        {
+            Assert.That((object)Tupler.Size(new object()), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void SizeRealTupleReturnsCorrectSize()
+        {
+            var tup = Tuple.Create(1, 2, 3);
+            Assert.That((object)Tupler.Size(tup), Is.EqualTo(3));
+        }
+
+        [Test]
+        public void IndexNullThrowsArgumentNullException()
+        {
+            Assert.That(() => Tupler.Index(null!, 0),
+                Throws.ArgumentNullException.With.Property("ParamName").EqualTo("tuple"));
+        }
+
+        [Test]
+        public void IndexNonTupleThrowsArgumentException()
+        {
+            Assert.That(() => Tupler.Index(new object(), 0), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void IndexRealTupleReturnsCorrectValue()
+        {
+            var tup = Tuple.Create(1, 2, 3);
+            Assert.That((object)Tupler.Index(tup, 1), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void FirstNullThrowsArgumentNullException()
+        {
+            Assert.That(() => Tupler.First(null!),
+                Throws.ArgumentNullException.With.Property("ParamName").EqualTo("tuple"));
+        }
+
+        [Test]
+        public void FirstNonTupleThrowsArgumentException()
+        {
+            Assert.That(() => Tupler.First(new object()), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void FirstRealTupleReturnsCorrectValue()
+        {
+            var tup = Tuple.Create(1, 2, 3);
+            Assert.That((object)Tupler.First(tup), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SecondNullThrowsArgumentNullException()
+        {
+            // Second takes the same bare `object tuple` shape as First/Last and is guarded
+            // for the same reason, even though the issue only names Size/Index/First/Last/ToList.
+            Assert.That(() => Tupler.Second(null!),
+                Throws.ArgumentNullException.With.Property("ParamName").EqualTo("tuple"));
+        }
+
+        [Test]
+        public void LastNullThrowsArgumentNullException()
+        {
+            Assert.That(() => Tupler.Last(null!),
+                Throws.ArgumentNullException.With.Property("ParamName").EqualTo("tuple"));
+        }
+
+        [Test]
+        public void LastNonTupleThrowsArgumentException()
+        {
+            Assert.That(() => Tupler.Last(new object()), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void LastRealTupleReturnsCorrectValue()
+        {
+            var tup = Tuple.Create(1, 2, 3);
+            Assert.That((object)Tupler.Last(tup), Is.EqualTo(3));
+        }
+
+        [Test]
+        public void ToListNullThrowsArgumentNullException()
+        {
+            Assert.That(() => Tupler.ToList(null!),
+                Throws.ArgumentNullException.With.Property("ParamName").EqualTo("tuple"));
+        }
+
+        [Test]
+        public void ToListNonTupleReturnsEmptyList()
+        {
+            Assert.That((object)Tupler.ToList(new object()), Is.Empty);
+        }
+
+        [Test]
+        public void ToListRealTupleReturnsCorrectList()
+        {
+            var tup = Tuple.Create(1, 2, 3);
+            Assert.That((object)Tupler.ToList(tup), Is.EqualTo(new List<int> { 1, 2, 3 }));
+        }
     }
 }

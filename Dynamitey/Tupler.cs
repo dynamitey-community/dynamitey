@@ -95,6 +95,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic First(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return Index(tuple, 0);
         }
 
@@ -107,6 +108,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Second(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return Index(tuple, 1);
         }
 
@@ -119,6 +121,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Last(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return Index(tuple, Size(tuple)-1);
         }
 
@@ -131,6 +134,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static IList<dynamic> ToList(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
 
             var list = new List<dynamic>();
             HelperToList(list, tuple, safe:false);
@@ -168,6 +172,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Index(object tuple, int index)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return HelperIndex(tuple, index, false);
         }
 
@@ -214,7 +219,7 @@ namespace Dynamitey
         private static bool HelperIsTuple(object? target, [NotNullWhen(true)] out Type? type, out Type genericeType, out int size, bool safe)
         {
             genericeType = typeof(object);
-            size = 1;
+            size = 0;
             type = null;
             if (target == null)
                 return false;
@@ -237,6 +242,7 @@ namespace Dynamitey
         /// <returns></returns>
         public static int Size(object tuple)
         {
+            Dynamitey.Internal.Guard.NotNull(tuple);
             return HelperSize(tuple, false);
         }
 
