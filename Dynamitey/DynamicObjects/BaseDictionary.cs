@@ -53,8 +53,10 @@ namespace Dynamitey.DynamicObjects
         [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
             "A protected field on a public class, deliberately: it's the extension point Dictionary " +
             "and List (the two concrete subclasses) build on, and every other CA1051 site in this " +
-            "batch is the same pattern - Builder._buildType, four fields on ExtensionToInstanceProxy's " +
-            "nested Invoker, Factory's two BaseSingleInstancesFactory fields, FauxType.RealType's " +
+            "batch is the same pattern - Builder._buildType, the five protected fields on " +
+            "ExtensionToInstanceProxy.Invoker (Name, Parent, OverloadTypes, GenericParams, " +
+            "GenericMethodParameters), " +
+            "Factory's two BaseSingleInstancesFactory fields, FauxType.RealType's " +
             "TargetType, and List's own _list. Turning any of them into a property is a binary breaking " +
             "change for an external subclass that reads or assigns the field directly - the very thing " +
             "they're declared protected to allow - for no behavioral gain, so this is a suppression " +
