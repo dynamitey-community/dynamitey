@@ -220,6 +220,15 @@ namespace Dynamitey
     /// <summary>
     /// Partial Application Proxy
     /// </summary>
+    [SuppressMessage("Design", "CA1040:Avoid empty interfaces", Justification =
+        "IPartialApply is a deliberately empty marker interface: PartialApply and Curry both implement it " +
+        "purely so a consumer can test 'x is IPartialApply' to recognize 'this is one of Dynamitey's " +
+        "partial-application proxies', without depending on either concrete type by name and without a " +
+        "reflection-by-type-name check. CA1040's usual alternative - a custom attribute - can't do that: an " +
+        "attribute isn't checkable with 'is'/pattern-matching or usable as a generic type constraint, only " +
+        "discoverable via reflection at each call site, which is slower and more code at every use than the " +
+        "interface check it would replace. It is declared public API (PublicAPI.Unshipped.txt); giving it a " +
+        "member now, or removing it, both change what a consumer's 'is IPartialApply' check evaluates.")]
     public interface IPartialApply
     {
     }
