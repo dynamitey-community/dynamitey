@@ -75,8 +75,11 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         public void Clear()
         {
-            var tKeys = Keys;
-           
+            // ToList, because Keys is a live view over _dictionary: without the copy it is
+            // already empty by the time the notification loop below runs, and PropertyChanged
+            // never fires for anything. A bound control was left showing properties that no
+            // longer existed.
+            var tKeys = Keys.ToList();
 
             _dictionary.Clear();
 

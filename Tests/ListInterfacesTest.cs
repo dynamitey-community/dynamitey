@@ -134,10 +134,11 @@ namespace Dynamitey.Tests
             Assert.That(tDict["Foo"], Is.EqualTo(1), "sanity: indexer round-trips");
 
             // Manual foreach rather than LINQ's ToList()/Count(): those special-case
-            // ICollection<T> and go through List.Count/CopyTo instead of enumerating - see
-            // TestDictionaryCountThroughCollectionInterfaceIsActuallyListCount below for why
-            // that path reports the wrong count. Iterating the enumerator by hand is what
-            // isolates the explicit GetEnumerator() implementation itself.
+            // ICollection<T> and read Count or call CopyTo instead of enumerating, so they
+            // would not exercise the thing under test here. Since #69 that path reports the
+            // right number - see TestDictionaryCountThroughCollectionInterfaceMatchesEnumeration
+            // below - but it still bypasses GetEnumerator(), and isolating that explicit
+            // implementation is the whole point of this test.
             IEnumerable<KeyValuePair<string, object>> tKvEnumerable = tListObj;
             var tPairs = new List<KeyValuePair<string, object>>();
             using (var tEnumerator = tKvEnumerable.GetEnumerator())
@@ -151,21 +152,15 @@ namespace Dynamitey.Tests
             Assert.That(tPairs.Count, Is.EqualTo(2), $"got: [{string.Join(", ", tPairs.Select(p => p.Key + "=" + p.Value))}]");
         }
 
-        // BUG (found while writing this coverage): List declares exactly one public `Count`
-        // property - `_list.Count`, for its array-like IList<object>/ICollection side. That
-        // same property is also what satisfies ICollection<KeyValuePair<string,object>>.Count,
-        // which List implicitly acquires through IDictionary<string,object> - there is no
-        // second, explicit Count for the dictionary-of-properties side. So anything that reads
-        // List's *dictionary* Count through that interface - including LINQ's Count()/
-        // Enumerable fast path, which special-cases ICollection<T> and reads .Count instead of
-        // enumerating - reports the *list's* element count instead, while foreach-enumerating
-        // the same IEnumerable<KeyValuePair<string,object>> yields the real dictionary entries.
-        // Concretely: a List with 0 list-items and 2 dictionary-properties enumerates 2
-        // KeyValuePairs by foreach, but LINQ's .Count() on that same sequence reports 0. This
-        // test pins the current (inconsistent) behavior rather than papering over it - see the
-        // coverage task's report for the write-up.
+        // Issue #69. List declares one public Count - the element count - and that same
+        // property used to satisfy ICollection<KeyValuePair<string,object>>.Count, which List
+        // acquires through IDictionary<string,object>. Reading the dictionary count therefore
+        // reported the element count, and because LINQ special-cases ICollection<T> and reads
+        // Count rather than enumerating, counting and iterating the same sequence disagreed: a
+        // List with no elements and two properties enumerated two pairs while Count() said 0.
+        // The dictionary side is now implemented explicitly, so the two agree.
         [Test]
-        public void TestDictionaryCountThroughCollectionInterfaceIsActuallyListCount()
+        public void TestDictionaryCountThroughCollectionInterfaceMatchesEnumeration()
         {
             var tListObj = new DynamicObjects.List(); // 0 list items
             IDictionary<string, object> tDict = tListObj;
@@ -180,8 +175,8 @@ namespace Dynamitey.Tests
             }
 
             Assert.That(tForeachCount, Is.EqualTo(2), "manual enumeration sees both properties");
-            Assert.That(tKvEnumerable.Count(), Is.EqualTo(0),
-                "LINQ's ICollection<T>.Count fast path reads List.Count (the list side, still empty) instead");
+            Assert.That(tKvEnumerable.Count(), Is.EqualTo(2),
+                "LINQ's ICollection<T>.Count fast path now reads the property count, agreeing with enumeration");
         }
 
         [Test]
