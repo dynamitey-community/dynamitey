@@ -29,7 +29,16 @@ namespace Dynamitey.DynamicObjects
     /// <summary>
     /// Expando-Type List for dynamic objects
     /// </summary>
-   
+
+    [SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification =
+        "List implements IDictionary<string,object>, IList<object>, IList and INotifyCollectionChanged - " +
+        "real collection interfaces - which is exactly why CA1710 wants its name to end in Dictionary or " +
+        "Collection. It's named List instead because it is the array-like counterpart to " +
+        "DynamicObjects.Dictionary and DynamicObjects.Expando in this same namespace - together they model " +
+        "the three dynamic-object shapes (array, dictionary, expando) - and because List is the name every " +
+        "consumer already knows it by, unchanged since upstream's first release. Renaming it now would " +
+        "also break that matched-set naming with its two siblings for no behavioral gain, and is a breaking " +
+        "rename of declared public API (PublicAPI.Unshipped.txt) this batch is not authorized to make.")]
     public class List : BaseDictionary, IList<object>, IDictionary<string, object>, INotifyCollectionChanged, IList
 
     {
