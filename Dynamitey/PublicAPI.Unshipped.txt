@@ -511,7 +511,7 @@ override Dynamitey.Internal.Curry.TryBinaryOperation(System.Dynamic.BinaryOperat
 override Dynamitey.Internal.Curry.TryConvert(System.Dynamic.ConvertBinder! binder, out object? result) -> bool
 override Dynamitey.Internal.Curry.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
 override Dynamitey.Internal.Curry.TryInvokeMember(System.Dynamic.InvokeMemberBinder! binder, object?[]? args, out object? result) -> bool
-override Dynamitey.Internal.InvokeSetters.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? rawArgs, out object? result) -> bool
+override Dynamitey.Internal.InvokeSetters.TryInvoke(System.Dynamic.InvokeBinder! binder, object?[]? args, out object? result) -> bool
 override Dynamitey.Invocation.Equals(object? obj) -> bool
 override Dynamitey.Invocation.GetHashCode() -> int
 override Dynamitey.InvokeMemberName.Equals(object? obj) -> bool
