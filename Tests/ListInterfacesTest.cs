@@ -134,10 +134,11 @@ namespace Dynamitey.Tests
             Assert.That(tDict["Foo"], Is.EqualTo(1), "sanity: indexer round-trips");
 
             // Manual foreach rather than LINQ's ToList()/Count(): those special-case
-            // ICollection<T> and go through List.Count/CopyTo instead of enumerating - see
-            // TestDictionaryCountThroughCollectionInterfaceMatchesEnumeration below for why
-            // that path reports the wrong count. Iterating the enumerator by hand is what
-            // isolates the explicit GetEnumerator() implementation itself.
+            // ICollection<T> and read Count or call CopyTo instead of enumerating, so they
+            // would not exercise the thing under test here. Since #69 that path reports the
+            // right number - see TestDictionaryCountThroughCollectionInterfaceMatchesEnumeration
+            // below - but it still bypasses GetEnumerator(), and isolating that explicit
+            // implementation is the whole point of this test.
             IEnumerable<KeyValuePair<string, object>> tKvEnumerable = tListObj;
             var tPairs = new List<KeyValuePair<string, object>>();
             using (var tEnumerator = tKvEnumerable.GetEnumerator())
