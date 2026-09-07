@@ -621,6 +621,22 @@ namespace Dynamitey.Tests
 
         }
 
+        // Pins the CA2208 fix in CacheableInvocation.Invoke's "wrong argument count" branch: the
+        // ArgumentException constructor's (message, paramName) arguments used to be transposed, so
+        // Message was literally the string "args" and ParamName was left null. A Get invocation
+        // takes 0 args; calling it with 1 forces that branch.
+        [Test]
+        public void TestCacheableInvocationWrongArgCountExceptionIsWellFormed()
+        {
+            var tCached = new CacheableInvocation(InvocationKind.Get, "Prop1");
+            var tAnon = new PropPoco { Prop1 = "1" };
+
+            var tException = Assert.Throws<ArgumentException>(() => tCached.Invoke(tAnon, "unexpected extra arg"));
+
+            Assert.That(tException.ParamName, Is.EqualTo("args"));
+            Assert.That(tException.Message, Does.StartWith("Incorrect number of Arguments for CachedInvocation, Expected:0"));
+        }
+
         // Pins the CA2201 fix on CoerceToDelegate's "impossible" branch (System.Exception ->
         // InvalidOperationException). MulticastDelegate is the one built-in type that reaches it:
         // it passes the earlier IsAssignableFrom(Delegate) check (its own base type is Delegate),
