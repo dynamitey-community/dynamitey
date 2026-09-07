@@ -103,9 +103,9 @@ namespace System.Diagnostics.CodeAnalysis
             "byte-for-byte the same shape as that real attribute (see the file header) so the C# " +
             "compiler's pattern-matching recognises it identically on netstandard2.0; adding a property " +
             "the real one lacks would be less faithful, not more.")]
-        public MemberNotNullAttribute(string members)
+        public MemberNotNullAttribute(string member)
         {
-            Members = new[] { members };
+            Members = new[] { member };
         }
 
         public MemberNotNullAttribute(params string[] members)
@@ -121,10 +121,10 @@ namespace System.Diagnostics.CodeAnalysis
     {
         [SuppressMessage("Design", "CA1019:Define accessors for attribute arguments", Justification =
             "Same reasoning as the matching constructor on MemberNotNullAttribute above.")]
-        public MemberNotNullWhenAttribute(bool returnValue, string members)
+        public MemberNotNullWhenAttribute(bool returnValue, string member)
         {
             ReturnValue = returnValue;
-            Members = new[] { members };
+            Members = new[] { member };
         }
 
         public MemberNotNullWhenAttribute(bool returnValue, params string[] members)

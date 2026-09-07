@@ -95,7 +95,7 @@ namespace Dynamitey.Internal.Optimization {
 
 		internal static readonly IDictionary<Type,int> FuncArgs = FuncKinds.Zip(Enumerable.Range(0, FuncKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
         internal static readonly IDictionary<Type,int> ActionArgs = ActionKinds.Zip(Enumerable.Range(0, ActionKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
-		internal static readonly IDictionary<Type,int> TupleArgs = TupleKinds.Zip(Enumerable.Range(1, ActionKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
+		internal static readonly IDictionary<Type,int> TupleArgs = TupleKinds.Zip(Enumerable.Range(1, TupleKinds.Length), (key, value) => new { key, value }).ToDictionary(k => k.key, v => v.value);
 
 		[RequiresUnreferencedCode("Reads tuple.ItemN/tuple.Rest through 'dynamic' member access; trimming can remove those properties from the tuple's concrete type.")]
 		[RequiresDynamicCode("The 'dynamic' member access binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]

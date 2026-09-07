@@ -979,7 +979,7 @@ namespace Dynamitey
                 var tDelMethodInfo = delegateTypeInfo.GetMethod("Invoke");
                 if (tDelMethodInfo is null)
                 {
-                    throw new InvalidOperationException("This Delegate Didn't have and Invoke method! Impossible!");
+                    throw new InvalidOperationException("This Delegate Didn't have an Invoke method! Impossible!");
                 }
                 var tReturnType = tDelMethodInfo.ReturnType;
                 var tAction = tReturnType == typeof(void);
