@@ -1717,43 +1717,74 @@ namespace Dynamitey.Tests
             Assert.That(Dynamic.InvokeBinaryOperator(1, ExpressionType.Add, 2), Is.EqualTo(3));
         }
 
+        // Each `case` body in InvokeUnaryOperator's switch (Dynamic.cs) is its own dynamic call
+        // site with its own compiler-generated, lazily-initialized CallSite field - "site is null,
+        // create and bind it" is one branch, "site already exists" is the other. Calling every
+        // operator exactly once - as this test did before - permanently leaves the second branch
+        // uncovered for each of them; calling each one twice exercises both.
         [Test]
         public void TestInvokeBasicUnaryOperatorsDynamic()
         {
             RunUnaryMockTests(ExpressionType.Not);
+            RunUnaryMockTests(ExpressionType.Not);
+            RunUnaryMockTests(ExpressionType.Negate);
             RunUnaryMockTests(ExpressionType.Negate);
             RunUnaryMockTests(ExpressionType.Increment);
+            RunUnaryMockTests(ExpressionType.Increment);
             RunUnaryMockTests(ExpressionType.Decrement);
-        
+            RunUnaryMockTests(ExpressionType.Decrement);
+
 
 
         }
 
+        // See the comment on TestInvokeBasicUnaryOperatorsDynamic above - same reasoning, for
+        // InvokeBinaryOperator's switch.
         [Test]
         public void TestInvokeBasicBinaryOperatorsDynamic()
         {
             RunBinaryMockTests(ExpressionType.Add);
+            RunBinaryMockTests(ExpressionType.Add);
+            RunBinaryMockTests(ExpressionType.Subtract);
             RunBinaryMockTests(ExpressionType.Subtract);
             RunBinaryMockTests(ExpressionType.Divide);
+            RunBinaryMockTests(ExpressionType.Divide);
             RunBinaryMockTests(ExpressionType.Multiply);
+            RunBinaryMockTests(ExpressionType.Multiply);
+            RunBinaryMockTests(ExpressionType.Modulo);
             RunBinaryMockTests(ExpressionType.Modulo);
 
             RunBinaryMockTests(ExpressionType.And);
+            RunBinaryMockTests(ExpressionType.And);
+            RunBinaryMockTests(ExpressionType.Or);
             RunBinaryMockTests(ExpressionType.Or);
             RunBinaryMockTests(ExpressionType.ExclusiveOr);
+            RunBinaryMockTests(ExpressionType.ExclusiveOr);
             RunBinaryMockTests(ExpressionType.LeftShift);
+            RunBinaryMockTests(ExpressionType.LeftShift);
+            RunBinaryMockTests(ExpressionType.RightShift);
             RunBinaryMockTests(ExpressionType.RightShift);
 
             RunBinaryMockTests(ExpressionType.AddAssign);
+            RunBinaryMockTests(ExpressionType.AddAssign);
+            RunBinaryMockTests(ExpressionType.SubtractAssign);
             RunBinaryMockTests(ExpressionType.SubtractAssign);
             RunBinaryMockTests(ExpressionType.DivideAssign);
+            RunBinaryMockTests(ExpressionType.DivideAssign);
             RunBinaryMockTests(ExpressionType.MultiplyAssign);
+            RunBinaryMockTests(ExpressionType.MultiplyAssign);
+            RunBinaryMockTests(ExpressionType.ModuloAssign);
             RunBinaryMockTests(ExpressionType.ModuloAssign);
 
             RunBinaryMockTests(ExpressionType.AndAssign);
+            RunBinaryMockTests(ExpressionType.AndAssign);
+            RunBinaryMockTests(ExpressionType.OrAssign);
             RunBinaryMockTests(ExpressionType.OrAssign);
             RunBinaryMockTests(ExpressionType.ExclusiveOrAssign);
+            RunBinaryMockTests(ExpressionType.ExclusiveOrAssign);
             RunBinaryMockTests(ExpressionType.LeftShiftAssign);
+            RunBinaryMockTests(ExpressionType.LeftShiftAssign);
+            RunBinaryMockTests(ExpressionType.RightShiftAssign);
             RunBinaryMockTests(ExpressionType.RightShiftAssign);
         }
 
