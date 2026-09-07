@@ -17,7 +17,7 @@
 
           <!-- The shipped library only. SupportLibrary and the test assembly
                are fixtures, not product code. -->
-          <Include>[Dynamitey]*</Include>
+          <Include>[Dynamitey.Community]*</Include>
 
           <!-- Compiler generated members (iterator state machines, lambda
                display classes) report as lines no test can reach directly. -->

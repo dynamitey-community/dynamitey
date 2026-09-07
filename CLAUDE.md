@@ -306,14 +306,37 @@ execution order or it will pass for the wrong reason.
 arm supplies `GetDefaultThreadCurrentCulture`, called from `Dynamic.cs:869`. The
 filename is misleading; do not delete it on the strength of the name.
 
-`Dynamitey/sn.snk` is upstream's strong-name key, committed. A renamed fork needs
-its own — see #3.
+`Dynamitey/sn.snk` is **this fork's own 2048-bit key**, generated for #3 and
+committed. Upstream's key was removed: a renamed assembly cannot keep using it,
+since the strong name is part of the identity being changed. Committing a signing
+key is normal for open source — it establishes identity, not security. Signing is
+kept rather than dropped because a strong-named assembly may only reference other
+strong-named assemblies, and `netstandard2.0` exists here to serve .NET Framework
+consumers where strong naming is still common.
 
 ## Scope reminders
 
-The library still sets no `PackageId`, `AssemblyName`, or `RootNamespace`, so all
-three default to `Dynamitey` and collide with the original package on nuget.org.
-Its `Company` and `Copyright` still read `Ekon Benefits`. Neither is an oversight
-to fix casually in passing — they are #3 and #6, both of which must land before
-anything is ever published, and #6 carries an Apache-2.0 attribution question
+**The identity is settled (#3), and the split is deliberate.** `PackageId` and
+`AssemblyName` are `Dynamitey.Community`; `RootNamespace` stays **`Dynamitey`**
+and is pinned explicitly so it cannot drift toward `AssemblyName` later.
+
+The collision with the original package is an assembly-identity problem, and the
+assembly name alone fixes it. Keeping the namespace means an existing consumer
+swaps one `PackageReference` line and rebuilds with no source change. Because the
+namespace did not move, the frozen `PublicAPI.*.txt` files were **byte-identical**
+across the rename — which is how the change was proven surface-neutral rather
+than assumed to be.
+
+Two consequences worth knowing before touching this:
+
+- Anything keyed to the **assembly** name must move with it. `coverlet.runsettings`
+  filters `[Dynamitey.Community]*`; getting that wrong silently measures nothing.
+- `ImpromptuInterface` carries a compile-time reference to the *original*
+  `Dynamitey`, so a project with both gets `CS0433` on every shared type. The test
+  project declares upstream's package directly with `Aliases="upstream"` to take it
+  out of the global namespace — it is still needed on disk because
+  `Dynamic.CoerceConvert` late-binds to `Impromptu.DynamicActLike`.
+
+`Company` and `Copyright` still read `Ekon Benefits` — that is #6, which must land
+before anything is published and carries an Apache-2.0 attribution question
 (upstream's copyright is *retained*, not replaced).

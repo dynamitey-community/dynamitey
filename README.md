@@ -42,6 +42,49 @@ identity question that comes with it is
 If you depend on Dynamitey today, keep using upstream's 3.0.3. This repository
 is where the work to move it forward is happening, not yet where you get it.
 
+### Installing, and moving from the original package
+
+This fork is configured to pack as **`Dynamitey.Community`**, not `Dynamitey`. The assembly is
+named `Dynamitey.Community` too, so once released it cannot collide with the original package on
+nuget.org — two assemblies claiming one identity resolve to a coin flip that
+surfaces as a runtime `MissingMethodException`.
+
+**The namespace is deliberately unchanged.** Everything still lives in
+`Dynamitey`, so moving from the original package is a one-line change and a
+rebuild:
+
+```diff
+- <PackageReference Include="Dynamitey" Version="3.0.3" />
++ <PackageReference Include="Dynamitey.Community" Version="4.0.0" />
+```
+
+No `using` directive changes, no source edits. The public API is unchanged by the
+rename — it is frozen by `PublicAPI.Shipped.txt`, and those files were byte-identical
+before and after, which is how that claim was checked rather than asserted.
+
+#### If you end up with both packages
+
+A project that references both — most likely by using **ImpromptuInterface**, which
+carries a compile-time reference to the original `Dynamitey` — will get a
+compile-time error rather than a silent runtime failure:
+
+```
+error CS0433: The type 'Invocation' exists in both
+  'Dynamitey.Community, Version=4.0.0.0, ...' and 'Dynamitey, Version=3.0.3.0, ...'
+```
+
+Resolve it by aliasing the one you are not using directly:
+
+```xml
+<PackageReference Include="Dynamitey" Version="3.0.3" Aliases="upstream" />
+```
+
+`Aliases` is honored on a direct `PackageReference` and ignored on a transitive one,
+so the package has to be declared explicitly for this to take effect. This
+repository's own test project does exactly that.
+
+---
+
 ### What has changed since upstream
 
 | | |
