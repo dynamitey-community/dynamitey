@@ -104,6 +104,6 @@ There is no CLA. Contributions are under Apache-2.0, the same as the project.
 ## Licence
 
 By contributing you agree your work is licensed under the Apache License 2.0.
-See [License.txt](License.txt) and [NOTICE](NOTICE). Do not add code you did not
+See [LICENSE.md](LICENSE.md) and [NOTICE](NOTICE). Do not add code you did not
 write or that carries an incompatible licence — this project's attribution chain
 back to the original authors matters, and is recorded in NOTICE.

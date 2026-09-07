@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](License.txt)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE.md)
 
 Dynamitey is a .NET library that wraps the Dynamic Language Runtime to do
 runtime dispatch: late binding, currying, partial application, expando objects,
@@ -48,7 +48,10 @@ is where the work to move it forward is happening, not yet where you get it.
 | --- | --- |
 | Target frameworks | `netstandard2.0;net10.0` — `net40` dropped |
 | Tests | `net10.0`, NUnit 4, green on Linux, macOS and Windows |
-| CI | Rebuilt: build and test on three platforms, CodeQL, dependency review and NuGet audit |
+| CI | Rebuilt: build and test on three platforms, code coverage with enforced floors, CodeQL, dependency review, NuGet audit, OWASP Dependency-Check, and AOT and benchmark smoke jobs |
+| Static analysis | .NET analyzers at `AnalysisMode=All`, plus Roslynator, SonarAnalyzer, AsyncFixer, IDisposableAnalyzers and PublicApiAnalyzers. Every remaining suppression carries a written reason |
+| Public API | Frozen by `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` — a change to the public surface fails the build until it is declared |
+| Coverage | 90%+ of lines and 80%+ of branches, enforced in CI |
 | Benchmarks | The old wall-clock `SpeedTest` fixture is now a BenchmarkDotNet project |
 | Dependencies | All current; no known vulnerable or deprecated packages |
 
@@ -56,8 +59,9 @@ is where the work to move it forward is happening, not yet where you get it.
 reaches both .NET Framework 4.6.1–4.8.1 and modern .NET from a single assembly.
 
 The [roadmap](https://github.com/dynamitey-community/dynamitey/issues/10) tracks
-what is planned and in what order. Six issues carried over from upstream are
-labelled [`ported-from-upstream`](https://github.com/dynamitey-community/dynamitey/labels/ported-from-upstream).
+what is planned and in what order. The six issues carried over from upstream,
+labelled [`ported-from-upstream`](https://github.com/dynamitey-community/dynamitey/labels/ported-from-upstream),
+have all been resolved.
 
 ---
 
@@ -162,7 +166,25 @@ dotnet test Tests/Tests.csproj -c Release
 ```
 
 The full suite runs with no category filter and must report 0 failed and 0
-skipped. CI additionally builds with `-warnaserror`.
+skipped. CI additionally builds with `-warnaserror`, so any analyzer warning is
+a build failure there even though a local build stays workable.
+
+Coverage is enforced in CI against a floor, so it is worth being able to
+reproduce it before opening a pull request:
+
+```bash
+dotnet test Tests/Tests.csproj -c Release \
+  --settings coverlet.runsettings --collect:"XPlat Code Coverage"
+```
+
+`coverlet.runsettings` restricts the report to the `Dynamitey` assembly, which
+is the figure CI measures — without it the number also covers `SupportLibrary`,
+a fixture that exists only to be called from tests.
+
+Adding a public member fails the build until it is declared in
+`Dynamitey/PublicAPI.Unshipped.txt`. That is deliberate: it makes an accidental
+change to the public surface impossible to merge quietly. The analyzer's own
+code fix will add the entry for you.
 
 Benchmarks are a separate project and never run in CI:
 
@@ -188,7 +210,7 @@ To report a security problem, do **not** open a public issue. See
 
 ## Licence and attribution
 
-Apache License 2.0. See [License.txt](License.txt) and [NOTICE](NOTICE).
+Apache License 2.0. See [License.txt](LICENSE.md) and [NOTICE](NOTICE).
 
 Dynamitey was created and maintained by Ekon Benefits. This fork retains that
 copyright and adds its own for changes made after `upstream-baseline`, as

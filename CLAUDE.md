@@ -102,28 +102,29 @@ dotnet run -c Release --project Benchmarks -- --list flat
 dotnet run -c Release --project Benchmarks -- --filter '*Tuple*'
 ```
 
-### The test count, because it looks wrong and is not
+### The test count, and why this section names no numbers
 
-Two numbers will not match, and both are fine.
+**Do not pin the executed count in documentation.** It was once pinned at 186 in
+four files, and the first bug fix that added tests made all four wrong at once.
+This section used to illustrate that rule with a worked example — and the
+example itself then rotted, while the rule stayed true. Hence no figures here.
 
-`Tests/*.cs` carries **187** `[Test]` attributes and **10** `[TestCase]`
-attributes. NUnit expands each `[TestCase]` into its own test, so the executed
-count is higher than the `[Test]` count, not lower.
+The bar is *0 failed, 0 skipped, with no category filter*. That survives new
+tests, and a filter reappearing in a test command is the thing actually worth
+catching. CI enforces the skipped half explicitly.
+
+Two counts will not match, and both are fine: `Tests/*.cs` carries `[Test]`
+attributes and `[TestCase]` attributes, and NUnit expands each `[TestCase]` into
+its own test — so the executed count is higher than the `[Test]` count, not
+lower. `[TestCaseSource]` and parameterised fixtures widen the gap further.
 
 One test does not run at all: `TestCodeDomLateTypeBind` in
 `Tests/DynamicObjects.cs`, inside `#if NETFRAMEWORK`. It compiles an assembly at
 runtime with `CSharpCodeProvider`, so it only ever ran on .NET Framework and has
 been unreachable since `net48` was dropped. Tracked in #23.
 
-**Do not pin the executed count in documentation.** It was pinned at 186 in four
-files, and the first bug fix that added tests made all four wrong at once. The
-bar is *0 failed, 0 skipped, with no category filter* — that survives new tests,
-and a filter reappearing in a test command is the thing actually worth catching.
-
-**Where older numbers came from.** Before the `SpeedTest` fixture moved to
-`Benchmarks/` in #9, the source carried 219 `[Test]` attributes and CI needed
-`--filter TestCategory!=Performance` to stay green, which produced 186. So 219
-and "186 under a filter" both describe the tree before #9.
+Coverage is enforced separately — see the floors in `ci.yml` — so "the suite
+passes" and "the suite covers the code" are two different gates here.
 
 ## Continuous integration
 
@@ -131,18 +132,69 @@ Three workflows, all pinned to current action majors:
 
 | Workflow | Does |
 | --- | --- |
-| `ci.yml` | Build and test on Linux, macOS, Windows; `-warnaserror`; TRX artifacts; dry-runs every benchmark |
+| `ci.yml` | Four jobs: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test |
 | `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
-| `dependencies.yml` | Dependency review on PRs; weekly `dotnet list package --vulnerable --include-transitive` |
+| `dependencies.yml` | Three jobs: dependency review on PRs; weekly `dotnet list package --vulnerable --include-transitive`; and **OWASP Dependency-Check**, which needs an `NVD_API_KEY` secret and reports NOT RUN rather than passing without one |
 
 `push` only triggers CI on `main`; `pull_request` covers everything else, which
 is what stops every branch push producing a duplicate run. Do not add branches
 to the `push` trigger without a reason.
 
 **`-warnaserror` lives in the workflow, not the project files.** The tree builds
-clean with .NET analyzers at `AnalysisLevel=latest`, so any new warning is a
-regression — but a local build stays workable. If a change needs a warning
-suppressed, suppress it narrowly and say why.
+clean, so any new warning is a regression — but a local build stays workable.
+
+## Static analysis, and the conventions around it
+
+Six analyzers run against the shipped library. Getting this wrong is the most
+likely way to be surprised by a red build:
+
+| | |
+| --- | --- |
+| Built-in .NET analyzers | `AnalysisMode=All`, set on `Dynamitey.csproj` rather than solution-wide. Test and benchmark code is not the shipped product, and rules like CA1707 and CA1515 are signal in a library and noise in a fixture |
+| Roslynator, SonarAnalyzer, AsyncFixer, IDisposableAnalyzers | All `PrivateAssets="all"`, so none reaches consumers |
+| PublicApiAnalyzers | Freezes the public surface — see below |
+| CodeQL | Separate, in its own workflow |
+
+**SonarAnalyzer is pinned to 10.5.0.109200 deliberately.** That is the last
+release under LGPL-3.0-only. From 10.6.0.109712 it moved to the SONAR
+Source-Available License, which is not OSI-approved and whose grant excludes
+using AI to interpret the data the tool produces. Do not bump it without
+reading the licence.
+
+**The `NoWarn` lists are a documented backlog, not a dumping ground.** Each
+entry is a rule deferred with a reason recorded in the comment above it, and the
+lists are meant to shrink. CA is down to `CA1851`; the SonarAnalyzer list still
+carries about thirty rules, which is the next triage worth doing. A rule *not*
+on a list fails the build immediately, which is the point: the backlog is fixed
+at what already existed and cannot grow.
+
+**Every suppression carries a reason a reviewer can evaluate.** Not "by design"
+and not "false positive" — what the rule protects against, and why that does not
+apply here. Where a rule has many sites, the full reasoning is written once and
+the others point back to it. The same standard applies to dismissed CodeQL
+alerts.
+
+**The public API is frozen.** `Dynamitey/PublicAPI.Shipped.txt` and
+`PublicAPI.Unshipped.txt` declare every public member. Adding or changing one
+fails the build until the change is written into those files, which makes an
+accidental breaking change impossible to merge quietly. Nothing has shipped from
+this fork yet, so `Shipped.txt` holds only its nullable directive and the whole
+surface sits in `Unshipped.txt`; at 4.0.0 the entries move across. This matters
+for #3: with the surface frozen, the rename can be *proven* to have changed
+nothing but names.
+
+**Null validation goes through `Internal.Guard.NotNull`**, not an inline check.
+`ArgumentNullException.ThrowIfNull` does not exist on netstandard2.0, and the
+plain `if`-throw form trips CA1510 on net10.0, so an inline guard needs a
+five-line `#if` block at every site. `.editorconfig` registers the helper with
+CA1062 via `null_check_validation_methods`, so the analyzer accepts the call as
+validation — the rule stays live, only the boilerplate goes.
+
+**Coverage has enforced floors** in `ci.yml` (`MIN_LINE`, `MIN_BRANCH`), set just
+under the real figures so they ratchet rather than trap. Raise them when the real
+number moves up and stays there. Reproduce locally with
+`--settings coverlet.runsettings --collect:"XPlat Code Coverage"`; the runsettings
+restricts the report to the `Dynamitey` assembly, which is what CI measures.
 
 `Directory.Build.props` carries the analyzer settings and NuGet audit config
 (`NuGetAuditMode=all`, `NuGetAuditLevel=low`).

@@ -16,7 +16,7 @@
     <RepositoryUrl>https://github.com/dynamitey-community/dynamitey.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>dynamic metaprogramming dlr reflection currying tuples expando latetypes</PackageTags>
     <IncludeSymbols>True</IncludeSymbols>
     <IncludeSource>True</IncludeSource>
@@ -99,7 +99,7 @@
          puts it in the package; PackagePath places it at the package root, matching
          PackageReadmeFile above. Visible="false" keeps it out of the Solution Explorer
          "Dynamitey" project node, since the file physically lives one level up. -->
-    <None Include="..\Readme.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="..\README.md" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
