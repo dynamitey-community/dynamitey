@@ -132,6 +132,55 @@ namespace Dynamitey.Tests
         }
 
         [Test]
+        public void TestInvokeKindInvokesDirectly()
+        {
+            Func<int, int> tFunc = x => x * 2;
+            var tInvocation = new CacheableInvocation(InvocationKind.Invoke, argCount: 1);
+
+            var tResult = tInvocation.Invoke(tFunc, 5);
+
+            Assert.That(tResult, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void TestInvokeActionKindInvokesAndReturnsNull()
+        {
+            var tCalled = false;
+            Action<int> tAction = x => tCalled = x == 7;
+            var tInvocation = new CacheableInvocation(InvocationKind.InvokeAction, argCount: 1);
+
+            var tResult = tInvocation.Invoke(tAction, 7);
+
+            Assert.That(tResult, Is.Null);
+            Assert.That(tCalled, Is.True);
+        }
+
+        [Test]
+        public void TestInvokeUnknownSucceedsWithoutFallback()
+        {
+            Func<int, int> tFunc = x => x + 1;
+            var tInvocation = new CacheableInvocation(InvocationKind.InvokeUnknown, argCount: 1);
+
+            var tResult = tInvocation.Invoke(tFunc, 4);
+
+            Assert.That(tResult, Is.EqualTo(5));
+        }
+
+        // Covers the constructor's storedArgs branch where GetArgsAndNames comes back with
+        // more names than the caller-supplied argNames (here, none at all): the InvokeArg
+        // names win, letting Add's arguments be supplied out of order.
+        [Test]
+        public void TestConstructorMergesArgNamesFromStoredInvokeArgs()
+        {
+            var tInvocation = new CacheableInvocation(InvocationKind.InvokeMember, "Add",
+                storedArgs: new object[] { InvokeArg.Create("y", 3), InvokeArg.Create("x", 2) });
+
+            var tResult = tInvocation.InvokeWithStoredArgs(new PocoAdder());
+
+            Assert.That(tResult, Is.EqualTo(5));
+        }
+
+        [Test]
         public void TestUnknownKindThrows()
         {
             var tInvocation = new CacheableInvocation(InvocationKind.NotSet);
