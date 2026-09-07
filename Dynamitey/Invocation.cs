@@ -228,6 +228,11 @@ namespace Dynamitey
         // unenforced contract (e.g. Kind.Get needs Name; most Kinds need args), not something
         // introduced here. The `!` suppressions below preserve that exact pre-existing behavior
         // (an NRE if the contract is violated) rather than adding new checks.
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "args is deliberately unchecked here - see the comment immediately above this " +
+            "attribute. Which Kind values need args at all varies (Kind.Get never touches it), so " +
+            "a blanket null guard would reject calls that are legitimate today; the pre-existing " +
+            "per-Kind NRE-on-misuse contract is being kept as-is rather than tightened by this pass.")]
         public virtual object? Invoke(object target, params object?[]? args)
         {
             switch (Kind)

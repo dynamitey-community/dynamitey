@@ -42,6 +42,8 @@ namespace Dynamitey.DynamicObjects
             "member access already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same MassageResultBasedOnInterface call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryGetMember(System.Dynamic.GetMemberBinder binder, out object? result)
         {
             result = null;
@@ -79,6 +81,8 @@ namespace Dynamitey.DynamicObjects
             "consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same MassageResultBasedOnInterface call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object?[]? args, out object? result)
         {
 

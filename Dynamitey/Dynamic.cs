@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  Copyright 2010  Ekon Benefits
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -171,7 +171,8 @@ namespace Dynamitey
         public static CallSite CreateCallSite(Type delegateType, CallSiteBinder binder, String_OR_InvokeMemberName name,
                                               Type context, string?[]? argNames = null, bool staticContext = false,
                                               bool isEvent = false) =>
-            InvokeHelper.CreateCallSite(delegateType, binder.GetType(), InvokeHelper.Unknown, 
+            binder is null ? throw new ArgumentNullException(nameof(binder)) :
+            InvokeHelper.CreateCallSite(delegateType, binder.GetType(), InvokeHelper.Unknown,
                 () => binder, (InvokeMemberName)name, context, argNames, staticContext, isEvent);
 
         /// <summary>
@@ -217,8 +218,9 @@ namespace Dynamitey
                 + "future change to it has to be written down before it can build.")]
         public static CallSite<T> CreateCallSite<T>(CallSiteBinder binder, String_OR_InvokeMemberName name, Type context,
                                                     string?[]? argNames = null, bool staticContext = false,
-                                                    bool isEvent = false) where T : class 
-            => InvokeHelper.CreateCallSite<T>(binder.GetType(), InvokeHelper.Unknown, 
+                                                    bool isEvent = false) where T : class
+            => binder is null ? throw new ArgumentNullException(nameof(binder)) :
+               InvokeHelper.CreateCallSite<T>(binder.GetType(), InvokeHelper.Unknown,
                 () => binder, (InvokeMemberName) name, context, argNames, staticContext, isEvent);
 
 
@@ -231,6 +233,8 @@ namespace Dynamitey
         [RequiresDynamicCode("Each LINQ-style call through the returned proxy binds through the DLR and, for multi-generic-argument methods, may build the closed generic method at runtime; not supported when AOT-compiled.")]
         public static dynamic Linq(object enumerable)
         {
+            Guard.NotNull(enumerable);
+
             if (enumerable
                 .GetType()
                 .GetTypeInfo()
@@ -576,6 +580,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static object? InvokeSetIndex(object target, params object?[] indexesThenValue)
         {
+            Guard.NotNull(indexesThenValue);
             if (indexesThenValue.Length < 2)
             {
                 throw new ArgumentException("Requires at least one index and one value", nameof(indexesThenValue));
@@ -934,7 +939,7 @@ namespace Dynamitey
         /// <returns></returns>
         [RequiresUnreferencedCode("Falls back to Expression.Lambda(...).Compile() and, for a plain Action/Func-shaped delegate whose parameters are all reference types, to invoking invokeableObject through the DLR; trimming can remove the member the compiled expression or DLR call resolves.")]
         [RequiresDynamicCode("Expression.Lambda(...).Compile() and the DLR invocation path both generate code at runtime; not supported when AOT-compiled.")]
-        public static dynamic? CoerceToDelegate(object invokeableObject, Type delegateType)
+        public static dynamic? CoerceToDelegate(object? invokeableObject, Type delegateType)
             {
                 var delegateTypeInfo = delegateType.GetTypeInfo();
                 if (!typeof(Delegate).GetTypeInfo().IsAssignableFrom(delegateTypeInfo.BaseType))
@@ -950,9 +955,14 @@ namespace Dynamitey
                 var tAction = tReturnType == typeof(void);
                 var tParams = tDelMethodInfo.GetParameters();
                 var tLength = tDelMethodInfo.GetParameters().Length;
+                // invokeableObject is genuinely allowed to be null here (see its nullable
+                // parameter annotation above); WrapAction/WrapFunc only close over it and hand it
+                // to a delegate the caller may never invoke, so a null flows through unharmed. The
+                // `!`s below match every other deliberate-null forward in this file rather than
+                // widening WrapAction/WrapFunc's own parameter types.
                 Delegate tBaseDelegate = tAction
-                                             ? InvokeHelper.WrapAction(invokeableObject, tLength)
-                                             : InvokeHelper.WrapFunc(tReturnType, invokeableObject, tLength);
+                                             ? InvokeHelper.WrapAction(invokeableObject!, tLength)
+                                             : InvokeHelper.WrapFunc(tReturnType, invokeableObject!, tLength);
 
 
                 if (InvokeHelper.IsActionOrFunc(delegateType) &&
@@ -1032,6 +1042,9 @@ namespace Dynamitey
         [RequiresDynamicCode("ConvertEach's DLR conversion path requires runtime code generation; not supported when AOT-compiled.")]
         public static void ApplyEquivalentType(DynamicObjects.IEquivalentType target, params Type[] types)
         {
+            Guard.NotNull(target);
+            Guard.NotNull(types);
+
             target.EquivalentType = types.Length == 1
                 ? types.First()
                 : new DynamicObjects.AggreType(types.ConvertEach<DynamicObjects.FauxType>().ToArray());
@@ -1077,6 +1090,8 @@ namespace Dynamitey
         [RequiresDynamicCode("The CoerceToDelegate and Impromptu.DynamicActLike paths require the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic? CoerceConvert(object? target, Type type)
         {
+            Guard.NotNull(type);
+
             var typeInfo = type.GetTypeInfo();
             if (target != null && !typeInfo.IsInstanceOfType(target) && !IsDBNull(target))
             {
@@ -1197,6 +1212,8 @@ namespace Dynamitey
         [RequiresDynamicCode("For more than 14 arguments, building the call site emits a delegate type via Reflection.Emit; for 14 or fewer, it binds through Microsoft.CSharp.RuntimeBinder. Both require the DLR's runtime code generation. On a runtime without Reflection.Emit (AOT-compiled, trimmed, or mobile/WebAssembly), more than 14 arguments throws PlatformNotSupportedException instead - see issue #27; 14 or fewer still requires the DLR itself and is not supported when AOT-compiled.")]
         public static dynamic? InvokeConstructor(Type type, params object?[] args)
         {
+            Guard.NotNull(args);
+
             var tValue = type.GetTypeInfo().IsValueType;
             if (tValue && args.Length == 0)  //dynamic invocation doesn't see constructors of value types
             {
@@ -1221,6 +1238,9 @@ namespace Dynamitey
         [RequiresDynamicCode("The DLR invocation path requires runtime code generation; not supported when AOT-compiled.")]
 		public static object? FastDynamicInvoke(this Delegate del, params object?[] args)
 		{
+            Guard.NotNull(del);
+            Guard.NotNull(args);
+
             if (del.GetMethodInfo().ReturnType != typeof(void))
             {
                 return InvokeHelper.FastDynamicInvokeReturn(del, args!);
@@ -1261,6 +1281,8 @@ namespace Dynamitey
         [RequiresDynamicCode("The late-bound ComBinder path goes through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         public static IEnumerable<string> GetMemberNames(object target, bool dynamicOnly = false)
         {
+            Guard.NotNull(target);
+
             var tList = new List<string>();
             if (!dynamicOnly)
             {

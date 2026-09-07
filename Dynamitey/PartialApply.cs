@@ -51,6 +51,8 @@ namespace Dynamitey
             "after the consumer's own dynamic call site already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same DLR invocation as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object? result)
         {
             result = null;
@@ -77,6 +79,8 @@ namespace Dynamitey
             "conversion already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same Dynamic.CoerceToDelegate call as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryConvert(ConvertBinder binder, out object? result)
         {
             result = Dynamic.CoerceToDelegate(this, binder.Type);
@@ -165,6 +169,8 @@ namespace Dynamitey
             "the consumer's own dynamic invocation already triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Same FastDynamicInvoke/Invocation.Invoke calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
         {
             var tNamedArgs = Util.NameArgsIfNecessary(binder.CallInfo, args!);

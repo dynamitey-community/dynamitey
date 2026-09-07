@@ -534,7 +534,7 @@ static Dynamitey.Dynamic.ApplyEquivalentType(Dynamitey.DynamicObjects.IEquivalen
 static Dynamitey.Dynamic.AwaitResult(object? task) -> System.Threading.Tasks.Task<object?>!
 static Dynamitey.Dynamic.ClearCaches() -> void
 static Dynamitey.Dynamic.CoerceConvert(object? target, System.Type! type) -> dynamic?
-static Dynamitey.Dynamic.CoerceToDelegate(object! invokeableObject, System.Type! delegateType) -> dynamic?
+static Dynamitey.Dynamic.CoerceToDelegate(object? invokeableObject, System.Type! delegateType) -> dynamic?
 static Dynamitey.Dynamic.ConvertAll<T>(this System.Collections.IEnumerable! enumerable, bool explict = false) -> System.Collections.Generic.IEnumerable<T>!
 static Dynamitey.Dynamic.ConvertEach<T>(this System.Collections.IEnumerable! enumerable, bool explicit = false) -> System.Collections.Generic.IEnumerable<T>!
 static Dynamitey.Dynamic.CreateCallSite(System.Type! delegateType, System.Runtime.CompilerServices.CallSiteBinder! binder, Dynamitey.String_OR_InvokeMemberName! name, System.Type! context, string?[]? argNames = null, bool staticContext = false, bool isEvent = false) -> System.Runtime.CompilerServices.CallSite!
@@ -588,7 +588,7 @@ static Dynamitey.Internal.Compat.Net40.GetDefaultThreadCurrentCulture() -> Syste
 static Dynamitey.Internal.Curry.operator |(dynamic! argument, Dynamitey.Internal.Curry! function) -> dynamic!
 static Dynamitey.Internal.Optimization.Util.FixContext(this System.Type! context) -> System.Type!
 static Dynamitey.Internal.Optimization.Util.GetTargetContext(this object! target, out System.Type! context, out bool staticContext) -> object!
-static Dynamitey.Internal.Optimization.Util.IsAnonymousType(object! target) -> bool
+static Dynamitey.Internal.Optimization.Util.IsAnonymousType(object? target) -> bool
 static Dynamitey.Internal.Optimization.Util.NameArgsIfNecessary(System.Dynamic.CallInfo! callInfo, object?[]! args) -> object?[]!
 static Dynamitey.Invocation.Create(Dynamitey.InvocationKind kind, Dynamitey.String_OR_InvokeMemberName? name, params object?[]? storedArgs) -> Dynamitey.Invocation!
 static Dynamitey.InvokeArg.explicit operator Dynamitey.InvokeArg!(System.Collections.Generic.KeyValuePair<string!, object!> pair) -> Dynamitey.InvokeArg!

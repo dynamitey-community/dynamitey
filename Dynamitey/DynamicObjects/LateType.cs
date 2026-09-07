@@ -148,6 +148,8 @@ namespace Dynamitey.DynamicObjects
                 "dynamic call site already triggered the framework's warning.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
                 "Same Dynamic.InvokeConstructor call as above; see the IL2026 suppression on this member.")]
+            [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+                "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
             public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
             {
                 result = Dynamic.InvokeConstructor(_type, Util.NameArgsIfNecessary(binder.CallInfo, args!));

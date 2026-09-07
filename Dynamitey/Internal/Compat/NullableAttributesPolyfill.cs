@@ -128,3 +128,26 @@ namespace System.Diagnostics.CodeAnalysis
     }
 }
 #endif
+
+#if NETSTANDARD2_0
+namespace System.Runtime.CompilerServices
+{
+    using System;
+
+    // CallerArgumentExpression arrived in C# 10 / .NET 6. Internal.Guard.NotNull uses it so a
+    // call reads Guard.NotNull(target) and still reports "target" as the parameter name, rather
+    // than repeating nameof(target) at every one of the twenty call sites. Same arrangement as
+    // the attributes above: on netstandard2.0 this compiles to inert metadata, and the compiler
+    // recognises it by name and shape regardless of which assembly declares it.
+    [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
+    internal sealed class CallerArgumentExpressionAttribute : Attribute
+    {
+        public CallerArgumentExpressionAttribute(string parameterName)
+        {
+            ParameterName = parameterName;
+        }
+
+        public string ParameterName { get; }
+    }
+}
+#endif

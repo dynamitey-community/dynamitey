@@ -74,6 +74,8 @@ namespace Dynamitey.DynamicObjects
             "and the DLR invokes it only after the consumer's own dynamic member access already " +
             "triggered the framework's warning.")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
        public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             var tGroup = _match.Groups[binder.Name];

@@ -1,0 +1,21 @@
+# EditorConfig for Dynamitey.
+#
+# Deliberately minimal: this exists to configure analyzers, not to impose a
+# formatting standard on a fifteen-year-old codebase. A formatting pass would
+# touch nearly every file and bury real changes in whitespace diffs.
+
+root = true
+
+[*.cs]
+
+# CA1062 (validate arguments of public methods) accepts a project's own
+# validation helper once it is named here. Without this the analyzer only
+# recognises an inline null check, which meant every guarded method carried a
+# five-line #if block - ArgumentNullException.ThrowIfNull does not exist on
+# netstandard2.0, and the plain if-throw form trips CA1510 on net10.0.
+#
+# Registering Dynamitey.Internal.Guard.NotNull keeps the rule fully live: a
+# public method that dereferences an unvalidated argument still fails the build.
+# The analyzer just accepts this call as the validation, so the conditional
+# compilation lives in one place instead of sixteen.
+dotnet_code_quality.CA1062.null_check_validation_methods = NotNull

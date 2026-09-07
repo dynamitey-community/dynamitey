@@ -36,6 +36,8 @@ namespace Dynamitey.DynamicObjects
         /// <param name="args">The args.</param>
         /// <param name="result">The result.</param>
         /// <returns></returns>
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
             result = _lookup(binder.Name);
@@ -49,6 +51,8 @@ namespace Dynamitey.DynamicObjects
         /// <param name="args">The args.</param>
         /// <param name="result">The result.</param>
         /// <returns></returns>
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
+            "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
         {
             result = null;
