@@ -45,7 +45,12 @@ namespace Dynamitey.DynamicObjects
         /// Gets or sets the recording.
         /// </summary>
         /// <value>The recording.</value>
-       
+        [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification =
+            "Declared public API (PublicAPI.Unshipped.txt) with a protected setter - the same subclass " +
+            "extension-point pattern as the CA1051 fields (see BaseDictionary._dictionary): a Recorder " +
+            "subclass can swap in its own list (e.g. to reset or replace the recording), and dropping the " +
+            "setter to satisfy CA2227 is a breaking signature change for that subclass, out of scope for " +
+            "an analyzer-driven cleanup this close to the 4.0.0 freeze.")]
         public IList<Invocation> Recording { get; protected set; }
 
         /// <summary>

@@ -237,12 +237,6 @@
                        an instance to call it on by name - and the type hasn't
                        shipped yet (PublicAPI.Unshipped.txt).
 
-         Needs a judgement call on public API, which #3 will revisit anyway:
-           CA1051 (11) visible instance fields
-           CA2225 (12) operator overloads without named alternatives
-           CA2227 (1)  collection properties with a public setter
-           CA1002 (1)  List<T> on a public surface
-
          Resolved in batch 4 (mostly real fixes, unlike batch 3 - removed from
          NoWarn below; each finding fixed or suppressed at its call site with a
          written reason):
@@ -361,8 +355,73 @@
                        DBNull" collapse to the same false). Full reasoning on
                        Dynamic.ProbeComObjectType; every other site points back
                        to it or to the IsDBNull boolean-probe variant.
+
+         Resolved in batch 5, the last batch except CA1851 (public API judgement
+         calls, right up against the 4.0.0 freeze - removed from NoWarn below):
+           CA1051 (11) SUPPRESSED, all eleven: every finding is a protected field
+                       on a public class - BaseDictionary._dictionary,
+                       Builder._buildType, five fields on ExtensionToInstanceProxy's
+                       nested Invoker, BaseSingleInstancesFactory's two fields
+                       (Factory.cs), RealType.TargetType, and List._list. Each is
+                       a deliberate subclass extension point; turning any of them
+                       into a property is a binary breaking change for an external
+                       subclass that reads or assigns the field directly. Full
+                       reasoning on BaseDictionary._dictionary; every other site
+                       points back to it.
+           CA2227 (1)  SUPPRESSED: Recorder.Recording has a protected, not public,
+                       setter - the same subclass extension-point pattern as
+                       CA1051 above, letting a Recorder subclass replace the
+                       recording. Declared public API (PublicAPI.Unshipped.txt);
+                       dropping the setter is a breaking change for that subclass.
+           CA1002 (1)  SUPPRESSED: ILinq<TSource>.ToList() deliberately mirrors
+                       System.Linq.Enumerable's real extension-method surface
+                       member-for-member, including its List<T> return type;
+                       changing just this one member to satisfy CA1002 would
+                       break that mirroring, and it is declared public API besides.
+           CA2225 (12) Judged per type rather than applied mechanically - adding a
+                       named alternate is purely additive, but growing the public
+                       surface right before the freeze is only worth it where a
+                       consumer genuinely holds and converts the type by hand:
+                       ADDED (8, all recorded in PublicAPI.Unshipped.txt):
+                         FauxType/RealType (DynamicObjects/FauxType.cs) - a real,
+                         tested public feature (Impromptu.cs's FauxTypeTest,
+                         Dynamic.ApplyEquivalentType) for describing a member
+                         shape without a real Type. FauxType.FromType and
+                         RealType.FromType mirror the two Type-to-{Faux,Real}Type
+                         conversions; RealType.ToType() is the only way an
+                         external caller reads TargetType back out at all, since
+                         the field is protected (CA1051 above).
+                         InvokeArg/InvokeArg&lt;T&gt; (InvokeArg.cs) - real,
+                         actively-used named-argument type (Tests/PrivateTest.cs,
+                         Tests/Invoke.cs); FromKeyValuePair mirrors each type's
+                         explicit KeyValuePair conversion.
+                         StaticContext (InvokeContext.cs) - the idiomatic
+                         `(StaticContext)typeof(Foo)` cast is exercised directly
+                         in Tests/Curry.cs and Tests/Invoke.cs to target a static
+                         method; FromType mirrors it.
+                         InvokeMemberName/String_OR_InvokeMemberName
+                         (InvokeMemberName.cs) - the type behind the string
+                         parameter of every InvokeMember-family overload
+                         (Dynamic.InvokeMember and siblings); FromString mirrors
+                         each type's implicit string conversion, preserving the
+                         null-vs-empty-array GenericArgs distinction the class's
+                         own doc comment calls out, which the existing
+                         constructor does not.
+                       SUPPRESSED (4): BaseForwarder.AddRemoveMarker's operator +
+                         and - (DynamicObjects/BaseForwarder.cs) are internal DLR
+                         plumbing - constructed only internally (Util.cs), and
+                         the operators are invoked implicitly by the DLR's own
+                         binder for `dynamicForwarder.SomeEvent += handler`, never
+                         called by name. Curry's operator | (Internal/Curry.cs)
+                         and PartialApply's operator | (PartialApply.cs) are the
+                         same pattern: Curry has an internal constructor and is
+                         only ever returned as `dynamic`, PartialApply's own XML
+                         summary calls it "Internal method for subsequent
+                         invocations of Dynamic.Curry", the pipe result is
+                         already reachable by invoking the value directly, and no
+                         test in the suite exercises the `|` syntax on either.
     -->
-    <NoWarn>$(NoWarn);CA1002;CA1051;CA1851;CA2225;CA2227</NoWarn>
+    <NoWarn>$(NoWarn);CA1851</NoWarn>
 
     <!-- Sonar's share of the backlog: 90 findings across 31 rules, on the same
          terms as the CA list above. Its signal is different in kind - it found

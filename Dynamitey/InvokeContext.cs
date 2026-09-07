@@ -40,6 +40,17 @@ namespace Dynamitey
         }
 
         /// <summary>
+        /// Named alternate for the explicit conversion from <see cref="Type"/> above, for callers
+        /// in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The result of the conversion.</returns>
+        public static StaticContext FromType(Type type)
+        {
+            return new StaticContext(type);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="StaticContext"/> class.
         /// </summary>
         /// <param name="target">The target.</param>

@@ -309,6 +309,7 @@ Dynamitey.DynamicObjects.PropretySpecType.PropertySpec.get -> System.Collections
 Dynamitey.DynamicObjects.PropretySpecType.PropretySpecType(System.Collections.Generic.IDictionary<string!, System.Type!>! propertySpec) -> void
 Dynamitey.DynamicObjects.RealType
 Dynamitey.DynamicObjects.RealType.RealType(System.Type! type) -> void
+Dynamitey.DynamicObjects.RealType.ToType() -> System.Type!
 Dynamitey.DynamicObjects.Recorder
 Dynamitey.DynamicObjects.Recorder.Recorder() -> void
 Dynamitey.DynamicObjects.Recorder.Recorder(object! target) -> void
@@ -571,11 +572,13 @@ static Dynamitey.Dynamic.Linq(object! enumerable) -> dynamic!
 static Dynamitey.DynamicObjects.AggreType.MakeTypeAppendable(Dynamitey.DynamicObjects.IEquivalentType! type) -> Dynamitey.DynamicObjects.AggreType!
 static Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker.operator +(Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker! left, object! right) -> Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker!
 static Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker.operator -(Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker! left, object! right) -> Dynamitey.DynamicObjects.BaseForwarder.AddRemoveMarker!
+static Dynamitey.DynamicObjects.FauxType.FromType(System.Type! type) -> Dynamitey.DynamicObjects.FauxType!
 static Dynamitey.DynamicObjects.FauxType.implicit operator Dynamitey.DynamicObjects.FauxType!(System.Type! type) -> Dynamitey.DynamicObjects.FauxType!
 static Dynamitey.DynamicObjects.Get.Create(object! target) -> dynamic!
 static Dynamitey.DynamicObjects.LateType.FindType(string! typeName, System.Reflection.Assembly? assembly = null) -> System.Type?
 static Dynamitey.DynamicObjects.Lazy.Create<T>(System.Func<T>! valueFactory) -> dynamic!
 static Dynamitey.DynamicObjects.Lazy.Create<T>(System.Lazy<T>! target) -> dynamic!
+static Dynamitey.DynamicObjects.RealType.FromType(System.Type! type) -> Dynamitey.DynamicObjects.RealType!
 static Dynamitey.DynamicObjects.RealType.implicit operator Dynamitey.DynamicObjects.RealType!(System.Type! type) -> Dynamitey.DynamicObjects.RealType!
 static Dynamitey.DynamicObjects.RealType.implicit operator System.Type!(Dynamitey.DynamicObjects.RealType! type) -> System.Type!
 static Dynamitey.Expando.New.get -> dynamic!
@@ -591,8 +594,11 @@ static Dynamitey.Internal.Optimization.Util.GetTargetContext(this object! target
 static Dynamitey.Internal.Optimization.Util.IsAnonymousType(object? target) -> bool
 static Dynamitey.Internal.Optimization.Util.NameArgsIfNecessary(System.Dynamic.CallInfo! callInfo, object?[]! args) -> object?[]!
 static Dynamitey.Invocation.Create(Dynamitey.InvocationKind kind, Dynamitey.String_OR_InvokeMemberName? name, params object?[]? storedArgs) -> Dynamitey.Invocation!
+static Dynamitey.InvokeArg.FromKeyValuePair(System.Collections.Generic.KeyValuePair<string!, object!> pair) -> Dynamitey.InvokeArg!
 static Dynamitey.InvokeArg.explicit operator Dynamitey.InvokeArg!(System.Collections.Generic.KeyValuePair<string!, object!> pair) -> Dynamitey.InvokeArg!
+static Dynamitey.InvokeArg<T>.FromKeyValuePair(System.Collections.Generic.KeyValuePair<string!, T> pair) -> Dynamitey.InvokeArg<T>!
 static Dynamitey.InvokeArg<T>.explicit operator Dynamitey.InvokeArg<T>!(System.Collections.Generic.KeyValuePair<string!, T> pair) -> Dynamitey.InvokeArg<T>!
+static Dynamitey.InvokeMemberName.FromString(string! name) -> Dynamitey.InvokeMemberName!
 static Dynamitey.InvokeMemberName.implicit operator Dynamitey.InvokeMemberName!(string! name) -> Dynamitey.InvokeMemberName!
 static Dynamitey.PartialApply.operator |(dynamic! argument, Dynamitey.PartialApply! function) -> dynamic!
 static Dynamitey.Return<TR>.Arguments(System.Func<TR>! del) -> System.Func<TR>!
@@ -663,7 +669,9 @@ static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3, T4>(Dynamitey.ThisActio
 static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2, T3>(Dynamitey.ThisAction<T1, T2, T3>! del) -> Dynamitey.ThisAction<T1, T2, T3>!
 static Dynamitey.ReturnVoid.ThisAndArguments<T1, T2>(Dynamitey.ThisAction<T1, T2>! del) -> Dynamitey.ThisAction<T1, T2>!
 static Dynamitey.ReturnVoid.ThisAndArguments<T1>(Dynamitey.ThisAction<T1>! del) -> Dynamitey.ThisAction<T1>!
+static Dynamitey.StaticContext.FromType(System.Type! type) -> Dynamitey.StaticContext!
 static Dynamitey.StaticContext.explicit operator Dynamitey.StaticContext!(System.Type! type) -> Dynamitey.StaticContext!
+static Dynamitey.String_OR_InvokeMemberName.FromString(string? name) -> Dynamitey.String_OR_InvokeMemberName!
 static Dynamitey.String_OR_InvokeMemberName.implicit operator Dynamitey.String_OR_InvokeMemberName!(string? name) -> Dynamitey.String_OR_InvokeMemberName!
 static Dynamitey.ThisDelegate.IsSpecialThisDelegate(this System.Delegate! del) -> bool
 static Dynamitey.Tupler.Create(params object![]! args) -> dynamic!

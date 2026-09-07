@@ -25,6 +25,17 @@ namespace Dynamitey.DynamicObjects
             return new RealType(type);
         }
 
+        /// <summary>
+        /// Named alternate for the implicit conversion from <see cref="Type"/> above, for callers
+        /// in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>A <see cref="RealType"/> wrapping <paramref name="type"/>.</returns>
+        public static FauxType FromType(Type type)
+        {
+            return new RealType(type);
+        }
+
 
         /// <summary>
         /// Gets the members.
@@ -120,6 +131,17 @@ namespace Dynamitey.DynamicObjects
          }
 
          /// <summary>
+         /// Named alternate for the implicit conversion to <see cref="Type"/> above, for callers
+         /// in a language that cannot consume operator overloads. TargetType is protected, so this
+         /// is the only way an external caller reads the wrapped <see cref="Type"/> back out.
+         /// </summary>
+         /// <returns>The wrapped <see cref="Type"/>.</returns>
+         public Type ToType()
+         {
+             return TargetType;
+         }
+
+         /// <summary>
          /// An actual Type implicitly conversts to a real type
          /// </summary>
          /// <param name="type">The type.</param>
@@ -129,10 +151,23 @@ namespace Dynamitey.DynamicObjects
              return new RealType(type);
          }
 
+         /// <summary>
+         /// Named alternate for the implicit conversion from <see cref="Type"/> above, for callers
+         /// in a language that cannot consume operator overloads.
+         /// </summary>
+         /// <param name="type">The type.</param>
+         /// <returns>A <see cref="RealType"/> wrapping <paramref name="type"/>.</returns>
+         public static new RealType FromType(Type type)
+         {
+             return new RealType(type);
+         }
+
 
          /// <summary>
          /// The target type
          /// </summary>
+        [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+            "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
         protected readonly Type TargetType;
 
         /// <summary>

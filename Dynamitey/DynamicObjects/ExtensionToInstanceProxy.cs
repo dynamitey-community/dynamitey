@@ -114,22 +114,32 @@ namespace Dynamitey.DynamicObjects
             /// <summary>
             /// The name
             /// </summary>
+            [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+                "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
             protected string Name;
             /// <summary>
             /// The parent
             /// </summary>
+            [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+                "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
             protected ExtensionToInstanceProxy Parent;
             /// <summary>
             /// The overload types
             /// </summary>
+            [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+                "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
             protected IDictionary<int, Type[]> OverloadTypes;
             /// <summary>
             /// The generic params
             /// </summary>
+            [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+                "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
             protected Type[] GenericParams;
             /// <summary>
             /// The generic method parameters
             /// </summary>
+            [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+                "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
             protected Type[]? GenericMethodParameters;
 
             [RequiresUnreferencedCode("Reflects over parent.InstanceHints' methods by name (GetMethods/MakeGenericType) to find overloads matching Name; trimming can remove a method this depends on.")]

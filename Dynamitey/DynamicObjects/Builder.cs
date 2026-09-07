@@ -150,7 +150,9 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Build factory storage
         /// </summary>
-       
+
+        [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
+            "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
 		protected IDictionary<string,Activate?> _buildType;
 
         /// <summary>

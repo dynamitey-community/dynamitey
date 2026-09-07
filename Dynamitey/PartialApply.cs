@@ -30,6 +30,11 @@ namespace Dynamitey
         /// <returns></returns>
         [RequiresUnreferencedCode("Invokes function through 'dynamic', resolved via the DLR binder; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("The 'dynamic' invocation binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
+        [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification =
+            "Same internal-plumbing reasoning as Curry's mirroring operator (Internal/Curry.cs): PartialApply " +
+            "is documented as \"Internal method for subsequent invocations of Dynamic.Curry\" in its own class " +
+            "summary, the pipe result is already reachable by invoking the value directly, and no test in " +
+            "this repository exercises the `|` syntax.")]
         public static dynamic operator |(dynamic argument, PartialApply function)
         {
            return ((dynamic)function)(argument);
