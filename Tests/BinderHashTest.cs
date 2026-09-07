@@ -69,6 +69,30 @@ namespace Dynamitey.Tests
         }
 
         [Test]
+        public void EqualsObject_Null_ReturnsFalse()
+        {
+            var tOne = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType, staticContext: true, isEvent: false, knownBinder: false);
+
+            Assert.That(tOne.Equals(null), Is.False);
+        }
+
+        [Test]
+        public void EqualsObject_SameReference_ReturnsTrue()
+        {
+            var tOne = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType, staticContext: true, isEvent: false, knownBinder: false);
+
+            Assert.That(tOne.Equals(tOne), Is.True);
+        }
+
+        [Test]
+        public void EqualsObject_NotABinderHash_ReturnsFalse()
+        {
+            var tOne = Create<Func<object>>("Foo", typeof(string), new[] { "a" }, DummyBinderType, staticContext: true, isEvent: false, knownBinder: false);
+
+            Assert.That(tOne.Equals(new object()), Is.False);
+        }
+
+        [Test]
         public void EqualBinderHashesAreEqualAndShareHashCode()
         {
             var tArgNames = new[] { "a", "b" };
