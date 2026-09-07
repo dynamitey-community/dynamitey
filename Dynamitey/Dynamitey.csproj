@@ -2,6 +2,24 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+
+    <!-- Identity, set explicitly rather than defaulted from the project name (#3).
+         PackageId and AssemblyName move so this fork cannot collide with the
+         original package on nuget.org: two assemblies claiming one identity resolve
+         to a coin flip that surfaces as a runtime MissingMethodException.
+
+         RootNamespace deliberately does NOT move, and is pinned here so it cannot
+         drift toward AssemblyName later. The collision is an assembly-identity
+         problem and the assembly name alone fixes it. Keeping the namespace means an
+         existing consumer swaps one PackageReference line and rebuilds, with no
+         source change - which is what a continuation of a dormant library should
+         offer. A project that somehow references both now gets CS0433 at compile
+         time, which is explicit and rare, instead of today's silent runtime failure.
+         Microsoft's own Microsoft.Bcl.* packages ship System.* namespaces for the
+         same reason. -->
+    <PackageId>Dynamitey.Community</PackageId>
+    <AssemblyName>Dynamitey.Community</AssemblyName>
+    <RootNamespace>Dynamitey</RootNamespace>
     <Nullable>enable</Nullable>
     <!-- netstandard2.0's default LangVersion (7.3, driven off the TFM) predates both
          nullable reference types (C# 8) and the `is not null` pattern (C# 9) used
@@ -20,6 +38,16 @@
     <PackageTags>dynamic metaprogramming dlr reflection currying tuples expando latetypes</PackageTags>
     <IncludeSymbols>True</IncludeSymbols>
     <IncludeSource>True</IncludeSource>
+    <!-- sn.snk is this fork's own 2048-bit key, generated for #3. It replaced
+         upstream's committed key, which a renamed assembly cannot keep using -
+         the strong name is part of the identity being changed. Committing it is
+         normal for open source: a strong name establishes identity, not security,
+         and anyone can re-sign a fork with their own.
+
+         Signing is kept rather than dropped because a strong-named assembly may
+         only reference other strong-named assemblies, and netstandard2.0 exists
+         here precisely to serve .NET Framework consumers, where strong naming is
+         still common. Dropping it would break them on upgrade. -->
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>sn.snk</AssemblyOriginatorKeyFile>
     <DelaySign>False</DelaySign>
