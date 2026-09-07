@@ -6,7 +6,7 @@
     <IsPackable>false</IsPackable>
     <AssemblyName>Dynamitey.Benchmarks</AssemblyName>
     <RootNamespace>Dynamitey.Benchmarks</RootNamespace>
-    <!-- BenchmarkDotNet refuses to run a non-optimised build, and warns on any
+    <!-- BenchmarkDotNet refuses to run a non-optimized build, and warns on any
          attached debugger. Always run this with -c Release. -->
     <IsPublishable>false</IsPublishable>
   </PropertyGroup>

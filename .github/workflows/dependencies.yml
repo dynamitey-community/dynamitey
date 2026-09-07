@@ -151,7 +151,7 @@ jobs:
           DC_NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
           # An NVD API key is mandatory, not merely helpful. NIST retired the
-          # old JSON data feeds in favour of a rate-limited API, and
+          # old JSON data feeds in favor of a rate-limited API, and
           # Dependency-Check 12 and later fail outright without a key rather
           # than running slowly: "Invalid API Key, length of 0 too short".
           #
@@ -166,7 +166,7 @@ jobs:
               echo "### OWASP Dependency-Check: NOT RUN"
               echo
               echo "No \`NVD_API_KEY\` repository secret is set, and Dependency-Check 12+ requires one:"
-              echo "NIST retired the JSON data feeds in favour of a rate-limited API."
+              echo "NIST retired the JSON data feeds in favor of a rate-limited API."
               echo
               echo "**This is not a clean result. Nothing was scanned.**"
               echo
@@ -206,7 +206,7 @@ jobs:
           echo "DC_EXIT=${tExit}" >> "$GITHUB_ENV"
           exit 0
 
-      - name: Summarise findings
+      - name: Summarize findings
         if: always()
         shell: bash
         run: |

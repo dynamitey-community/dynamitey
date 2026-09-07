@@ -7,7 +7,7 @@ body:
       value: |
         Worth knowing before you write this up: this project is a continuation of
         a dormant library, and its near-term priority is getting the existing
-        behaviour onto supported ground rather than growing the API. The
+        behavior onto supported ground rather than growing the API. The
         [roadmap](https://github.com/dynamitey-community/dynamitey/issues/10)
         says what is planned and in what order.
 
@@ -26,7 +26,7 @@ body:
     id: proposal
     attributes:
       label: What you would like
-      description: If you have a specific API or behaviour in mind, sketch it.
+      description: If you have a specific API or behavior in mind, sketch it.
     validations:
       required: true
 

@@ -162,7 +162,7 @@ namespace Dynamitey.Tests
         // the same IEnumerable<KeyValuePair<string,object>> yields the real dictionary entries.
         // Concretely: a List with 0 list-items and 2 dictionary-properties enumerates 2
         // KeyValuePairs by foreach, but LINQ's .Count() on that same sequence reports 0. This
-        // test pins the current (inconsistent) behaviour rather than papering over it - see the
+        // test pins the current (inconsistent) behavior rather than papering over it - see the
         // coverage task's report for the write-up.
         [Test]
         public void TestDictionaryCountThroughCollectionInterfaceIsActuallyListCount()

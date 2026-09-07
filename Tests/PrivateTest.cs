@@ -52,7 +52,7 @@ namespace Dynamitey.Tests
         // sync + named args, public + async + named args, and internal + async
         // + named args that skip optional parameters all succeed - on this
         // repo's current code and against the pristine upstream baseline (tag
-        // upstream-baseline). These tests record that behaviour as coverage
+        // upstream-baseline). These tests record that behavior as coverage
         // rather than as fix verification - there was no failing case to fix.
         [Test]
         public async Task TestInvokeInternalTypeAsyncMethodAcrossAssemblyBoundriesPositionalArgs()
@@ -380,7 +380,7 @@ namespace Dynamitey.Tests
         // static PROPERTY when the target type isn't a non-nested public type.
         // Each shape below uses its own type/property so the tests don't depend
         // on each other, or on any other test in the suite, having run first -
-        // the reported bug was that behaviour changed depending on execution
+        // the reported bug was that behavior changed depending on execution
         // order, so a test that relied on ordering to pass would be validating
         // the wrong thing.
         [Test]

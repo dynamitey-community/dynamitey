@@ -7,7 +7,7 @@ namespace Dynamitey.Tests
     // CA1062 batch (see the csproj backlog comment): a reflection probe found 34 public
     // methods that threw NullReferenceException on a null argument they never checked.
     // Guarding those turns the same failure into an ArgumentNullException naming the
-    // offending parameter - a pure diagnostic improvement, not a behaviour change. This
+    // offending parameter - a pure diagnostic improvement, not a behavior change. This
     // fixture is a representative sample of that guard work, not exhaustive coverage of
     // every guarded member; each case here was also proven load-bearing by removing the
     // guard in an isolated worktree and confirming the test fails.

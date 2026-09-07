@@ -101,7 +101,7 @@ namespace System.Diagnostics.CodeAnalysis
             "alongside Members, which the real System.Diagnostics.CodeAnalysis.MemberNotNullAttribute " +
             "(.NET Core 3.0+/netstandard2.1) does not have either. This type's whole purpose is to be " +
             "byte-for-byte the same shape as that real attribute (see the file header) so the C# " +
-            "compiler's pattern-matching recognises it identically on netstandard2.0; adding a property " +
+            "compiler's pattern-matching recognizes it identically on netstandard2.0; adding a property " +
             "the real one lacks would be less faithful, not more.")]
         public MemberNotNullAttribute(string member)
         {
@@ -149,7 +149,7 @@ namespace System.Runtime.CompilerServices
     // call reads Guard.NotNull(target) and still reports "target" as the parameter name, rather
     // than repeating nameof(target) at every one of the twenty call sites. Same arrangement as
     // the attributes above: on netstandard2.0 this compiles to inert metadata, and the compiler
-    // recognises it by name and shape regardless of which assembly declares it.
+    // recognizes it by name and shape regardless of which assembly declares it.
     [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
     internal sealed class CallerArgumentExpressionAttribute : Attribute
     {

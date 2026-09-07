@@ -242,7 +242,7 @@ namespace Dynamitey.Tests
         // Equal but do not have equal hash codes, which breaks the Equals/GetHashCode contract
         // (a violation is directly observable: put such an Invocation in a Dictionary/HashSet
         // keyed by itself and a lookup with an "equal" key can miss it). This test pins the
-        // current (contract-violating) behaviour rather than papering over it - see the
+        // current (contract-violating) behavior rather than papering over it - see the
         // coverage task's report for the write-up.
         [Test]
         public void TestGetHashCodeViolatesEqualsContractForDistinctArgsArrayInstances()
