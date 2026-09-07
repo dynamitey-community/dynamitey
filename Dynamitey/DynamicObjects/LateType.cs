@@ -26,6 +26,10 @@ namespace Dynamitey.DynamicObjects
                 + "Neither fits: this exception exists to name the type that could not be found, and its single "
                 + "string parameter is that type name, not a message - it is formatted into one. A parameterless "
                 + "overload could only produce a message with no type in it, which is worse than not offering it.")]
+        [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification =
+            "Same reasoning as the RCS1194 suppression immediately above - CA1032 wants exactly the " +
+            "parameterless and (string message) constructors that suppression already explains are the " +
+            "wrong shape for this exception.")]
         [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
             "See AwaitableResult.Awaiter; identical reasoning. MissingTypeException's identity only makes " +
             "sense next to LateType, the class whose lookups throw it.")]
@@ -36,9 +40,9 @@ namespace Dynamitey.DynamicObjects
             /// </summary>
             /// <param name="typename">The typename.</param>
              public MissingTypeException(string typename)
-                 : base(String.Format("Could Not Find Type. {0}", typename))
+                 : base(String.Format(System.Globalization.CultureInfo.InvariantCulture, "Could Not Find Type. {0}", typename))
              {
-                 
+
              }
 
              /// <summary>
@@ -67,6 +71,12 @@ namespace Dynamitey.DynamicObjects
 
 
         [RequiresUnreferencedCode("Resolves typeName via Assembly.GetType/Type.GetType, both name-based type lookups the trimmer cannot see; a type this depends on can be removed. Returns null instead of throwing when the type can't be found.")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
+            "Same type-probe reasoning as Dynamic.ProbeComObjectType (Dynamic.cs): throwOnError:false " +
+            "only suppresses the \"not found\" case, and Assembly.GetType/Type.GetType can still throw " +
+            "ArgumentException, FileNotFoundException, FileLoadException, or BadImageFormatException " +
+            "for other resolution failures. This method's own documented contract is to return null " +
+            "for any of them, not just the one - narrowing the catch would break that contract.")]
         public static Type? FindType(string typeName, Assembly? assembly = null)
         {
             try
@@ -79,11 +89,6 @@ namespace Dynamitey.DynamicObjects
             }
             catch
             {
-                // Deliberately broad (cs/catch-of-all-exceptions): throwOnError:false only
-                // suppresses the "not found" case. Assembly.GetType/Type.GetType can still throw
-                // ArgumentException, FileNotFoundException, FileLoadException, or
-                // BadImageFormatException for other resolution failures; this method's contract
-                // (see the summary above) is to return null for any of them, not just the one.
                 return null;
             }
         }
@@ -180,6 +185,15 @@ namespace Dynamitey.DynamicObjects
         /// The call target.
         /// </value>
         /// <exception cref="Dynamitey.DynamicObjects.LateType.MissingTypeException"></exception>
+        [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations", Justification =
+            "Overlaps SonarAnalyzer S2372 (\"property getter that throws\"), already in the Sonar half " +
+            "of the backlog for this exact getter and deliberately deferred there rather than fixed here " +
+            "- the two rules flag the same defect, so resolving one by converting CallTarget into a " +
+            "method would just close S2372 for free while reopening it as a CA1065 fix that isn't this " +
+            "batch's to make. CallTarget overrides BaseForwarder's abstract member, so changing its shape " +
+            "from a property to a method is a design change affecting every forwarder subclass, not a " +
+            "narrow fix; the throw itself is intentional (see the summary above): a LateType constructed " +
+            "from a name whose type never resolved has nothing to forward to.")]
         protected override object CallTarget
         {
             get
