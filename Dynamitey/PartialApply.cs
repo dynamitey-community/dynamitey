@@ -136,6 +136,8 @@ namespace Dynamitey
         /// Gets the args.
         /// </summary>
         /// <value>The args.</value>
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification =
+            "Public API, breaking to reshape - see Invocation.Args (Invocation.cs) for the full reasoning.")]
         public object?[] Args => _args;
 
         /// <summary>
