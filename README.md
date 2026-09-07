@@ -32,9 +32,15 @@ Everything after it belongs to this project.
 > been released.** The `Dynamitey` package on nuget.org is upstream's, at 3.0.3.
 > Installing it does not get you this code.
 
-Publishing is deliberately on hold. An outreach message to the original
-maintainer is unanswered, and until that resolves this project will not publish
-a package or reserve a package ID — see
+Publishing is deliberately on hold. An outreach message was sent to the original
+maintainer on **2026-09-05**, through the NuGet "Contact owners" form on the
+`Dynamitey` package — upstream has issue creation restricted, so its own tracker
+was not available. Until that is answered this project will not publish a package
+or reserve a package ID.
+
+**If there is no reply by 2026-09-26**, the block lifts and 4.0.0 publishes as
+`Dynamitey.Community`. The reasoning behind that date, and what happens either
+way, is recorded on
 [#8](https://github.com/dynamitey-community/dynamitey/issues/8). The package
 identity question that comes with it is
 [#3](https://github.com/dynamitey-community/dynamitey/issues/3).

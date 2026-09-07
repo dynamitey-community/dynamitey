@@ -42,7 +42,7 @@ The GitHub fork that previously existed at `AtwoodTM/dynamitey` has been deleted
 
 ## Hard constraints
 
-**Never push to `ekonbenefits`.** Not a branch, not a tag, not a PR. This repo has issue creation restricted by its owner and an outreach message is currently pending a reply. An accidental push would be a serious problem. Step 5 sets the upstream push URL to `DISABLED` for exactly this reason. Do not undo that.
+**Never push to `ekonbenefits`.** Not a branch, not a tag, not a PR. This repo has issue creation restricted by its owner, and an outreach message sent through the NuGet "Contact owners" form on 2026-09-05 is pending a reply. An accidental push would be a serious problem. Step 5 sets the upstream push URL to `DISABLED` for exactly this reason. Do not undo that.
 
 **Do not force-push anything.**
 
@@ -264,4 +264,4 @@ For context only, so you understand why the baseline matters. Do not start any o
 4. Add trim and AOT analyzer annotations. This library is DLR-based and will never be trim-safe or AOT-safe, so the public surface should carry `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]` to give consumers build-time warnings instead of runtime failures.
 5. README, NOTICE, SECURITY.md, CI, NuGet Trusted Publishing via OIDC.
 
-Publishing is gated on a pending reply from the upstream maintainer. Do not publish anything.
+Publishing is gated on a pending reply from the upstream maintainer, sought through the NuGet "Contact owners" form on 2026-09-05. Do not publish anything before that is answered or before 2026-09-26, whichever comes first — see #8, which records the deadline and the fallback.

@@ -1,0 +1,122 @@
+# Release machinery for 4.0.0, deliberately inert.
+#
+# This workflow builds, tests and packs the library and uploads the resulting
+# packages as build artifacts. It does NOT publish them anywhere, and it has no
+# credential of any kind. See the "Why there is no push step" comment on the
+# pack job below before adding one.
+#
+# It is also `workflow_dispatch` only - no `push`, and specifically no tag
+# trigger. Publishing is gated on issue #8: a NuGet "Contact owners" message was
+# sent to the upstream maintainer on 2026-09-05, and nothing publishes until it
+# is answered or 2026-09-26 passes, whichever comes first. A tag trigger added
+# before then would turn `git tag` into an accidental release.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why this run was started (recorded in the run summary)'
+        required: false
+        default: 'Dry run of the release pipeline'
+
+# The default token needs nothing beyond reading the repository. Stated
+# explicitly so that adding a publish step later is a visible, deliberate
+# permissions change rather than an inherited capability.
+permissions:
+  contents: read
+
+jobs:
+  pack:
+    name: Build, test and pack
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # GitVersion derives the version from history and tags. The default
+          # shallow clone has neither, and it fails rather than guessing. This
+          # matters more here than in ci.yml: the version this computes is the
+          # version that would ship.
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      # -warnaserror matches ci.yml. A release must not be cut from a tree that
+      # would fail the ordinary build gate.
+      - name: Build
+        run: dotnet build -c Release --no-restore -warnaserror
+
+      # No category filter, and the run must report 0 skipped as well as 0
+      # failed - the same bar ci.yml enforces. A release built from a tree whose
+      # suite was filtered down is not a tested release.
+      - name: Test
+        run: dotnet test Tests/Tests.csproj -c Release --no-build
+
+      # Packs both target frameworks, plus a .snupkg of symbols. Source Link is
+      # supplied by the .NET SDK (bundled since .NET 8) and configured by the
+      # PublishRepositoryUrl / EmbedUntrackedSources properties in
+      # Dynamitey.csproj; ContinuousIntegrationBuild switches itself on here via
+      # the GITHUB_ACTIONS variable, which is what normalizes source paths so
+      # Source Link can resolve them.
+      - name: Pack
+        run: dotnet pack Dynamitey/Dynamitey.csproj -c Release --no-build -o artifacts
+
+      # Fails the run if the pack produced the legacy symbol format instead of a
+      # .snupkg. nuget.org rejects .symbols.nupkg on push, and without this check
+      # that rejection would surface at the first real publish - the worst moment
+      # to find out. Cheap to assert here, so assert it every run.
+      - name: Verify the package shape
+        run: |
+          set -euo pipefail
+          ls -la artifacts
+          if ls artifacts/*.symbols.nupkg >/dev/null 2>&1; then
+            echo "::error::Packed the legacy .symbols.nupkg format; nuget.org rejects it. Check SymbolPackageFormat in Dynamitey.csproj."
+            exit 1
+          fi
+          if ! ls artifacts/*.snupkg >/dev/null 2>&1; then
+            echo "::error::No .snupkg was produced, so the release would ship without usable symbols."
+            exit 1
+          fi
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+          if-no-files-found: error
+
+      # Why there is no push step
+      #
+      # Publishing is blocked by #8 until the upstream maintainer replies or
+      # 2026-09-26 passes. A workflow that cannot publish cannot publish by
+      # accident, so the step is absent rather than present and disabled behind
+      # an `if:` - a condition is one edit away from being true, and an absent
+      # step is not.
+      #
+      # When this unblocks, the push arrives as NuGet Trusted Publishing over
+      # OIDC, not an API key in a repository secret. That means:
+      #
+      #   * add `id-token: write` to this workflow's permissions
+      #   * exchange the OIDC token for a short-lived NuGet credential
+      #   * `dotnet nuget push artifacts/*.nupkg` (the .snupkg goes with it)
+      #   * add the tag trigger, so a release is cut by pushing a tag
+      #
+      # The point of OIDC is that no durable secret exists to leak, rotate or
+      # inherit. This repository arrived carrying two inherited publish
+      # credentials, so that is not a hypothetical concern here.
+      - name: Publishing is blocked
+        run: |
+          echo "### Packages built, nothing published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Reason given for this run: ${{ inputs.reason }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Publishing is gated on issue #8. The packages above are build artifacts only." >> "$GITHUB_STEP_SUMMARY"
