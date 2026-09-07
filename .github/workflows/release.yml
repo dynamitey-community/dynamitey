@@ -92,6 +92,10 @@ jobs:
             echo "::error::Packed the legacy .symbols.nupkg format; nuget.org rejects it. Check SymbolPackageFormat in Dynamitey.csproj."
             exit 1
           fi
+          if ls artifacts/*.source.nupkg >/dev/null 2>&1; then
+            echo "::error::Packed a legacy .source.nupkg. IncludeSource should remain unset/false (use Source Link instead)."
+            exit 1
+          fi
           if ! ls artifacts/*.snupkg >/dev/null 2>&1; then
             echo "::error::No .snupkg was produced, so the release would ship without usable symbols."
             exit 1
