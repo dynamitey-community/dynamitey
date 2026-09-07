@@ -44,8 +44,8 @@ is where the work to move it forward is happening, not yet where you get it.
 
 ### Installing, and moving from the original package
 
-This fork publishes as **`Dynamitey.Community`**, not `Dynamitey`. The assembly is
-named `Dynamitey.Community` too, so it cannot collide with the original package on
+This fork is configured to pack as **`Dynamitey.Community`**, not `Dynamitey`. The assembly is
+named `Dynamitey.Community` too, so once released it cannot collide with the original package on
 nuget.org — two assemblies claiming one identity resolve to a coin flip that
 surfaces as a runtime `MissingMethodException`.
 
