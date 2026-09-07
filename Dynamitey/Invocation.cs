@@ -176,11 +176,6 @@ namespace Dynamitey
         }
 
         /// <summary>
-        /// Equalses the specified other.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns></returns>
-        /// <summary>
         /// Two argument lists match when both are null, or both are non-null with equal contents.
         /// A null argument list is not the same as an empty one.
         /// </summary>
@@ -202,6 +197,14 @@ namespace Dynamitey
             return right is not null && left.SequenceEqual(right);
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="Invocation"/> is equal to this instance.
+        /// </summary>
+        /// <param name="other">The other.</param>
+        /// <returns>
+        /// <c>true</c> when both describe the same call: the same <see cref="Kind"/> and
+        /// <see cref="Name"/>, and argument lists that match by content.
+        /// </returns>
         public bool Equals(Invocation? other)
         {
             if (ReferenceEquals(null, other)) return false;
