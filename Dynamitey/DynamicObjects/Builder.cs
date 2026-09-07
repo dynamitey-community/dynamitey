@@ -98,6 +98,25 @@ namespace Dynamitey.DynamicObjects
         /// Generates Object, use by calling with named arguments <code>builder.Object(Prop1:"test",Prop2:"test")</code>
         /// returns new object;
         /// </summary>
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
+            "IBuilder.Object is the fluent-builder property that returns the object under construction - " +
+            "'builder.Object' is the whole point of the name, reading naturally at the call site. CA1716 " +
+            "exists for multi-language interop safety against a hard reserved keyword; 'Object' is not one " +
+            "in C#, the only language the DLR marshals these dynamic calls through. The same reasoning covers " +
+            "the other six CA1716 sites in this batch: Get (DynamicObjects.Get - names what the proxy does), " +
+            "ILinq<TSource>.Select/Single (mirror LINQ's own Enumerable.Select/Single so the proxy reads as a " +
+            "drop-in stand-in for LINQ - renaming to dodge the keyword would break that mirroring for no " +
+            "gain), and Return<TR> (InlineLambdas.cs, T4-generated - names the fluent lambda-typing helper for " +
+            "what it returns). All are declared public API (PublicAPI.Unshipped.txt); renaming any of them is " +
+            "a breaking rename this batch is not authorized to make.")]
+        [SuppressMessage("Naming", "CA1720:Identifiers should not contain type names", Justification =
+            "CA1720 flags an identifier containing a type name because it can misleadingly imply a member IS " +
+            "of that type. Object here is exactly what it says - a property returning the newly built proxy " +
+            "object - so the name is accurate, not misleading, and reads naturally as 'builder.Object'. The " +
+            "concrete implementation below (Builder<TObjectPrototype>.Object) carries the identical " +
+            "suppression for the identical reason, as does ILinq<TSource>.Single (LinqInstanceProxy.cs) which " +
+            "mirrors LINQ's own Enumerable.Single. All are declared public API; renaming is the breaking " +
+            "change this batch may not make.")]
         dynamic Object { get; }
 
         /// <summary>
@@ -269,6 +288,8 @@ namespace Dynamitey.DynamicObjects
         /// Creates a Prototype object.
         /// </summary>
         /// <value>The object.</value>
+        [SuppressMessage("Naming", "CA1720:Identifiers should not contain type names", Justification =
+            "See IBuilder.Object above; identical reasoning - this is that interface member's implementation.")]
         public dynamic Object { get; }
 
         /// <summary>
@@ -301,6 +322,9 @@ namespace Dynamitey.DynamicObjects
         ///<summary>
         /// Trampoline for builder
         ///</summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. BuilderTrampoline must be public because it " +
+            "overrides DynamicObject.TryInvoke, a public member.")]
         public class BuilderTrampoline<TInnerObjectProtoType> : DynamicObject
         {
             readonly Builder<TInnerObjectProtoType> _buider;
@@ -343,6 +367,9 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Trampoline for setup builder
         /// </summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. SetupTrampoline must be public because it " +
+            "overrides DynamicObject.TryInvoke, a public member.")]
         public class SetupTrampoline<TInnerObjectProtoType> : DynamicObject
         {
 			readonly Builder<TInnerObjectProtoType> _buider;

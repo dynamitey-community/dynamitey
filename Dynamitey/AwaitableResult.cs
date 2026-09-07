@@ -91,6 +91,22 @@ namespace Dynamitey
         /// the C# runtime binder can resolve them for a dynamically-typed <c>await</c> without ever needing
         /// access to the wrapped task's <c>TResult</c>.
         /// </summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "CA1034 wants nested public types un-nested because a consumer has to know the outer type to " +
+            "find them. Awaiter is deliberately both nested and public: it exists solely so " +
+            "GetAwaiter() can return AwaitableResult's own compiler-await-pattern awaiter, and it must be " +
+            "public because every member the C# runtime binder's await pattern touches - IsCompleted, " +
+            "GetResult, OnCompleted, UnsafeOnCompleted - has to be reachable by that binder (see the type's " +
+            "own remarks). Un-nesting it would not change any of that; it would just relocate a type nobody " +
+            "is meant to reference by name to the namespace root. The same reasoning covers the other seven " +
+            "CA1034 sites in this batch: each nested type is either a compiler-pattern helper (this one), an " +
+            "implementation detail that must be public because it overrides a public DynamicObject member " +
+            "(BuilderTrampoline, SetupTrampoline, ConstructorForward, Invoker, OverloadInvoker), an " +
+            "operator-only helper scoped to its one owner (AddRemoveMarker), or an exception whose identity " +
+            "only makes sense next to the type that throws it (MissingTypeException) - see the per-site " +
+            "suppression on each for the specific reason. All eight are declared public API " +
+            "(PublicAPI.Unshipped.txt); un-nesting any of them moves a type to a new namespace location, " +
+            "which is a breaking rename for any consumer referencing the nested name.")]
         public sealed class Awaiter : ICriticalNotifyCompletion
         {
             private readonly Task _task;

@@ -54,6 +54,9 @@ namespace Dynamitey.DynamicObjects
         /// <summary>
         /// Marks whether we are adding or removing the delegate
         /// </summary>
+        [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
+            "See AwaitableResult.Awaiter; identical reasoning. AddRemoveMarker is an operator-only helper " +
+            "scoped to BaseForwarder's own add/remove syntax and has no meaning outside it.")]
         public class AddRemoveMarker
         {
             /// <summary>
