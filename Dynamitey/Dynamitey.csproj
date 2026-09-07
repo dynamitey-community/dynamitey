@@ -180,13 +180,6 @@
          trips rules that a library trips rarely or never. The figures below are
          re-measured from a clean build of Dynamitey.csproj by itself.
 
-         Likely real, expected to end as fixes:
-           CA1810 (3)  static field initialization in an explicit static ctor
-           CA1812 (3)  internal classes that are apparently never instantiated
-           CA2201 (4)  raising reserved exception types
-           CA2208 (1)  argument exception constructed without the argument name
-           CA1508 (1)  dead conditional code
-
          Deliberately still deferred after triage (batch 1, performance rules):
            CA1851 (3)  multiple enumerations of an IEnumerable, all three in
                        Tupler.ToTuple. That method takes a bare IEnumerable from
@@ -249,10 +242,127 @@
            CA2225 (12) operator overloads without named alternatives
            CA2227 (1)  collection properties with a public setter
            CA1002 (1)  List<T> on a public surface
-           CA1019 (2), CA1024 (2), CA1032 (1), CA1033 (1), CA1065 (1),
-           CA1822 (1), CA1305 (1), CA1307 (2), CA1819 (3), CA1031 (4)
+
+         Resolved in batch 4 (mostly real fixes, unlike batch 3 - removed from
+         NoWarn below; each finding fixed or suppressed at its call site with a
+         written reason):
+           CA1810 (3)  FIXED: static field initialization moved into field
+                       initializers (a helper method per field where the old
+                       .cctor body had a try/catch), removing the explicit
+                       static constructor - Dynamic.cs, Internal/Optimization/
+                       InvokeHelper.cs (generated - edited via the .tt and
+                       regenerated), Internal/Optimization/Util.cs.
+           CA1812 (3)  Internal/Optimization/InvokeHelper-Regular.cs.
+                       IsEventBinderDummy and InvokeConstructorDummy FIXED:
+                       made static: both are referenced only as typeof(...)
+                       cache keys passed to CreateCallSite, never `new`'d, and
+                       typeof() works the same on a static class. DummmyNull
+                       SUPPRESSED, not deleted: an exhaustive repository-wide
+                       search (including the .tt templates) found zero
+                       references anywhere, not even a typeof() use - genuinely
+                       dead code by every check available, but this batch's
+                       standing rule for CA1812 in a DLR library is evidence-
+                       based suppression over deletion, because reflection or
+                       an emitted call site can instantiate a type in ways a
+                       search cannot see. Left as a candidate for a future
+                       issue to actually remove.
+           CA2201 (4)  FIXED, and an OBSERVABLE BEHAVIOUR CHANGE (see the batch
+                       4 release notes): Dynamic.cs's four `throw new
+                       Exception(...)` sites now throw FormatException (the
+                       three "Could Not Parse" parse-failure sites in
+                       InvokeSetChain/InvokeGetChain) or InvalidOperationException
+                       (CoerceToDelegate's "Impossible!" invariant check).
+           CA2208 (1)  FIXED, and an OBSERVABLE BEHAVIOUR CHANGE (see the batch
+                       4 release notes): CacheableInvocation.Invoke's
+                       ArgumentException constructor arguments were transposed
+                       - message and paramName were swapped, so Message was
+                       literally the string "args" and ParamName was always
+                       null. Reordered to match the real (message, paramName)
+                       constructor.
+           CA1508 (1)  FIXED, no behaviour change: DynamicObjects/Get.cs
+                       reorders `var tDel = result as Delegate;` before the
+                       `if (result == null) return false;` null check (matching
+                       BaseDictionary.TryInvokeMember's already-working order
+                       for the identical pattern) rather than after it. `as` on
+                       null is already null, so the result is identical either
+                       way - only the order silences the analyzer's mistaken
+                       "always false" reading of `tDel != null`.
+           CA1032 (1)  SUPPRESSED: LateType.MissingTypeException - same
+                       reasoning as its existing RCS1194 suppression
+                       immediately above it (LateType.cs): the standard
+                       parameterless/(string message) constructors don't fit an
+                       exception whose one string parameter is the type name.
+           CA1065 (1)  SUPPRESSED: LateType.CallTarget (LateType.cs) - overlaps
+                       SonarAnalyzer S2372 ("property getter that throws"),
+                       already in the Sonar half of this backlog and
+                       deliberately deferred there; resolving one by reshaping
+                       CallTarget from a property to a method would just
+                       reopen the other, the same trap batch 2 hit with CA1062
+                       vs S3877.
+           CA1305 (1)  FIXED, no behaviour change: LateType.MissingTypeException's
+                       String.Format call now passes CultureInfo.InvariantCulture
+                       explicitly. The formatted argument is a string, whose
+                       formatting is not culture-sensitive, so the produced
+                       message is byte-for-byte the same as before.
+           CA1033 (1)  FIXED: DynamicObjects/RegexMatch.cs's RegexMatch class is
+                       now sealed - the fix CA1033 itself names as non-breaking
+                       here, since RegexMatch hasn't shipped
+                       (PublicAPI.Unshipped.txt) and nothing in this repository
+                       derives from it.
+           CA1307 (2)  FIXED, no behaviour change: Internal/Optimization/
+                       BinderHash.cs and InvokeMemberName.cs both call
+                       Name.GetHashCode(StringComparison.Ordinal) on net10.0 -
+                       proven to compute the exact same hash as the
+                       parameterless overload, so no observable change, just
+                       the explicit comparison type the rule asks for. Guarded
+                       by #if NETSTANDARD2_0 falling back to the parameterless
+                       call there: that overload doesn't exist on
+                       netstandard2.0's string surface (added in .NET Core
+                       2.1), which is also why CA1307 itself only ever fired
+                       for the net10.0 leg of the multi-target build.
+           CA1024 (2)  SUPPRESSED, both public API: FauxType.GetMemberNames
+                       (abstract; every override would need to change too) and
+                       Internal/Compat/Net40.GetDefaultThreadCurrentCulture
+                       (public API despite the "Internal" namespace) - same
+                       public-API-freeze reasoning as the CA1819 sites below.
+           CA1819 (3)  SUPPRESSED, all three public API and out of scope for an
+                       analyzer-driven breaking change: Invocation.Args (full
+                       reasoning there), InvokeMemberName.GenericArgs,
+                       PartialApply.Args.
+           CA1822 (1)  SUPPRESSED, proven load-bearing: Tupler.cs's private
+                       TuplerFix.Create exists solely so ToTuple can bind to it
+                       as an *instance* member through
+                       Dynamic.InvokeMember(TuplerHelper, "Create", ...) for
+                       the >7-arity tuple path. Tried marking it static:
+                       DynamicListToTuplet8 fails with a RuntimeBinderException
+                       ("cannot be accessed with an instance reference") -
+                       the DLR's C#-compatible binder does not allow invoking a
+                       static method through instance syntax.
+           CA1019 (2)  SUPPRESSED: Internal/Compat/NullableAttributesPolyfill.cs's
+                       MemberNotNullAttribute(string) and
+                       MemberNotNullWhenAttribute(bool, string) constructors.
+                       Both funnel into the same Members string[] property
+                       their params-array sibling constructor sets directly;
+                       satisfying CA1019 literally would mean adding a second,
+                       single-string property the real
+                       System.Diagnostics.CodeAnalysis.MemberNotNullAttribute
+                       (.NET Core 3.0+/netstandard2.1) does not have either,
+                       which would make this netstandard2.0 polyfill less
+                       faithful to the shape it exists to mirror, not more.
+           CA1031 (4)  SUPPRESSED, all four: matches to the type-probe and
+                       boolean-probe patterns issue #50 already established.
+                       Dynamic.cs's two static-field probes (now
+                       ProbeComObjectType/ProbeTypeConverterAttributeSL, moved
+                       out of the old .cctor for CA1810 above) and
+                       LateType.FindType are name-based type-resolution
+                       probes where several distinct exception types all mean
+                       "treat as absent"; Dynamic.IsDBNull is a boolean probe
+                       with a symmetric safe default ("can't tell" and "not
+                       DBNull" collapse to the same false). Full reasoning on
+                       Dynamic.ProbeComObjectType; every other site points back
+                       to it or to the IsDBNull boolean-probe variant.
     -->
-    <NoWarn>$(NoWarn);CA1002;CA1019;CA1024;CA1031;CA1032;CA1033;CA1051;CA1065;CA1305;CA1307;CA1810;CA1812;CA1819;CA1822;CA1851;CA2201;CA2208;CA2225;CA2227;CA1508</NoWarn>
+    <NoWarn>$(NoWarn);CA1002;CA1051;CA1851;CA2225;CA2227</NoWarn>
 
     <!-- Sonar's share of the backlog: 90 findings across 31 rules, on the same
          terms as the CA list above. Its signal is different in kind - it found
