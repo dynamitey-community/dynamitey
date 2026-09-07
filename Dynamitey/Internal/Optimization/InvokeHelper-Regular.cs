@@ -14,6 +14,16 @@ using Dynamitey.Internal.Compat;
 namespace Dynamitey.Internal.Optimization
 {
 
+    // Suppressed rather than fixed or deleted: an exhaustive repository-wide search (including the
+    // .tt templates and generated files) found zero references to DummmyNull anywhere - not even a
+    // typeof() cache-key use like IsEventBinderDummy/InvokeConstructorDummy below have. That reads
+    // as genuinely dead code, but this batch's hard rule for CA1812 in a DLR library is "prefer
+    // suppression with evidence over deletion" precisely because reflection/emitted call sites can
+    // instantiate a type in ways static analysis (and a grep) cannot see. Left in place as a
+    // candidate for a future issue to actually remove, rather than deleted on this analyzer's
+    // say-so without a stronger check than a search.
+    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification =
+        "See the comment on this type.")]
     internal sealed class DummmyNull
     {
 
@@ -897,7 +907,10 @@ namespace Dynamitey.Internal.Optimization
             InvokeMemberAction(ref callSite, tBinderType, KnownDirect, tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, args!);
         }
 
-        internal sealed class IsEventBinderDummy{
+        // static, not merely sealed (CA1812): only ever referenced as typeof(IsEventBinderDummy), a
+        // cache-key Type passed to CreateCallSite - never `new`'d - so nothing is lost by also
+        // making it uninstantiable, and typeof() works identically on a static class.
+        internal static class IsEventBinderDummy{
 
         }
         [RequiresUnreferencedCode("Resolves 'name' via Binder.IsEvent; trimming can remove the member being resolved.")]
@@ -980,7 +993,9 @@ namespace Dynamitey.Internal.Optimization
 
         }
 
-        internal sealed class InvokeConstructorDummy{};
+        // static, not merely sealed (CA1812): same reasoning as IsEventBinderDummy above - only
+        // ever referenced as typeof(InvokeConstructorDummy), never `new`'d.
+        internal static class InvokeConstructorDummy{};
 
         internal static readonly InvokeMemberName ConstructorName = new InvokeMemberName(Invocation.ConstructorBinderName);
 
