@@ -1,5 +1,8 @@
 name: Dependencies
 
+# Note the jobs here do not all run on the same events: dependency review is
+# pull-request-only, the NuGet audit runs on everything, and the OWASP scan is
+# weekly and on-demand only. See the condition on each job.
 on:
   pull_request:
   schedule:
@@ -81,6 +84,19 @@ jobs:
   owasp:
     name: OWASP dependency check
     runs-on: ubuntu-latest
+    # Weekly and on demand, never on a pull request. The first scan with a cold
+    # cache takes about an hour: Dependency-Check has to build the NVD database
+    # from scratch, and the API is rate-limited even with a key. That is a fine
+    # price once a week and a bad one on every pull request, where it would be by
+    # far the slowest thing in CI while blocking nothing - it is deliberately not
+    # a required check.
+    #
+    # It loses very little. The NVD publishes advisories daily, not per-commit,
+    # so a weekly scan of main catches the same things a per-PR scan would, only
+    # slightly later. The fast per-PR dependency gates remain: the dependency
+    # review job above blocks a PR that introduces a known-vulnerable package,
+    # and the NuGet audit job runs in about twenty seconds.
+    if: github.event_name != 'pull_request'
     # This is deliberately not redundant with the NuGet audit above. That audit
     # queries the GitHub Advisory Database; OWASP Dependency-Check matches
     # against the NVD by CPE. The two datasets genuinely diverge - an advisory
