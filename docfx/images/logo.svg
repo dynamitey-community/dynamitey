@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Dynamitey">
+  <defs>
+    <linearGradient id="spark" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB250"/>
+      <stop offset="0.55" stop-color="#F07A1A"/>
+      <stop offset="1" stop-color="#C8410A"/>
+    </linearGradient>
+  </defs>
+  <!-- Four-point spark. The concave edges are what keep it reading as ignition
+       rather than as a plain star, and it stays legible down to 16px. -->
+  <path d="M19 1.5C19 9.4 22.9 13.3 30.8 13.3C22.9 13.3 19 17.2 19 25.1C19 17.2 15.1 13.3 7.2 13.3C15.1 13.3 19 9.4 19 1.5Z" fill="url(#spark)"/>
+  <!-- Second, smaller spark: gives the mark asymmetry so it does not read as a
+       generic sparkle icon, and fills the lower-left of the square. -->
+  <path d="M8.6 18.4C8.6 22.6 10.7 24.7 14.9 24.7C10.7 24.7 8.6 26.8 8.6 31C8.6 26.8 6.5 24.7 2.3 24.7C6.5 24.7 8.6 22.6 8.6 18.4Z" fill="url(#spark)" opacity="0.72"/>
+</svg>
