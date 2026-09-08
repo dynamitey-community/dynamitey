@@ -176,3 +176,9 @@ dc.zip
 
 # Scratch worktrees created for isolated agent runs.
 .claude/worktrees/
+
+# DocFX build output and generated API metadata. The site is built in CI and
+# published to Pages; only the sources under docfx/ are tracked.
+docfx/_site/
+docfx/api/*.yml
+docfx/api/.manifest

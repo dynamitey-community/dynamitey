@@ -76,7 +76,7 @@ namespace Dynamitey.Internal.Optimization
         /// differently from one that has them - so null and non-null must never compare equal.
         /// </summary>
         /// <remarks>
-        /// This replaces a "(a == null) == (b == null) && (b == null || b.SequenceEqual(a))" pair
+        /// This replaces a "(a == null) == (b == null) &amp;&amp; (b == null || b.SequenceEqual(a))" pair
         /// spelled out inline in both Equals implementations. Extracting it is what
         /// cs/complex-condition asks for: that rule flags nesting rather than length - a flat
         /// chain of &amp;&amp; is explicitly acceptable to it - and these parenthesised sub-conditions

@@ -1,0 +1,95 @@
+# Builds the DocFX documentation site and publishes it to GitHub Pages.
+#
+# On a pull request the site is built but not deployed, so a change that breaks
+# the docs build fails the PR rather than the deployment. Only main deploys.
+name: Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docfx/**'
+      - 'Dynamitey/**'
+      - '.github/workflows/docs.yml'
+  # Deliberately unfiltered, unlike the push trigger above. `Build the site` is a
+  # required status check, and a required check that does not run is not treated
+  # as passing - it is treated as never reported, which blocks the pull request
+  # forever. A paths filter here would do exactly that to any pull request
+  # touching only Tests/, README.md, or another workflow. The job takes under a
+  # minute; a permanently stuck pull request costs considerably more.
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time. `cancel-in-progress: false` because cancelling a
+# half-finished Pages deployment can leave the published site inconsistent;
+# queueing costs a little time and avoids that.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # GitVersion reads history and tags, and the library build below runs
+          # it. The default shallow clone has neither and fails rather than
+          # guessing.
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install DocFX
+        run: dotnet tool install -g docfx
+
+      # DocFX builds the library to extract API metadata from the compiled
+      # assembly and its XML documentation file. Restoring first keeps that step
+      # from doing a cold restore inside the metadata phase, where its output is
+      # harder to read when it fails.
+      - name: Restore
+        run: dotnet restore
+
+      # -warnaserror matches ci.yml. GenerateDocumentationFile is on, so a
+      # missing or malformed doc comment is a build failure here as well - which
+      # is the point: the docs cannot silently drift from the code.
+      - name: Build the library
+        run: dotnet build Dynamitey/Dynamitey.csproj -c Release --no-restore -warnaserror
+
+      - name: Build the documentation
+        run: docfx docfx/docfx.json --warningsAsErrors
+
+      - name: Upload the Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docfx/_site
+
+  deploy:
+    name: Deploy to Pages
+    # Pull requests build the site but never publish it. A fork's PR must not be
+    # able to overwrite the published documentation.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -36,6 +36,11 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>dynamic metaprogramming dlr reflection currying tuples expando latetypes</PackageTags>
+    <!-- The XML documentation file is the input DocFX builds the API reference from, and it
+         ships inside the package so consumers get IntelliSense summaries. Enabling it turns
+         every missing or malformed doc comment into a warning, and CI builds -warnaserror, so
+         the doc comments are now a build gate rather than a nicety. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Symbols ship as a .snupkg. IncludeSymbols on its own produces the legacy
          .symbols.nupkg format, which nuget.org rejects on push - a failure that
          would only surface at the first publish, which is exactly the moment not

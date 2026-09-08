@@ -19,6 +19,11 @@ using Dynamitey.DynamicObjects;
 
 namespace Dynamitey
 {
+    /// <summary>
+    /// Builder syntax for constructing <see cref="ExpandoObject"/> graphs inline, rather than
+    /// creating one and assigning members statement by statement.
+    /// </summary>
+    /// <seealso cref="Builder{TObjectProtoType}"/>
     [SuppressMessage("Naming", "CA1724:Type names should not match namespaces", Justification =
         "See Dynamic.cs; identical reasoning. Expando collides only with the retired " +
         "System.Runtime.InteropServices.Expando namespace, which this library doesn't use.")]

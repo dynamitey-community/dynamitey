@@ -70,6 +70,19 @@ namespace Dynamitey.DynamicObjects
         private readonly string? TypeName;
 
 
+        /// <summary>
+        /// Resolves a type by name, returning <c>null</c> rather than throwing when it cannot be
+        /// found.
+        /// </summary>
+        /// <param name="typeName">The type name to resolve. An assembly-qualified name is
+        /// resolved without <paramref name="assembly"/> being supplied.</param>
+        /// <param name="assembly">The assembly to search, or <c>null</c> to resolve through the
+        /// normal type-resolution rules.</param>
+        /// <returns>
+        /// The resolved type, or <c>null</c> if it could not be found. Every resolution failure
+        /// is reported this way, not only the "not found" case - a malformed name, a missing or
+        /// unloadable assembly, and a bad image all yield <c>null</c>.
+        /// </returns>
         [RequiresUnreferencedCode("Resolves typeName via Assembly.GetType/Type.GetType, both name-based type lookups the trimmer cannot see; a type this depends on can be removed. Returns null instead of throwing when the type can't be found.")]
         [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
             "Same type-probe reasoning as Dynamic.ProbeComObjectType (Dynamic.cs): throwOnError:false " +

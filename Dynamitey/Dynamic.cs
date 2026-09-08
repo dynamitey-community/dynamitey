@@ -517,6 +517,13 @@ namespace Dynamitey
         }
 
 
+        /// <summary>
+        /// Invokes a unary operator. Misspelled alias of <see cref="InvokeUnaryOperator"/>, kept
+        /// only so existing callers keep compiling; it forwards there unchanged.
+        /// </summary>
+        /// <param name="op">The unary operator to apply.</param>
+        /// <param name="arg">The operand.</param>
+        /// <returns>The result of applying <paramref name="op"/> to <paramref name="arg"/>.</returns>
         [Obsolete("Use `InvokeUnaryOperator` instead.")]
         // ReSharper disable once IdentifierTypo
         [RequiresUnreferencedCode("Forwards to InvokeUnaryOperator, which dispatches through a 'dynamic' operand resolved by the DLR binder.")]
@@ -1094,10 +1101,14 @@ namespace Dynamitey
         /// <summary>
         /// Implicit or Explicit Converts the items of the specified enumerable.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="enumerable">The enumerable.</param>
-        /// <param name="explicit">if set to <c>true</c> [explicit].</param>
-        /// <returns></returns>
+        /// <typeparam name="T">The type each item is converted to.</typeparam>
+        /// <param name="enumerable">The enumerable whose items are converted.</param>
+        /// <param name="explict">
+        /// <c>true</c> to use an explicit conversion, <c>false</c> for an implicit one. The
+        /// parameter name is misspelled and is kept that way: it is declared public API, and
+        /// renaming it would break callers passing it by name.
+        /// </param>
+        /// <returns>The converted items, converted lazily as the result is enumerated.</returns>
         [Obsolete("Use ConvertEach.")]
         [RequiresUnreferencedCode("Forwards to ConvertEach, which resolves a conversion via the DLR binder per item.")]
         [RequiresDynamicCode("Forwards to ConvertEach, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]

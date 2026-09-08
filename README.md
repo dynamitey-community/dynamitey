@@ -116,16 +116,21 @@ have all been resolved.
 
 ## Features
 
-Documentation still lives on upstream's wiki. Those pages describe the same API
-this fork carries, and there is no equivalent here yet.
+**Documentation: <https://dynamitey-community.github.io/dynamitey/>**
 
-- Easy fast DLR-based reflection — [Really Late Binding](https://github.com/ekonbenefits/dynamitey/wiki/UsageReallyLateBinding)
-- Clean syntax for using types from late-bound libraries — [LateType](https://github.com/ekonbenefits/dynamitey/wiki/LateType)
-- Dynamic currying — [Curry](https://github.com/ekonbenefits/dynamitey/wiki/UsageCurry)
-- Manipulation of tuples — [`Tests/TuplerTest.cs`](Tests/TuplerTest.cs)
-- Inline object graph initialization syntax — [Builder](https://github.com/ekonbenefits/dynamitey/wiki/UsageBuilder)
-- `DynamicObject` base types for many things — [Dynamic](https://github.com/ekonbenefits/dynamitey/wiki/UsageDynamic)
-- Extension-to-instance method conversion — [`Tests/Linq.cs`](Tests/Linq.cs)
+Written for this fork and generated from its own source, so it describes 4.0.0
+rather than 3.0.3. Nothing is carried over from upstream's wiki.
+
+- Easy fast DLR-based reflection — [Late binding](https://dynamitey-community.github.io/dynamitey/docs/late-binding.html)
+- Clean syntax for using types from late-bound libraries — [Late types](https://dynamitey-community.github.io/dynamitey/docs/late-types.html)
+- Dynamic currying — [Currying and partial application](https://dynamitey-community.github.io/dynamitey/docs/currying.html)
+- Manipulation of tuples — [Tuples](https://dynamitey-community.github.io/dynamitey/docs/tuples.html)
+- Inline object graph initialization syntax — [Builders and expandos](https://dynamitey-community.github.io/dynamitey/docs/builders.html)
+- `DynamicObject` base types for many things — [API reference](https://dynamitey-community.github.io/dynamitey/api/)
+- Extension-to-instance method conversion — [Late binding](https://dynamitey-community.github.io/dynamitey/docs/late-binding.html#extension-methods-as-instance-methods)
+
+Upstream's wiki still exists and describes the same core API, but it predates
+this fork's retarget and cannot cover what 4.0.0 changed.
 
 ### Awaiting a result whose type you cannot see
 

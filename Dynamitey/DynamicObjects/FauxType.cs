@@ -51,6 +51,11 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public abstract Type[] GetContainedTypes();
 
+        /// <summary>
+        /// Gets the names of every member this type reports.
+        /// </summary>
+        /// <returns>The member names. Implementations may return duplicates only if the
+        /// underlying source does; <see cref="AggreType"/> removes them across its children.</returns>
         [RequiresUnreferencedCode("A FauxType wrapping a real Type (RealType) resolves this by reflecting over the target type's members; trimming can remove members it would otherwise report. Overrides on a data-only FauxType (PropretySpecType, or an AggreType composed only of those) don't need this themselves, but must match the abstract declaration.")]
         [SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification =
             "GetMemberNames is declared public API (PublicAPI.Unshipped.txt) and abstract: turning " +
@@ -75,15 +80,43 @@ namespace Dynamitey.DynamicObjects
 
 
 
+    /// <summary>
+    /// A <see cref="FauxType"/> described by an explicit name-to-type map rather than by a
+    /// real CLR type. Nothing is reflected over: every lookup is a dictionary read, which is
+    /// what makes this the cheap option when the shape is already known.
+    /// </summary>
+    /// <remarks>
+    /// The name is misspelled - "Proprety" - and is kept that way deliberately. It is declared
+    /// public API in PublicAPI.Unshipped.txt, and correcting it would break the one-line package
+    /// swap that <c>README.md</c> promises consumers moving from the original package.
+    /// </remarks>
     public class PropretySpecType : FauxType
     {
+        /// <summary>
+        /// Gets the member name to type map backing this instance.
+        /// </summary>
         public IDictionary<string, Type> PropertySpec { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PropretySpecType"/> class.
+        /// </summary>
+        /// <param name="propertySpec">
+        /// The member name to type map. It is stored by reference, not copied, so later changes
+        /// to the caller's dictionary are visible through this instance.
+        /// </param>
         public PropretySpecType(IDictionary<string, Type> propertySpec)
         {
             PropertySpec = propertySpec;
         }
 
+        /// <summary>
+        /// Gets the member matching <paramref name="binderName"/>.
+        /// </summary>
+        /// <param name="binderName">The member name to look up.</param>
+        /// <returns>
+        /// A single-element sequence holding the mapped type, or an empty sequence when the name
+        /// is not in the map. Absence is reported as an empty result rather than an exception.
+        /// </returns>
         [RequiresUnreferencedCode("Matches FauxType.GetMember's abstract declaration; this override is itself a plain dictionary lookup and does no reflection.")]
         public override IEnumerable<MemberInfo> GetMember(string binderName)
         {
@@ -95,12 +128,23 @@ namespace Dynamitey.DynamicObjects
             return Enumerable.Empty<MemberInfo>();
         }
 
+        /// <summary>
+        /// Gets the names in the map.
+        /// </summary>
+        /// <returns>The map's keys, in the order the underlying dictionary yields them.</returns>
         [RequiresUnreferencedCode("Matches FauxType.GetMemberNames's abstract declaration; this override is itself a plain dictionary lookup and does no reflection.")]
         public override IEnumerable<string> GetMemberNames()
         {
             return PropertySpec.Keys;
         }
 
+        /// <summary>
+        /// Gets the CLR types this instance stands in for.
+        /// </summary>
+        /// <returns>
+        /// Always empty. This type is defined by a name-to-type map rather than by wrapping real
+        /// CLR types, so there is nothing to report - unlike <see cref="RealType"/>.
+        /// </returns>
         public override Type[] GetContainedTypes()
         {
             return Array.Empty<Type>();
@@ -190,6 +234,10 @@ namespace Dynamitey.DynamicObjects
             return TargetType.GetTypeInfo().GetMember(binderName);
         }
 
+        /// <summary>
+        /// Gets the names of the wrapped type's members, reflected from the type itself.
+        /// </summary>
+        /// <returns>The member names reported by the underlying CLR type.</returns>
         [RequiresUnreferencedCode("Reflects over TargetType's members; trimming can remove members it would otherwise report.")]
         public override IEnumerable<string> GetMemberNames()
         {
@@ -263,6 +311,13 @@ namespace Dynamitey.DynamicObjects
             return Types.SelectMany(it => it.GetContainedTypes()).Where(it => it.GetTypeInfo().IsInterface).ToArray();
         }
 
+        /// <summary>
+        /// Gets the union of every child type's member names.
+        /// </summary>
+        /// <returns>
+        /// The distinct member names across all aggregated types. Duplicates are removed here, so
+        /// a name declared by two children is reported once.
+        /// </returns>
         [RequiresUnreferencedCode("Matches FauxType.GetMemberNames's abstract declaration; delegates to each child FauxType, one of which may be a RealType that reflects over its target's members.")]
         public override IEnumerable<string> GetMemberNames()
         {

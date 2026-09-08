@@ -24,7 +24,7 @@ namespace Dynamitey.Internal
     /// </summary>
     /// <remarks>
     /// This exists to hold one piece of conditional compilation instead of sixteen.
-    /// <see cref="ArgumentNullException.ThrowIfNull(object?, string?)"/> does not exist on
+    /// <c>ArgumentNullException.ThrowIfNull</c> does not exist on
     /// netstandard2.0, while writing the plain <c>if (x is null) throw</c> form inline trips
     /// CA1510 on the net10.0 leg, which wants the helper. Satisfying both at every call site
     /// meant a five-line <c>#if</c> block per guard.
