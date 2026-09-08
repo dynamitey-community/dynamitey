@@ -1,0 +1,11 @@
+# The published API reference covers the surface a consumer can actually use.
+#
+# Dynamitey.Internal is public for reasons of DLR plumbing rather than intent -
+# generated call sites and cached binders have to reach it across assembly
+# boundaries - but it is not a supported surface and documenting it would imply
+# otherwise. PublicAPI.Unshipped.txt still tracks every one of those members, so
+# excluding them here changes what is published, not what is frozen.
+apiRules:
+  - exclude:
+      uidRegex: ^Dynamitey\.Internal
+      type: Namespace

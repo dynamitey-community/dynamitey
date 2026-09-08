@@ -332,7 +332,7 @@ namespace Dynamitey.DynamicObjects
             readonly Builder<TInnerObjectProtoType> _buider;
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}.BuilderTrampoline"/> class.
+            /// Initializes a new instance of the <see cref="BuilderTrampoline{TInnerObjectProtoType}"/> class.
             /// </summary>
             /// <param name="builder">The builder.</param>
             [RequiresDynamicCode("Constructing any DynamicObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
@@ -377,7 +377,7 @@ namespace Dynamitey.DynamicObjects
 			readonly Builder<TInnerObjectProtoType> _buider;
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}.SetupTrampoline"/> class.
+            /// Initializes a new instance of the <see cref="SetupTrampoline{TInnerObjectProtoType}"/> class.
             /// </summary>
             /// <param name="builder">The builder.</param>
             [RequiresDynamicCode("Constructing any DynamicObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]

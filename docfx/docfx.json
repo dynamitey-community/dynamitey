@@ -1,0 +1,49 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../Dynamitey/bin/Release/net10.0",
+          "files": [ "Dynamitey.Community.dll" ]
+        }
+      ],
+      "dest": "api",
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "filter": "filterConfig.yml"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [ "api/**.yml", "api/index.md" ]
+      },
+      {
+        "files": [ "**.md", "**/toc.yml", "toc.yml", "*.md" ],
+        "exclude": [ "_site/**", "api/**" ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [ "images/**" ]
+      }
+    ],
+    "output": "_site",
+    "template": [ "default", "modern", "template" ],
+    "globalMetadata": {
+      "_appName": "Dynamitey.Community",
+      "_appTitle": "Dynamitey.Community",
+      "_appFooter": "Dynamitey is licensed under Apache-2.0. Copyright 2010-2024 Ekon Benefits; copyright 2026 the dynamitey-community contributors.",
+      "_enableSearch": true,
+      "_disableContribution": false,
+      "_gitContribute": {
+        "repo": "https://github.com/dynamitey-community/dynamitey",
+        "branch": "main"
+      },
+      "pdf": false
+    },
+    "sitemap": {
+      "baseUrl": "https://dynamitey-community.github.io/dynamitey/"
+    }
+  }
+}
