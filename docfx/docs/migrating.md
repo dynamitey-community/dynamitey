@@ -1,6 +1,9 @@
 # Migrating from the original Dynamitey
 
-The original `Dynamitey` package on nuget.org is upstream's, at 3.0.3. This fork publishes as `Dynamitey.Community`. Moving between them is a one-line change.
+The original `Dynamitey` package on nuget.org is upstream's, at 3.0.3. This fork **will publish** as `Dynamitey.Community`. Moving between them is a one-line change.
+
+> [!IMPORTANT]
+> **Nothing has been released yet**, so there is no migration to perform today. This page describes what the move will look like once 4.0.0 ships. Until then, keep using upstream's `Dynamitey` 3.0.3 — it is a different package, and installing it does not get you this code. See [issue #8](https://github.com/dynamitey-community/dynamitey/issues/8).
 
 ## The change
 
