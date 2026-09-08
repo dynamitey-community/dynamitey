@@ -42,7 +42,10 @@ It is history, not a task list.
   `c44f5c5`, the last purely-upstream commit, which is what the Apache-2.0
   "state your changes" requirement points at.
 - **Do not publish** a NuGet package or reserve a package ID. Gated on the
-  upstream maintainer's pending reply. See issue #8.
+  upstream maintainer's reply to a NuGet "Contact owners" message sent
+  2026-09-05. **The gate expires 2026-09-26**: if no reply has arrived by then,
+  publishing proceeds as `Dynamitey.Community`. Until one of those two things
+  happens, nothing publishes. See issue #8 for the reasoning and the fallback.
 
 ## Repo conventions
 

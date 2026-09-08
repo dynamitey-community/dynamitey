@@ -36,8 +36,26 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>dynamic metaprogramming dlr reflection currying tuples expando latetypes</PackageTags>
+    <!-- Symbols ship as a .snupkg. IncludeSymbols on its own produces the legacy
+         .symbols.nupkg format, which nuget.org rejects on push - a failure that
+         would only surface at the first publish, which is exactly the moment not
+         to discover it. SymbolPackageFormat is what selects the modern package. -->
     <IncludeSymbols>True</IncludeSymbols>
-    <IncludeSource>True</IncludeSource>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- IncludeSource is deliberately gone rather than left alongside the above. It
+         produced a separate legacy .source.nupkg, a pre-Source-Link mechanism for
+         shipping sources that no modern debugger looks for. Source Link supersedes
+         it: the two properties below let a consumer step into this library's real
+         sources, fetched from GitHub on demand, without a source package existing
+         at all. Microsoft.SourceLink.GitHub needs no PackageReference here - the
+         .NET SDK has bundled it since .NET 8, and this builds on the .NET 10 SDK. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Deterministic path normalization, in CI only. It rewrites source paths to
+         placeholders, which is required for Source Link to resolve them against the
+         repository but makes a local build's paths useless for local debugging. The
+         condition keeps release artifacts correct without degrading a dev build. -->
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     <!-- sn.snk is this fork's own 2048-bit key, generated for #3. It replaced
          upstream's committed key, which a renamed assembly cannot keep using -
          the strong name is part of the identity being changed. Committing it is
