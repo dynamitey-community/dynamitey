@@ -16,7 +16,7 @@ namespace Dynamitey.DynamicObjects
     public abstract class FauxType
     {
         /// <summary>
-        /// Fauxes the type.
+        /// Converts a real Type into a FauxType.
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns></returns>
@@ -158,7 +158,7 @@ namespace Dynamitey.DynamicObjects
     public class RealType : FauxType
     {
         /// <summary>
-        /// RealType implicitly conversts to an actualy Type
+        /// RealType implicitly converts to an actual Type
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns></returns>
@@ -186,7 +186,7 @@ namespace Dynamitey.DynamicObjects
          }
 
          /// <summary>
-         /// An actual Type implicitly conversts to a real type
+         /// An actual Type implicitly converts to a RealType
          /// </summary>
          /// <param name="type">The type.</param>
          /// <returns></returns>
@@ -264,7 +264,7 @@ namespace Dynamitey.DynamicObjects
 
 
     /// <summary>
-    /// A Fake Tupe that is an aggregate of other types
+    /// A Fake Type that is an aggregate of other types
     /// </summary>
     public class AggreType : FauxType
     {

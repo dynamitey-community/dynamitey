@@ -20,7 +20,7 @@ namespace Dynamitey
 {
 
     /// <summary>
-    /// Fluent Class for writing inline lambdass
+    /// Fluent Class for writing inline lambdas
     /// </summary>
     /// <typeparam name="TR">The type of the R.</typeparam>
     [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =

@@ -49,7 +49,7 @@ namespace Dynamitey.DynamicObjects
         dynamic ListSetup(params dynamic[] constructorArgs);
 
         /// <summary>
-        /// Setup List or Array if list has a default constrcutor
+        /// Setup List or Array if list has a default constructor
         /// </summary>
         /// <typeparam name="TList"></typeparam>
         /// <returns></returns>
@@ -63,7 +63,7 @@ namespace Dynamitey.DynamicObjects
         dynamic ListSetup(Func<object[]> constructorArgsFactory);
 
         /// <summary>
-        /// Setup List or Array if list has a default constrcutor
+        /// Setup List or Array if list has a default constructor
         /// </summary>
         /// <typeparam name="TList"></typeparam>
         /// <returns></returns>
@@ -225,7 +225,7 @@ namespace Dynamitey.DynamicObjects
         }
 
         /// <summary>
-        /// Setup List or Array if list has a default constrcutor
+        /// Setup List or Array if list has a default constructor
         /// </summary>
         /// <typeparam name="TList"></typeparam>
         /// <returns></returns>
@@ -245,7 +245,7 @@ namespace Dynamitey.DynamicObjects
         }
 
         /// <summary>
-        /// Setup List or Array if list has a default constrcutor
+        /// Setup List or Array if list has a default constructor
         /// </summary>
         /// <typeparam name="TList"></typeparam>
         /// <returns></returns>
@@ -316,7 +316,7 @@ namespace Dynamitey.DynamicObjects
         }
 
         /// <summary>
-        /// Trapoline for setting up Builders
+        /// Trampoline for setting up Builders
         /// </summary>
         public dynamic Setup { get; private set; }
 

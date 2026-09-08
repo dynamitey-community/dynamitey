@@ -43,7 +43,7 @@ namespace Dynamitey.DynamicObjects
 
 
     /// <summary>
-    /// Dynamic Object that knows about the Impromtu Interface return types;
+    /// Dynamic Object that knows about the ImpromptuInterface return types;
     /// Override Typical Dynamic Object methods, and use TypeForName to get the return type of an interface member.
     /// </summary>
     public abstract class BaseObject : DynamicObject, IEquivalentType

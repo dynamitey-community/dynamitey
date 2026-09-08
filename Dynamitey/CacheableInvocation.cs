@@ -73,7 +73,7 @@ namespace Dynamitey
         /// <param name="argNames">The arg names.</param>
         /// <param name="context">The context.</param>
         /// <param name="convertType">Type of the convert.</param>
-        /// <param name="convertExplicit">if set to <c>true</c> [convert explict].</param>
+        /// <param name="convertExplicit"><c>true</c> to use an explicit conversion, <c>false</c> for an implicit one.</param>
         /// <param name="storedArgs">The stored args.</param>
         public CacheableInvocation(InvocationKind kind,
                                    String_OR_InvokeMemberName? name=null,
@@ -162,7 +162,7 @@ namespace Dynamitey
         }
 
         /// <summary>
-        /// Equalses the specified other.
+        /// Determines whether the specified invocation is equal to this instance.
         /// </summary>
         /// <param name="other">The other.</param>
         /// <returns></returns>

@@ -167,7 +167,7 @@ namespace Dynamitey
         /// <param name="tuple">The tuple.</param>
         /// <param name="index">The index.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentException">index must be greater than or equalto 0;index</exception>
+        /// <exception cref="System.ArgumentException">index must be greater than or equal to 0;index</exception>
         [RequiresUnreferencedCode("Forwards to HelperIndex, which reads tuple.ItemN/tuple.Rest via InvokeHelper.TupleItem or 'dynamic' member access; trimming can remove those properties.")]
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         public static dynamic Index(object tuple, int index)
@@ -183,7 +183,7 @@ namespace Dynamitey
             var item = index + 1;
             if (!safe && item < 1)
             {
-                throw new ArgumentException("index must be greater than or equalto 0", nameof(index));
+                throw new ArgumentException("index must be greater than or equal to 0", nameof(index));
             }
 
             if (!safe && item > Size(tuple))
