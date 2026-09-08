@@ -13,7 +13,7 @@ namespace Dynamitey.DynamicObjects
 
 
     /// <summary>
-    /// Extension to Intance Proxy Configured for LINQ IEnumerable methods
+    /// Extension to Instance Proxy Configured for LINQ IEnumerable methods
     /// </summary>
     public class LinqInstanceProxy : ExtensionToInstanceProxy, IEnumerable<object>
     {

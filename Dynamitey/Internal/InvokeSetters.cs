@@ -12,7 +12,7 @@ using System.Reflection;
 namespace Dynamitey.Internal
 {
     /// <summary>
-    /// Internal class implmenation for <see cref="Dynamic.InvokeSetAll"/>
+    /// Internal class implementation for <see cref="Dynamic.InvokeSetAll"/>
     /// </summary>
     public class InvokeSetters : DynamicObject
     {

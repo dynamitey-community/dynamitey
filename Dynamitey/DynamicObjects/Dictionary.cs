@@ -102,7 +102,7 @@ namespace Dynamitey.DynamicObjects
 
 
     /// <summary>
-    /// Adds extra synatx to intialize properties to match up with clay
+    /// Adds extra syntax to initialize properties to match up with clay
     /// </summary>
 	public class ChainableDictionary:Dictionary{
 

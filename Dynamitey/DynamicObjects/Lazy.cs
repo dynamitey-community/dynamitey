@@ -9,7 +9,7 @@ namespace Dynamitey.DynamicObjects
 {
 
     /// <summary>
-    /// Abstract base for the Generic class <see cref="Lazy{T}"/> with <see cref="Create{T}(System.Func{T})"/> fatory methods
+    /// Abstract base for the Generic class <see cref="Lazy{T}"/> with <see cref="Create{T}(System.Func{T})"/> factory methods
     /// </summary>
    
     public abstract class Lazy:BaseForwarder
@@ -50,7 +50,7 @@ namespace Dynamitey.DynamicObjects
     }
 
     /// <summary>
-    /// Wraps a Lazy Type evalutaes on first method call
+    /// Wraps a Lazy Type; evaluates on first method call
     /// </summary>
     /// <typeparam name="T"></typeparam>
    

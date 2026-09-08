@@ -32,7 +32,7 @@ namespace Dynamitey
         /// </summary>
         NotSet=0,
         /// <summary>
-        /// Convert Implicit or Explicity
+        /// Convert Implicit or Explicitly
         /// </summary>
         Convert,
         /// <summary>
@@ -102,23 +102,23 @@ namespace Dynamitey
     {
 
         /// <summary>
-        /// Defacto Binder Name for Explicit Convert Op
+        /// De facto Binder Name for Explicit Convert Op
         /// </summary>
         public static readonly string ExplicitConvertBinderName = "(Explicit)";
 
         /// <summary>
-        /// Defacto Binder Name for Implicit Convert Op
+        /// De facto Binder Name for Implicit Convert Op
         /// </summary>
         public static readonly string ImplicitConvertBinderName = "(Implicit)";
 
         /// <summary>
-        /// Defacto Binder Name for Indexer
+        /// De facto Binder Name for Indexer
         /// </summary>
         public static readonly string IndexBinderName = "Item";
 
 
         /// <summary>
-        /// Defacto Binder Name for Constructor
+        /// De facto Binder Name for Constructor
         /// </summary>
         public static readonly string ConstructorBinderName = "new()";
 

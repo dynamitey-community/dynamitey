@@ -83,7 +83,7 @@ namespace Dynamitey.DynamicObjects
 
 
         /// <summary>
-        /// Constructs the type. Override for changing type intialization property changes.
+        /// Constructs the type. Override for changing type initialization property changes.
         /// </summary>
         /// <param name="type">The type.</param>
         /// <param name="args">The args.</param>
@@ -96,7 +96,7 @@ namespace Dynamitey.DynamicObjects
         }
 
         /// <summary>
-        /// Gets the instance for a dynamic member. Override for type constrcution behavoir changes based on property name.
+        /// Gets the instance for a dynamic member. Override for type construction behavior changes based on property name.
         /// </summary>
         /// <param name="memberName">Name of the member.</param>
         /// <param name="args">The args.</param>
@@ -143,7 +143,7 @@ namespace Dynamitey.DynamicObjects
 
 
         /// <summary>
-        /// Gets the instance for a dynamic member. Override for type constrcution behavoir changes based on property name.
+        /// Gets the instance for a dynamic member. Override for type construction behavior changes based on property name.
         /// </summary>
         /// <param name="memberName">Name of the member.</param>
         /// <param name="args"></param>

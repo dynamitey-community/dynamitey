@@ -30,7 +30,7 @@ namespace Dynamitey.Internal.Optimization
         /// <summary>
         /// Initializes a new instance of the <see cref="BareBonesList&lt;T&gt;"/> class.
         /// </summary>
-        /// <param name="length">The max length that the list cannot grow beyound</param>
+        /// <param name="length">The max length that the list cannot grow beyond</param>
         public BareBonesList(int length)
         {
             _list = new T[length];

@@ -79,7 +79,7 @@ namespace Dynamitey.Internal.Optimization
         /// This replaces a "(a == null) == (b == null) &amp;&amp; (b == null || b.SequenceEqual(a))" pair
         /// spelled out inline in both Equals implementations. Extracting it is what
         /// cs/complex-condition asks for: that rule flags nesting rather than length - a flat
-        /// chain of &amp;&amp; is explicitly acceptable to it - and these parenthesised sub-conditions
+        /// chain of &amp;&amp; is explicitly acceptable to it - and these parenthesized sub-conditions
         /// were the nesting. It also removes the null-forgiving operators the inline form needed,
         /// because the nullness guard and the comparison now live together instead of being
         /// separated by seven unrelated conjuncts.

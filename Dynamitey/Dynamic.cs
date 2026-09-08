@@ -969,9 +969,9 @@ namespace Dynamitey
         internal static readonly IDictionary<Type, Delegate> CompiledExpressions = new Dictionary<Type, Delegate>();
 
         /// <summary>
-        /// Coerces any invokable to specified delegate type.
+        /// Coerces any invokable object to the specified delegate type.
         /// </summary>
-        /// <param name="invokeableObject">The invokeable object.</param>
+        /// <param name="invokeableObject">The object to coerce.</param>
         /// <param name="delegateType">Type of the delegate.</param>
         /// <returns></returns>
         [RequiresUnreferencedCode("Falls back to Expression.Lambda(...).Compile() and, for a plain Action/Func-shaped delegate whose parameters are all reference types, to invoking invokeableObject through the DLR; trimming can remove the member the compiled expression or DLR call resolves.")]
