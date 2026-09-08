@@ -31,8 +31,10 @@
     "output": "_site",
     "template": [ "default", "modern", "template" ],
     "globalMetadata": {
-      "_appName": "Dynamitey.Community",
-      "_appTitle": "Dynamitey.Community",
+      "_appName": "Dynamitey",
+      "_appTitle": "Dynamitey",
+      "_appLogoPath": "images/logo.svg",
+      "_appFaviconPath": "images/favicon.svg",
       "_appFooter": "Dynamitey is licensed under Apache-2.0. Copyright 2010-2024 Ekon Benefits; copyright 2026 the dynamitey-community contributors.",
       "_enableSearch": true,
       "_disableContribution": false,

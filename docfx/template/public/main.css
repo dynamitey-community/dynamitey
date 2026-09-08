@@ -1,0 +1,339 @@
+/*
+ * Dynamitey documentation theme.
+ *
+ * The project's own identity, deliberately not any company's. This is a
+ * community continuation of an Apache-2.0 library whose copyright is retained
+ * upstream, so the site should look like it belongs to the project rather than
+ * to a maintainer.
+ *
+ * Almost everything here is expressed through Bootstrap 5 custom properties
+ * rather than by overriding DocFX's own selectors. Those variables are the
+ * template's supported surface; its class names are not, and a DocFX upgrade
+ * that reshuffles them would silently break a stylesheet written against them.
+ *
+ * Palette: a slate ground with a single ignition-amber accent. One accent used
+ * consistently reads as deliberate; three read as decoration.
+ */
+
+/* ---------------------------------------------------------------- palette */
+
+:root {
+  --dy-amber-300: #ffc06b;
+  --dy-amber-500: #f0791a;
+  --dy-amber-700: #b4470f;
+  --dy-amber-800: #8a3609;
+
+  --dy-slate-950: #0f1216;
+  --dy-slate-900: #14181f;
+  --dy-slate-800: #1b212a;
+  --dy-slate-700: #252c37;
+  --dy-slate-400: #8a94a3;
+  --dy-slate-200: #dfe3e9;
+  --dy-slate-100: #eef0f4;
+  --dy-slate-50: #f7f8fa;
+
+  --dy-radius: 8px;
+}
+
+/* ------------------------------------------------------------ light theme */
+
+[data-bs-theme="light"] {
+  --bs-body-bg: #ffffff;
+  --bs-body-color: #1b1f26;
+  --bs-emphasis-color: #0d1015;
+  --bs-secondary-bg: var(--dy-slate-50);
+  --bs-tertiary-bg: var(--dy-slate-100);
+  --bs-border-color: var(--dy-slate-200);
+
+  /* Amber is legible as a link colour only once it is darkened this far; the
+     mid-tone accent used for the logo does not clear 4.5:1 on white. */
+  --bs-link-color: var(--dy-amber-700);
+  --bs-link-hover-color: var(--dy-amber-800);
+  --bs-primary: var(--dy-amber-700);
+  --bs-primary-rgb: 180, 71, 15;
+
+  --bs-code-color: #9a3412;
+
+  --dy-header-bg: var(--dy-slate-900);
+  --dy-header-color: #f2f4f7;
+  --dy-header-muted: #a7b0bd;
+  --dy-shadow: 0 1px 2px rgba(15, 18, 22, 0.06), 0 8px 24px rgba(15, 18, 22, 0.06);
+}
+
+/* ------------------------------------------------------------- dark theme */
+
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--dy-slate-950);
+  --bs-body-color: #dde2e9;
+  --bs-emphasis-color: #f4f6f9;
+  --bs-secondary-bg: var(--dy-slate-900);
+  --bs-tertiary-bg: var(--dy-slate-800);
+  --bs-border-color: var(--dy-slate-700);
+
+  /* On the dark ground the accent moves the other way: light enough to clear
+     contrast, warm enough to stay the same colour identity. */
+  --bs-link-color: #ff9b5c;
+  --bs-link-hover-color: var(--dy-amber-300);
+  --bs-primary: #ff9b5c;
+  --bs-primary-rgb: 255, 155, 92;
+
+  --bs-code-color: var(--dy-amber-300);
+
+  --dy-header-bg: #0b0e12;
+  --dy-header-color: #eef1f5;
+  --dy-header-muted: #98a2b0;
+  --dy-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ------------------------------------------------------------ typography */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+article h1,
+article h2,
+article h3,
+article h4 {
+  color: var(--bs-emphasis-color);
+  font-weight: 650;
+  letter-spacing: -0.011em;
+}
+
+article h1 {
+  font-size: 2.1rem;
+  line-height: 1.2;
+  margin-bottom: 0.6rem;
+}
+
+/* A rule under h2 gives long reference pages a visible rhythm; without it the
+   API pages read as one undifferentiated column. */
+article h2 {
+  font-size: 1.5rem;
+  margin-top: 2.4rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+article h3 {
+  font-size: 1.18rem;
+  margin-top: 1.8rem;
+}
+
+/* Prose wants a measure; tables and code do not, so the cap is applied to the
+   text elements rather than to the article. */
+article > p,
+article > ul,
+article > ol,
+article > blockquote {
+  max-width: 46rem;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.navbar {
+  background-color: var(--dy-header-bg) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+.navbar .navbar-brand,
+.navbar .navbar-nav .nav-link {
+  color: var(--dy-header-color);
+}
+
+.navbar .navbar-nav .nav-link:hover,
+.navbar .navbar-nav .nav-link:focus {
+  color: var(--dy-amber-300);
+}
+
+.navbar .navbar-brand {
+  font-weight: 640;
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+/* Matches both the plain <img> the template emits today and an inline <svg>,
+   in case a future template version starts inlining the logo. */
+.navbar .navbar-brand img,
+.navbar .navbar-brand svg,
+#logo {
+  height: 26px;
+  width: 26px;
+}
+
+/* The search field inherits the page body colours, which are near-white and so
+   vanish into the dark header bar. */
+.navbar .form-control {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--dy-header-color);
+}
+
+.navbar .form-control::placeholder {
+  color: var(--dy-header-muted);
+}
+
+.navbar .form-control:focus {
+  background-color: rgba(255, 255, 255, 0.13);
+  border-color: var(--dy-amber-500);
+  box-shadow: 0 0 0 0.2rem rgba(240, 121, 26, 0.25);
+  color: var(--dy-header-color);
+}
+
+/* ------------------------------------------------------- code and syntax */
+
+code {
+  font-family: "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono",
+    Menlo, monospace;
+  font-size: 0.875em;
+}
+
+/* Inline code needs a ground to separate it from prose; block code already has
+   one from the highlighter, so the tint is scoped to inline only. */
+:not(pre) > code {
+  background-color: var(--bs-tertiary-bg);
+  border-radius: 4px;
+  padding: 0.12em 0.36em;
+}
+
+pre {
+  background-color: var(--bs-secondary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--dy-radius);
+  padding: 1rem 1.1rem;
+  line-height: 1.55;
+}
+
+/* ------------------------------------------------------ tables and notes */
+
+article table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--dy-radius);
+  overflow: hidden;
+  width: 100%;
+}
+
+article table th {
+  background-color: var(--bs-secondary-bg);
+  font-weight: 620;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+}
+
+article table th,
+article table td {
+  border-top: 1px solid var(--bs-border-color);
+  padding: 0.6rem 0.85rem;
+  vertical-align: top;
+}
+
+article table thead th {
+  border-top: 0;
+}
+
+/* DocFX renders NOTE/WARNING/IMPORTANT blocks as .alert. A left rule carries
+   the severity more quietly than Bootstrap's filled backgrounds. */
+.alert {
+  border: 1px solid var(--bs-border-color);
+  border-left: 3px solid var(--bs-primary);
+  border-radius: var(--dy-radius);
+  background-color: var(--bs-secondary-bg);
+  color: var(--bs-body-color);
+}
+
+.alert.WARNING,
+.alert.CAUTION {
+  border-left-color: #d94f2b;
+}
+
+.alert.IMPORTANT {
+  border-left-color: var(--dy-amber-500);
+}
+
+.alert > p:last-child {
+  margin-bottom: 0;
+}
+
+/* --------------------------------------------------- sidebar and in-page */
+
+.sidetoc,
+#affix {
+  font-size: 0.925rem;
+}
+
+.toc .nav > li > a,
+#affix .nav > li > a {
+  color: var(--bs-body-color);
+  opacity: 0.82;
+  border-radius: 5px;
+  padding: 0.22rem 0.5rem;
+}
+
+.toc .nav > li > a:hover,
+#affix .nav > li > a:hover {
+  opacity: 1;
+  background-color: var(--bs-tertiary-bg);
+  color: var(--bs-link-color);
+}
+
+/* The active page needs to be findable at a glance in a 100-entry API tree. */
+.toc .nav > li.active > a,
+#affix .nav > li.active > a {
+  opacity: 1;
+  color: var(--bs-link-color);
+  font-weight: 600;
+  background-color: var(--bs-secondary-bg);
+  box-shadow: inset 2px 0 0 var(--bs-primary);
+}
+
+/* ------------------------------------------------------------- landing page */
+
+/* The hero only exists on the landing page, which uses _layout: landing. */
+.hero,
+article > h1:first-child {
+  scroll-margin-top: 5rem;
+}
+
+/* ------------------------------------------------------------------ misc */
+
+a {
+  text-underline-offset: 0.15em;
+}
+
+article a:hover {
+  text-decoration-thickness: 2px;
+}
+
+footer {
+  background-color: var(--bs-secondary-bg);
+  border-top: 1px solid var(--bs-border-color) !important;
+  color: var(--bs-body-color);
+  font-size: 0.9rem;
+}
+
+footer .container-xxl {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.pagination a,
+.next-article a {
+  color: var(--bs-link-color);
+}
+
+/* Respect a reduced-motion preference: the template animates the sidebar and
+   the theme switch, and both are decorative. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
