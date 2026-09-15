@@ -312,6 +312,18 @@ jobs:
           curl -fsSL -A "dynamitey-community-ci" \
             "https://img.shields.io/badge/branch_coverage-${BRANCH}%25-brightgreen" \
             -o badges/branch-coverage.svg
+          cat > badges/coverage.md <<EOF
+          # Coverage
+
+          Last successful \`Code coverage\` job on \`main\`. The shipped
+          \`Dynamitey.Community\` assembly only (\`coverlet.runsettings\`).
+
+          | Metric | Value |
+          | --- | ---: |
+          | Tests | ${TESTS} |
+          | Line | ${LINE}% |
+          | Branch | ${BRANCH}% |
+          EOF
 
       - name: Push to the badges branch
         env:
@@ -331,14 +343,15 @@ jobs:
             git -C badges-repo rm -rf --quiet . || true
           fi
 
-          cp badges/tests.svg badges/line-coverage.svg badges/branch-coverage.svg badges-repo/
+          cp badges/tests.svg badges/line-coverage.svg badges/branch-coverage.svg badges/coverage.md badges-repo/
           cat > badges-repo/README.md <<'EOF'
-          Generated test-count and coverage badge SVGs. Written by the
-          `Publish README badges` job in `.github/workflows/ci.yml` on `main`.
-          Do not edit by hand. See issue #112.
+          Generated test-count and coverage badge SVGs, plus the coverage
+          snapshot the README badges link to. Written by the `Publish README
+          badges` job in `.github/workflows/ci.yml` on `main`. Do not edit by
+          hand. See issue #112.
           EOF
 
-          git -C badges-repo add tests.svg line-coverage.svg branch-coverage.svg README.md
+          git -C badges-repo add tests.svg line-coverage.svg branch-coverage.svg coverage.md README.md
           if git -C badges-repo diff --cached --quiet; then
             echo "Badges unchanged."
             exit 0
