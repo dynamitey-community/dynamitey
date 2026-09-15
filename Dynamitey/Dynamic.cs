@@ -14,6 +14,7 @@
 //    limitations under the License.
 
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
@@ -996,7 +997,7 @@ namespace Dynamitey
 
         }
 
-        internal static readonly IDictionary<Type, Delegate> CompiledExpressions = new Dictionary<Type, Delegate>();
+        internal static readonly ConcurrentDictionary<Type, Delegate> CompiledExpressions = new ConcurrentDictionary<Type, Delegate>();
 
         /// <summary>
         /// Coerces any invokable object to the specified delegate type.
@@ -1038,23 +1039,19 @@ namespace Dynamitey
                     return tBaseDelegate;
                 }
 
-                if (CompiledExpressions.TryGetValue(delegateType, out var tGetResult))
+                var tGetResult = CompiledExpressions.GetOrAdd(delegateType, tKey =>
                 {
-                    return tGetResult.DynamicInvoke(tBaseDelegate);
-                }
+                    var tParamTypes = tParams.Select(it => it.ParameterType).ToArray();
+                    var tDelParam = Expression.Parameter(tBaseDelegate.GetType());
+                    var tInnerParams = tParamTypes.Select(Expression.Parameter).ToArray();
 
-                var tParamTypes = tParams.Select(it => it.ParameterType).ToArray();
-                var tDelParam = Expression.Parameter(tBaseDelegate.GetType());
-                var tInnerParams = tParamTypes.Select(Expression.Parameter).ToArray();
+                    var tI = Expression.Invoke(tDelParam,
+                        tInnerParams.Select(it => (Expression)Expression.Convert(it, typeof(object))));
+                    var tL = Expression.Lambda(tKey, tI, tInnerParams);
 
-                var tI = Expression.Invoke(tDelParam,
-                    tInnerParams.Select(it => (Expression)Expression.Convert(it, typeof(object))));
-                var tL = Expression.Lambda(delegateType, tI, tInnerParams);
-
-                tGetResult =
-                    Expression.Lambda(Expression.GetFuncType(tBaseDelegate.GetType(), delegateType), tL,
+                    return Expression.Lambda(Expression.GetFuncType(tBaseDelegate.GetType(), tKey), tL,
                         tDelParam).Compile();
-                CompiledExpressions[delegateType] = tGetResult;
+                });
 
                 return tGetResult.DynamicInvoke(tBaseDelegate);
 
