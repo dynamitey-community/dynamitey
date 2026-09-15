@@ -441,7 +441,11 @@ namespace Dynamitey.Internal.Optimization {
                 default:
                     var tArgTypes = Enumerable.Repeat(typeof(object), tSwitch);
                     var tDelegateType = EmitCallSiteFuncType(tArgTypes, typeof(void));
-                    Dynamic.InvokeCallSite(CreateCallSite(tDelegateType, binderType!,knownType, binder!, name, context, argNames), target, args);
+                    if (callsite == null)
+                    {
+                        callsite = CreateCallSite(tDelegateType, binderType!, knownType, binder!, name, context, argNames, staticContext);
+                    }
+                    Dynamic.InvokeCallSite(callsite, target, args);
                     break;
 
             }
@@ -618,10 +622,14 @@ namespace Dynamitey.Internal.Optimization {
                 default:
                     var tArgTypes = Enumerable.Repeat(typeof(object), tSwitch);
                     var tDelegateType = EmitCallSiteFuncType(tArgTypes, typeof(TReturn));
+                    if (callsite == null)
+                    {
+                        callsite = CreateCallSite(tDelegateType, binderType!, knownType, binder!, name, context, argNames, staticContext);
+                    }
                     // target/the return value are TTarget/TReturn - unconstrained generics are
                     // nullable-oblivious, but InvokeCallSite's own object/dynamic? signature isn't;
                     // the `!`s bridge that without asserting anything actually new.
-                    return (TReturn)Dynamic.InvokeCallSite(CreateCallSite(tDelegateType, binderType!,knownType, binder!, name, context, argNames), target!, args)!;
+                    return (TReturn)Dynamic.InvokeCallSite(callsite, target!, args)!;
 
             }
         }
