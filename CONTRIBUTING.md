@@ -95,10 +95,9 @@ why a clone is better for anything you intend to test.
   hundreds of assertions is not reviewable.
 - Write the commit message for someone reading it in five years without the
   context. Say what changed and why the alternative was rejected.
-- CI must be green, Copilot must recommend merge on HEAD, and review
-  conversations must be resolved before merge. Copilot is requested
-  automatically. Disagreeing with it is fine, but reply with the reasoning
-  rather than resolving silently, then push so Copilot re-reviews.
+- CI must be green and review conversations must be resolved before merge.
+  Copilot is requested automatically. Disagreeing with it is fine, but reply
+  with the reasoning rather than resolving silently.
 
 There is no CLA. Contributions are under Apache-2.0, the same as the project.
 
