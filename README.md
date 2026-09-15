@@ -4,7 +4,12 @@
 
 [![CI](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml/badge.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/codeql.yml)
+[![Tests](https://raw.githubusercontent.com/dynamitey-community/dynamitey/badges/tests.svg)](https://github.com/dynamitey-community/dynamitey/actions/workflows/ci.yml)
+[![Line coverage](https://raw.githubusercontent.com/dynamitey-community/dynamitey/badges/line-coverage.svg)](https://github.com/dynamitey-community/dynamitey/blob/badges/coverage.md)
+[![Branch coverage](https://raw.githubusercontent.com/dynamitey-community/dynamitey/badges/branch-coverage.svg)](https://github.com/dynamitey-community/dynamitey/blob/badges/coverage.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+Line and branch coverage measure the shipped library only (`Dynamitey.Community`; see `coverlet.runsettings`).
 
 Dynamitey is a .NET library that wraps the Dynamic Language Runtime to do
 runtime dispatch: late binding, currying, partial application, expando objects,
