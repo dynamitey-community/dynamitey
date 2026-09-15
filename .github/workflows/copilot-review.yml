@@ -11,7 +11,7 @@ name: Copilot review
 on:
   pull_request:
   pull_request_review:
-    types: [submitted]
+    types: [submitted, dismissed]
 
 permissions:
   contents: read
@@ -30,6 +30,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # Once this file exists on main, ignore a PR that rewrites the waiter.
+      # The workflow YAML itself still comes from the pull_request event; a
+      # ruleset required-workflow from main is the remaining lock and can be
+      # added after this lands on the default branch.
+      - name: Prefer the gate script from the base branch
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --depth=1 origin "$BASE_SHA"
+          if git cat-file -e "${BASE_SHA}:.github/scripts/wait_for_copilot_review.py"; then
+            git checkout "$BASE_SHA" -- .github/scripts/wait_for_copilot_review.py
+          fi
 
       - name: Wait for Copilot to recommend merge
         env:

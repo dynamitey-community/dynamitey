@@ -134,27 +134,31 @@ passes" and "the suite covers the code" are two different gates here.
 
 ## Continuous integration
 
-Three workflows, all pinned to current action majors:
+Workflows, all pinned to current action majors:
 
 | Workflow | Does |
 | --- | --- |
 | `ci.yml` | Four jobs: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test |
 | `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
 | `dependencies.yml` | Three jobs on **different triggers**: dependency review on PRs only; `dotnet list package --vulnerable --include-transitive` on everything; and **OWASP Dependency-Check** weekly and on demand but never on a PR — a cold-cache scan takes about an hour, and it blocks nothing |
+| `copilot-review.yml` | Required merge gate: waits until Copilot's latest review of HEAD recommends merge. See #119 |
+| `docs.yml` | Builds the DocFX site on every pull request (`Build the site` is required); deploys only from `main` |
+| `release.yml` | Tag-driven pack and publish; not a pull-request gate |
 
 `push` only triggers CI on `main`; `pull_request` covers everything else, which
 is what stops every branch push producing a duplicate run. Do not add branches
 to the `push` trigger without a reason.
 
-**A job existing is not the same as a job gating a merge.** Eight checks are
-required by branch protection: the three `Build and test` legs, `Benchmarks
-compile and run`, `AOT smoke test`, `Analyze C#`, `NuGet audit` and `Dependency
-review`. `Code coverage` and `OWASP dependency check` run but are **not**
-required, so a red coverage floor does not block a merge today. Adding a check
-to the required list is a repository settings change, separate from adding the
-job — and adding one that cannot report on a pull request would block every pull
-request permanently, which is why the OWASP job's trigger and the required list
-have to be considered together.
+**A job existing is not the same as a job gating a merge.** Branch protection
+requires the three `Build and test` legs, `Benchmarks compile and run`,
+`AOT smoke test`, `Analyze C#`, `NuGet audit`, `Dependency review`,
+`Build the site`, and `Copilot review`. `Code coverage` and
+`OWASP dependency check` run but are **not** required, so a red coverage floor
+does not block a merge today. Adding a check to the required list is a
+repository settings change, separate from adding the job — and adding one that
+cannot report on a pull request would block every pull request permanently,
+which is why the OWASP job's trigger and the required list have to be
+considered together.
 
 **`-warnaserror` lives in the workflow, not the project files.** The tree builds
 clean, so any new warning is a regression — but a local build stays workable.
