@@ -12,12 +12,14 @@ on:
   pull_request:
     # Defaults plus ready_for_review: a draft that timed out before Copilot
     # finished would otherwise stay red after the PR is marked ready.
+    # edited: retargeting the base (or other PR metadata) must start a run
+    # so the required check is not pending forever with no synchronize.
     # Do not also subscribe to pull_request_review. Copilot's review event
     # starts a sibling run GitHub marks action_required, which cancels this
     # waiter via concurrency and leaves the PR UNSTABLE. A later Copilot
     # edit from Approval recommended to Changes recommended therefore does
     # not re-run this job; a new push or a manual re-run does.
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
 
 permissions:
   contents: read
