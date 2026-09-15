@@ -52,4 +52,4 @@ The DLR gives C# the `dynamic` keyword, and `dynamic` alone covers most everyday
 
 ## A word on trimming and AOT
 
-This library is DLR-based and will never be trim-safe or NativeAOT-safe. Rather than fail at runtime, the public surface carries `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`, so a trimmed or AOT-compiled project gets build-time warnings at the exact call sites that will not survive.
+This library is DLR-based and will never be trim-safe or NativeAOT-safe. Rather than fail at runtime, dynamic-dispatch entry points carry `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`, so a trimmed or AOT-compiled project gets build-time warnings at the exact call sites that will not survive.
