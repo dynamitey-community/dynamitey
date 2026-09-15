@@ -60,12 +60,11 @@ Jira keys. Work is tracked in GitHub issues.
 
 **`main` is protected.** PRs required (0 approvals, so a solo maintainer is not
 locked out), linear history, no force pushes, no deletions, conversation
-resolution required, admins included, and required status checks including
-`Copilot review`. That check waits until Copilot's latest review of HEAD says
-approval recommended — Copilot still posts a Comment review, not Approve, so
-the heading is the merge signal. A ruleset auto-requests Copilot on each push
-and on drafts. Conversation resolution still applies; it is not enough on its
-own because Copilot often finishes at or after merge. See #119.
+resolution required, admins included. `copilot-review.yml` waits until Copilot's
+latest review of HEAD says approval recommended — Copilot still posts a Comment
+review, not Approve, so the heading is the merge signal — but that job is **not**
+a required status check. A ruleset auto-requests Copilot on each push and on
+drafts. Conversation resolution still applies. See #119.
 
 **Issue labels that carry meaning beyond the default set:**
 
@@ -138,10 +137,10 @@ Workflows, all pinned to current action majors:
 
 | Workflow | Does |
 | --- | --- |
-| `ci.yml` | Four jobs: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test |
+| `ci.yml` | Four jobs on every run: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test. On `main` only, a fifth job (`Publish README badges`) renders test-count and coverage SVGs onto the `badges` branch — `contents: write` on that job, `GITHUB_TOKEN`, no extra secret. The README points at those files; do not pin the numbers. |
 | `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
 | `dependencies.yml` | Three jobs on **different triggers**: dependency review on PRs only; `dotnet list package --vulnerable --include-transitive` on everything; and **OWASP Dependency-Check** weekly and on demand but never on a PR — a cold-cache scan takes about an hour, and it blocks nothing |
-| `copilot-review.yml` | Required merge gate: waits until Copilot's latest review of HEAD recommends merge. Runs on `pull_request` (including `ready_for_review` and `edited`) and on Copilot's `copilot-pull-request-reviewer` check completing. Open threads stay a conversation-resolution rule. See #119 |
+| `copilot-review.yml` | Waits until Copilot's latest review of HEAD recommends merge. Runs on `pull_request` (including `ready_for_review` and `edited`) and on Copilot's `copilot-pull-request-reviewer` check completing. Not a required status check. See #119 |
 | `docs.yml` | Builds the DocFX site on every pull request (`Build the site` is required); deploys only from `main` |
 | `release.yml` | Manual `workflow_dispatch` dry run: build, test, pack, upload artifacts. No tag trigger and no publish (gated on #8) |
 
@@ -151,14 +150,15 @@ to the `push` trigger without a reason.
 
 **A job existing is not the same as a job gating a merge.** Branch protection
 requires the three `Build and test` legs, `Benchmarks compile and run`,
-`AOT smoke test`, `Analyze C#`, `NuGet audit`, `Dependency review`,
-`Build the site`, and `Copilot review`. `Code coverage` and
-`OWASP dependency check` run but are **not** required, so a red coverage floor
-does not block a merge today. Adding a check to the required list is a
-repository settings change, separate from adding the job — and adding one that
-cannot report on a pull request would block every pull request permanently,
-which is why the OWASP job's trigger and the required list have to be
-considered together.
+`AOT smoke test`, `Analyze C#`, `NuGet audit`, `Dependency review`, and
+`Build the site`. `Code coverage`, `Publish README badges`, `Copilot review`,
+and `OWASP dependency check` run but are **not** required, so a red coverage
+floor does not block a merge today. The badges job only runs on `main` anyway,
+so making it required would block every pull request. Adding a check to the
+required list is a repository settings change, separate from adding the job —
+and adding one that cannot report on a pull request would block every pull
+request permanently, which is why the OWASP job's trigger and the required list
+have to be considered together.
 
 **`-warnaserror` lives in the workflow, not the project files.** The tree builds
 clean, so any new warning is a regression — but a local build stays workable.

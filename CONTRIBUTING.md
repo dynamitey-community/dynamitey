@@ -90,7 +90,7 @@ why a clone is better for anything you intend to test.
 ## Pull requests
 
 - Branch from `main`. It is protected: no force pushes, linear history, required
-  status checks including `Copilot review`, and conversation resolution.
+  status checks, and conversation resolution.
 - Keep one concern per pull request. A dependency bump that also rewrites
   hundreds of assertions is not reviewable.
 - Write the commit message for someone reading it in five years without the
