@@ -10,29 +10,32 @@ name: Copilot review
 
 on:
   pull_request:
-    # Defaults plus ready_for_review: a draft that timed out before Copilot
-    # finished would otherwise stay red after the PR is marked ready.
-    # edited: retargeting the base (or other PR metadata) must start a run
-    # so the required check is not pending forever with no synchronize.
-    # Do not also subscribe to pull_request_review. Copilot's review event
-    # starts a sibling run GitHub marks action_required, which cancels this
-    # waiter via concurrency and leaves the PR UNSTABLE. A later Copilot
-    # edit from Approval recommended to Changes recommended therefore does
-    # not re-run this job; a new push or a manual re-run does.
+    # Defaults plus ready_for_review and edited: a draft timeout or a
+    # retargeted base must start a run so the required check is not pending
+    # forever with no synchronize.
     types: [opened, synchronize, reopened, ready_for_review, edited]
+  # Copilot's own review event (pull_request_review) starts a sibling run
+  # GitHub marks action_required, which cancels this waiter and leaves the
+  # PR UNSTABLE. The Copilot agent already posts check_run
+  # copilot-pull-request-reviewer; completing that re-evaluates HEAD.
+  check_run:
+    types: [completed]
 
 permissions:
   contents: read
   pull-requests: read
 
 concurrency:
-  group: copilot-review-${{ github.event.pull_request.number }}
+  group: copilot-review-${{ github.event.pull_request.number || github.event.check_run.pull_requests[0].number }}
   cancel-in-progress: true
 
 jobs:
   copilot-review:
     name: Copilot review
-    if: github.event.pull_request
+    if: >
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'check_run' &&
+       github.event.check_run.name == 'copilot-pull-request-reviewer')
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -47,7 +50,7 @@ jobs:
       # added after this lands on the default branch.
       - name: Prefer the gate script from the base branch
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.check_run.pull_requests[0].base.sha }}
         run: |
           git fetch --depth=1 origin "$BASE_SHA"
           if git cat-file -e "${BASE_SHA}:.github/scripts/wait_for_copilot_review.py"; then
@@ -57,8 +60,8 @@ jobs:
       - name: Wait for Copilot to recommend merge
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.check_run.pull_requests[0].number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.check_run.head_sha }}
           TIMEOUT_SECONDS: "900"
           POLL_SECONDS: "20"
         run: python3 .github/scripts/wait_for_copilot_review.py

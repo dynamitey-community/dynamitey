@@ -141,7 +141,7 @@ Workflows, all pinned to current action majors:
 | `ci.yml` | Four jobs: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test |
 | `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
 | `dependencies.yml` | Three jobs on **different triggers**: dependency review on PRs only; `dotnet list package --vulnerable --include-transitive` on everything; and **OWASP Dependency-Check** weekly and on demand but never on a PR — a cold-cache scan takes about an hour, and it blocks nothing |
-| `copilot-review.yml` | Required merge gate: waits until Copilot's latest review of HEAD recommends merge. Runs on `pull_request` (including `ready_for_review`). Open threads stay a conversation-resolution rule, not this waiter's timeout. See #119 |
+| `copilot-review.yml` | Required merge gate: waits until Copilot's latest review of HEAD recommends merge. Runs on `pull_request` (including `ready_for_review` and `edited`) and on Copilot's `copilot-pull-request-reviewer` check completing. Open threads stay a conversation-resolution rule. See #119 |
 | `docs.yml` | Builds the DocFX site on every pull request (`Build the site` is required); deploys only from `main` |
 | `release.yml` | Manual `workflow_dispatch` dry run: build, test, pack, upload artifacts. No tag trigger and no publish (gated on #8) |
 
