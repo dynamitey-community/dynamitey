@@ -14,10 +14,10 @@ on:
     # retargeted base must start a run so the required check is not pending
     # forever with no synchronize.
     types: [opened, synchronize, reopened, ready_for_review, edited]
-  # Copilot's own review event (pull_request_review) starts a sibling run
-  # GitHub marks action_required, which cancels this waiter and leaves the
-  # PR UNSTABLE. The Copilot agent already posts check_run
-  # copilot-pull-request-reviewer; completing that re-evaluates HEAD.
+  # pull_request_review is intentionally not configured: Copilot's review
+  # event is marked action_required, which left PRs UNSTABLE. Re-evaluate
+  # when the Copilot agent check_run copilot-pull-request-reviewer completes
+  # instead. A review edited without a new agent run is not observed.
   check_run:
     types: [completed]
 
@@ -43,6 +43,12 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      - name: Fail if Copilot's agent check failed
+        if: github.event_name == 'check_run' && github.event.check_run.conclusion != 'success'
+        run: |
+          echo "copilot-pull-request-reviewer concluded ${{ github.event.check_run.conclusion }}"
+          exit 1
+
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
