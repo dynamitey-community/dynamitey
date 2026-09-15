@@ -308,7 +308,7 @@ namespace Dynamitey
                     InvokeHelper.InvokeSubtractAssignCallSite(target, Name!.Name, args, _argNames, _context, _staticContext, ref _callSite, ref _callSite2, ref _callSite3, ref _callSite4);
                     return null;
                 case InvocationKind.IsEvent:
-                    return InvokeHelper.InvokeIsEventCallSite(target, Name!.Name, _context, ref _callSite);
+                    return InvokeHelper.InvokeIsEventCallSite(target, Name!.Name, _context, _staticContext, ref _callSite);
                 default:
                     throw new InvalidOperationException("Unknown Invocation Kind: " + Kind);
             }

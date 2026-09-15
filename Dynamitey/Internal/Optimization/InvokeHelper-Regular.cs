@@ -984,15 +984,61 @@ namespace Dynamitey.Internal.Optimization
         internal static class IsEventBinderDummy{
 
         }
-        [RequiresUnreferencedCode("Resolves 'name' via Binder.IsEvent; trimming can remove the member being resolved.")]
-        [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        internal static bool InvokeIsEventCallSite(object target, string name, Type tContext, ref CallSite? callSite)
+        [RequiresUnreferencedCode("Resolves 'name' via reflection against the static events of the target type; trimming can remove the member being resolved.")]
+        private static bool IsStaticEventByReflection(Type targetType, string name, Type context)
         {
+            return GetAccessibleStaticEvent(targetType, name, context) is not null;
+        }
+
+        [RequiresUnreferencedCode("Resolves 'name' via reflection against the static events of the target type; trimming can remove the member being resolved.")]
+        private static EventInfo? GetAccessibleStaticEvent(Type targetType, string name, Type context)
+        {
+            var tEvent = targetType.GetEvent(name, StaticMemberFlags);
+            if (tEvent?.AddMethod is null)
+            {
+                return null;
+            }
+
+            // Same exact-type gate as GetStaticMemberByReflection. Derived-context
+            // protected access is #108; do not invent a second rule here.
+            if (tEvent.AddMethod.IsPublic || context == targetType)
+            {
+                return tEvent;
+            }
+
+            return null;
+        }
+
+        [RequiresUnreferencedCode("Calls GetAccessibleStaticEvent; trimming can remove the event being resolved.")]
+        private static void AddStaticEventByReflection(Type targetType, string name, Type context, object? handler)
+        {
+            var tEvent = GetAccessibleStaticEvent(targetType, name, context)
+                         ?? throw new RuntimeBinderException($"'{targetType}' does not contain an accessible definition for '{name}'");
+            tEvent.AddEventHandler(null, (Delegate)handler!);
+        }
+
+        [RequiresUnreferencedCode("Calls GetAccessibleStaticEvent; trimming can remove the event being resolved.")]
+        private static void RemoveStaticEventByReflection(Type targetType, string name, Type context, object? handler)
+        {
+            var tEvent = GetAccessibleStaticEvent(targetType, name, context)
+                         ?? throw new RuntimeBinderException($"'{targetType}' does not contain an accessible definition for '{name}'");
+            tEvent.RemoveEventHandler(null, (Delegate)handler!);
+        }
+
+        [RequiresUnreferencedCode("Resolves 'name' via Binder.IsEvent for an instance context, or via reflection for a static context; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("The instance-context path binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+        internal static bool InvokeIsEventCallSite(object target, string name, Type tContext, bool staticContext, ref CallSite? callSite)
+        {
+            if (staticContext && target is Type tTargetType)
+            {
+                return IsStaticEventByReflection(tTargetType, name, tContext);
+            }
+
             if (callSite == null)
             {
                 LazyBinder tBinder = ()=> Binder.IsEvent(CSharpBinderFlags.None, name, tContext);
                 var tBinderType = typeof (IsEventBinderDummy);
-                callSite = CreateCallSite<Func<CallSite, object, bool>>(tBinderType, Unknown, tBinder, name, tContext, isEvent: true);
+                callSite = CreateCallSite<Func<CallSite, object, bool>>(tBinderType, Unknown, tBinder, name, tContext, staticContext: false, isEvent: true);
             }
             var tCallSite = (CallSite<Func<CallSite, object, bool>>)callSite;
 
@@ -1005,9 +1051,16 @@ namespace Dynamitey.Internal.Optimization
             ref CallSite? callSiteIsEvent, ref CallSite? callSiteAdd, ref CallSite? callSiteGet, ref CallSite? callSiteSet) //This is an optimization readability isn't the concern. 
         {
 
-            if (InvokeIsEventCallSite(target, name, context, ref callSiteIsEvent))
+            if (InvokeIsEventCallSite(target, name, context, staticContext, ref callSiteIsEvent))
             {
-                InvokeMemberActionCallSite(target, InvokeMemberName.CreateSpecialName("add_" + name), args, argNames, context, staticContext, ref callSiteAdd);
+                if (staticContext && target is Type tAddType)
+                {
+                    AddStaticEventByReflection(tAddType, name, context, args[0]);
+                }
+                else
+                {
+                    InvokeMemberActionCallSite(target, InvokeMemberName.CreateSpecialName("add_" + name), args, argNames, context, staticContext, ref callSiteAdd);
+                }
             }
             else
             {
@@ -1022,9 +1075,16 @@ namespace Dynamitey.Internal.Optimization
         internal static void InvokeSubtractAssignCallSite(object target, string name, object?[] args, string?[]? argNames, Type context, bool staticContext, // lgtm [cs/too-many-ref-parameters]
             ref CallSite? callSiteIsEvent, ref CallSite? callSiteRemove, ref CallSite? callSiteGet, ref CallSite? callSiteSet) //This is an optimization readability isn't the concern. 
         {
-            if (InvokeIsEventCallSite(target, name, context, ref callSiteIsEvent))
+            if (InvokeIsEventCallSite(target, name, context, staticContext, ref callSiteIsEvent))
             {
-                InvokeMemberActionCallSite(target, InvokeMemberName.CreateSpecialName("remove_" + name), args, argNames, context, staticContext, ref callSiteRemove);
+                if (staticContext && target is Type tRemoveType)
+                {
+                    RemoveStaticEventByReflection(tRemoveType, name, context, args[0]);
+                }
+                else
+                {
+                    InvokeMemberActionCallSite(target, InvokeMemberName.CreateSpecialName("remove_" + name), args, argNames, context, staticContext, ref callSiteRemove);
+                }
             }
             else
             {

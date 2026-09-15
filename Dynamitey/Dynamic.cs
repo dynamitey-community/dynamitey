@@ -897,7 +897,7 @@ namespace Dynamitey
             target = target.GetTargetContext(out var tContext, out var tStaticContext);
             tContext = tContext.FixContext();
             CallSite? tCallSite = null;
-            return InvokeHelper.InvokeIsEventCallSite(target, name, tContext, ref tCallSite);
+            return InvokeHelper.InvokeIsEventCallSite(target, name, tContext, tStaticContext, ref tCallSite);
         }
 
         /// <summary>
