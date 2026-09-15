@@ -60,9 +60,12 @@ Jira keys. Work is tracked in GitHub issues.
 
 **`main` is protected.** PRs required (0 approvals, so a solo maintainer is not
 locked out), linear history, no force pushes, no deletions, conversation
-resolution required, admins included, and seven required status checks. A merge
-is blocked until every review thread is resolved — including Copilot's, which
-reviews PRs automatically.
+resolution required, admins included, and required status checks including
+`Copilot review`. That check waits until Copilot's latest review of HEAD says
+approval recommended — Copilot still posts a Comment review, not Approve, so
+the heading is the merge signal. A ruleset auto-requests Copilot on each push
+and on drafts. Conversation resolution still applies; it is not enough on its
+own because Copilot often finishes at or after merge. See #119.
 
 **Issue labels that carry meaning beyond the default set:**
 

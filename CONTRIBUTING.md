@@ -89,15 +89,16 @@ why a clone is better for anything you intend to test.
 
 ## Pull requests
 
-- Branch from `main`. It is protected: no force pushes, linear history, and
-  seven required status checks.
+- Branch from `main`. It is protected: no force pushes, linear history, required
+  status checks including `Copilot review`, and conversation resolution.
 - Keep one concern per pull request. A dependency bump that also rewrites
   hundreds of assertions is not reviewable.
 - Write the commit message for someone reading it in five years without the
   context. Say what changed and why the alternative was rejected.
-- CI must be green, and review conversations must be resolved before merge.
-  Copilot reviews automatically; disagreeing with it is fine, but reply with the
-  reasoning rather than resolving silently.
+- CI must be green, Copilot must recommend merge on HEAD, and review
+  conversations must be resolved before merge. Copilot is requested
+  automatically. Disagreeing with it is fine, but reply with the reasoning
+  rather than resolving silently, then push so Copilot re-reviews.
 
 There is no CLA. Contributions are under Apache-2.0, the same as the project.
 
