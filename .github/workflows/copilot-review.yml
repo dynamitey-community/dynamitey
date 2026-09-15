@@ -26,7 +26,9 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: copilot-review-${{ github.event.pull_request.number || github.event.check_run.pull_requests[0].number }}
+  # Include the triggering SHA so a late Copilot check for H1 cannot
+  # cancel the waiter already running for H2.
+  group: copilot-review-${{ github.event.pull_request.number || github.event.check_run.pull_requests[0].number }}-${{ github.event.pull_request.head.sha || github.event.check_run.head_sha }}
   cancel-in-progress: true
 
 jobs:
@@ -35,7 +37,8 @@ jobs:
     if: >
       github.event_name == 'pull_request' ||
       (github.event_name == 'check_run' &&
-       github.event.check_run.name == 'copilot-pull-request-reviewer')
+       github.event.check_run.name == 'copilot-pull-request-reviewer' &&
+       github.event.check_run.head_sha == github.event.check_run.pull_requests[0].head.sha)
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -61,7 +64,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number || github.event.check_run.pull_requests[0].number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.check_run.head_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.check_run.pull_requests[0].head.sha }}
           TIMEOUT_SECONDS: "900"
           POLL_SECONDS: "20"
         run: python3 .github/scripts/wait_for_copilot_review.py
