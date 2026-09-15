@@ -23,28 +23,39 @@ namespace Dynamitey.Tests
         [Test]
         public void ParallelValueTypeConstructorsSameKeyDoNotThrow()
         {
-            var tErrors = RunContended(32, _ => Dynamic.InvokeConstructor(typeof(int)));
+            var tExpected = new DateTime(2009, 1, 20);
+            var tResults = new object[32];
+            var tErrors = RunContended(32, i =>
+                tResults[i] = Dynamic.InvokeConstructor(typeof(DateTime), 2009, 1, 20));
 
             Assert.That(tErrors, Is.Empty);
+            Assert.That(tResults, Is.All.EqualTo(tExpected));
         }
 
         [Test]
         public void ParallelValueTypeConstructorsDistinctKeysDoNotThrow()
         {
-            var tTypes = new[]
+            var tGuid = new Guid("00112233-4455-6677-8899-aabbccddeeff");
+            var tCases = new[]
             {
-                typeof(int), typeof(uint), typeof(long), typeof(ulong),
-                typeof(short), typeof(ushort), typeof(byte), typeof(sbyte),
-                typeof(bool), typeof(char), typeof(float), typeof(double),
-                typeof(decimal), typeof(DateTime), typeof(TimeSpan), typeof(Guid)
+                (Type: typeof(DateTime), Args: new object[] { 2009, 1, 20 }, Expected: (object)new DateTime(2009, 1, 20)),
+                (Type: typeof(TimeSpan), Args: new object[] { 1, 2, 3 }, Expected: (object)new TimeSpan(1, 2, 3)),
+                (Type: typeof(Guid), Args: new object[] { tGuid.ToString() }, Expected: (object)tGuid),
+                (Type: typeof(decimal), Args: new object[] { 42 }, Expected: (object)42m)
             };
-
-            var tErrors = RunContended(tTypes.Length * 4, i =>
-                Dynamic.InvokeConstructor(tTypes[i % tTypes.Length]));
+            var tResults = new object[tCases.Length * 8];
+            var tErrors = RunContended(tResults.Length, i =>
+            {
+                var tCase = tCases[i % tCases.Length];
+                tResults[i] = Dynamic.InvokeConstructor(tCase.Type, tCase.Args);
+                return tResults[i];
+            });
 
             Assert.That(tErrors, Is.Empty);
-            Assert.That(Dynamic.InvokeConstructor(typeof(DateTime)), Is.EqualTo(new DateTime()));
-            Assert.That(Dynamic.InvokeConstructor(typeof(int)), Is.EqualTo(0));
+            for (var i = 0; i < tResults.Length; i++)
+            {
+                Assert.That(tResults[i], Is.EqualTo(tCases[i % tCases.Length].Expected));
+            }
         }
 
         [Test]
@@ -81,14 +92,54 @@ namespace Dynamitey.Tests
                 typeof(Func<DateTime, DateTime>)
             };
             Func<object, object> tSource = x => x;
-
-            var tErrors = RunContended(tDelegateTypes.Length * 4, i =>
-                Dynamic.CoerceToDelegate(tSource, tDelegateTypes[i % tDelegateTypes.Length]));
+            var tDelegates = new object[tDelegateTypes.Length * 4];
+            var tErrors = RunContended(tDelegates.Length, i =>
+            {
+                var tType = tDelegateTypes[i % tDelegateTypes.Length];
+                tDelegates[i] = Dynamic.CoerceToDelegate(tSource, tType)!;
+                return InvokeCoerced(tDelegates[i], tType);
+            });
 
             Assert.That(tErrors, Is.Empty);
-            var tPlus = (Func<int, int>)Dynamic.CoerceToDelegate(
-                (Func<object, object>)(x => (int)x + 2), typeof(Func<int, int>))!;
-            Assert.That(tPlus(5), Is.EqualTo(7));
+            for (var i = 0; i < tDelegates.Length; i++)
+            {
+                var tType = tDelegateTypes[i % tDelegateTypes.Length];
+                Assert.That(InvokeCoerced(tDelegates[i], tType), Is.EqualTo(SampleFor(tType)));
+            }
+        }
+
+        private static object InvokeCoerced(object del, Type delegateType)
+        {
+            if (delegateType == typeof(Func<int, int>)) return ((Func<int, int>)del)(7);
+            if (delegateType == typeof(Func<long, long>)) return ((Func<long, long>)del)(7L);
+            if (delegateType == typeof(Func<byte, byte>)) return ((Func<byte, byte>)del)((byte)7);
+            if (delegateType == typeof(Func<short, short>)) return ((Func<short, short>)del)((short)7);
+            if (delegateType == typeof(Func<uint, uint>)) return ((Func<uint, uint>)del)(7u);
+            if (delegateType == typeof(Func<decimal, decimal>)) return ((Func<decimal, decimal>)del)(7m);
+            if (delegateType == typeof(Func<bool, bool>)) return ((Func<bool, bool>)del)(true);
+            if (delegateType == typeof(Func<char, char>)) return ((Func<char, char>)del)('x');
+            if (delegateType == typeof(Func<float, float>)) return ((Func<float, float>)del)(7f);
+            if (delegateType == typeof(Func<double, double>)) return ((Func<double, double>)del)(7d);
+            if (delegateType == typeof(Func<Guid, Guid>)) return ((Func<Guid, Guid>)del)(Guid.Empty);
+            if (delegateType == typeof(Func<DateTime, DateTime>)) return ((Func<DateTime, DateTime>)del)(new DateTime(2009, 1, 20));
+            throw new ArgumentException(delegateType.ToString());
+        }
+
+        private static object SampleFor(Type delegateType)
+        {
+            if (delegateType == typeof(Func<int, int>)) return 7;
+            if (delegateType == typeof(Func<long, long>)) return 7L;
+            if (delegateType == typeof(Func<byte, byte>)) return (byte)7;
+            if (delegateType == typeof(Func<short, short>)) return (short)7;
+            if (delegateType == typeof(Func<uint, uint>)) return 7u;
+            if (delegateType == typeof(Func<decimal, decimal>)) return 7m;
+            if (delegateType == typeof(Func<bool, bool>)) return true;
+            if (delegateType == typeof(Func<char, char>)) return 'x';
+            if (delegateType == typeof(Func<float, float>)) return 7f;
+            if (delegateType == typeof(Func<double, double>)) return 7d;
+            if (delegateType == typeof(Func<Guid, Guid>)) return Guid.Empty;
+            if (delegateType == typeof(Func<DateTime, DateTime>)) return new DateTime(2009, 1, 20);
+            throw new ArgumentException(delegateType.ToString());
         }
 
         private static ConcurrentBag<Exception> RunContended(int workers, Func<int, object> work)
