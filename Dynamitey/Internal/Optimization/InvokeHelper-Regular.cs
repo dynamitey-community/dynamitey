@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
@@ -272,6 +273,9 @@ namespace Dynamitey.Internal.Optimization
             lock (_callSiteCacheLock)
             {
                 ClearFullyDynamicCache();
+                _dynamicInvokeMemberSite.Clear();
+                _dynamicInvokeWrapFunc.Clear();
+                Dynamic.CompiledExpressions.Clear();
             }
         }
 
@@ -547,7 +551,7 @@ namespace Dynamitey.Internal.Optimization
             Type target,
             object[] args);
 
-        internal static readonly IDictionary<Type, CallSite<DynamicInvokeMemberConstructorValueType>> _dynamicInvokeMemberSite = new Dictionary<Type, CallSite<DynamicInvokeMemberConstructorValueType>>();
+        internal static readonly ConcurrentDictionary<Type, CallSite<DynamicInvokeMemberConstructorValueType>> _dynamicInvokeMemberSite = new ConcurrentDictionary<Type, CallSite<DynamicInvokeMemberConstructorValueType>>();
 
         [RequiresUnreferencedCode("Resolves and invokes the generic InvokeMemberTargetType<Type,TReturn> via the DLR binder (Binder.InvokeMember); trimming can remove that generic method instantiation.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
@@ -558,13 +562,12 @@ namespace Dynamitey.Internal.Optimization
                                      string?[]? argNames,
                                      Type target, params object[] args)
         {
-            if (!_dynamicInvokeMemberSite.TryGetValue(tReturn, out var tSite))
-            {
-                tSite = CallSite<DynamicInvokeMemberConstructorValueType>.Create(
+            var tSite = _dynamicInvokeMemberSite.GetOrAdd(tReturn, static tKey =>
+                CallSite<DynamicInvokeMemberConstructorValueType>.Create(
                         Binder.InvokeMember(
                             CSharpBinderFlags.None,
                             "InvokeMemberTargetType",
-                            new[] { typeof(Type), tReturn },
+                            new[] { typeof(Type), tKey },
                             typeof(InvokeHelper),
                             new[]
                                 {
@@ -583,9 +586,7 @@ namespace Dynamitey.Internal.Optimization
                                     CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.UseCompileTimeType, null),
                                 }
                             )
-                    );
-                _dynamicInvokeMemberSite[tReturn] = tSite;
-            }
+                    ));
 
             return tSite.Target(tSite, typeof(InvokeHelper), ref callsite, binderType, knownType, binder, name, staticContext, context, argNames, target, args);
         }
@@ -1297,7 +1298,7 @@ namespace Dynamitey.Internal.Optimization
                                                                      type, args!);
         }
 
-        internal static readonly IDictionary<Type, CallSite<DynamicInvokeWrapFunc>> _dynamicInvokeWrapFunc = new Dictionary<Type, CallSite<DynamicInvokeWrapFunc>>();
+        internal static readonly ConcurrentDictionary<Type, CallSite<DynamicInvokeWrapFunc>> _dynamicInvokeWrapFunc = new ConcurrentDictionary<Type, CallSite<DynamicInvokeWrapFunc>>();
 
         internal delegate object DynamicInvokeWrapFunc(
          CallSite funcSite,
@@ -1310,16 +1311,12 @@ namespace Dynamitey.Internal.Optimization
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static Delegate WrapFunc(Type returnType, object invokable, int length)
         {
-            if (!_dynamicInvokeWrapFunc.TryGetValue(returnType, out var tSite))
-            {
-
-                var tMethod =  "WrapFuncHelper";
- 
-                tSite = CallSite<DynamicInvokeWrapFunc>.Create(
+            var tSite = _dynamicInvokeWrapFunc.GetOrAdd(returnType, static tKey =>
+                CallSite<DynamicInvokeWrapFunc>.Create(
                     Binder.InvokeMember(
                         CSharpBinderFlags.None,
-                        tMethod,
-                        new[] {returnType},
+                        "WrapFuncHelper",
+                        new[] {tKey},
                         typeof (InvokeHelper),
                         new[]
                             {
@@ -1329,9 +1326,7 @@ namespace Dynamitey.Internal.Optimization
                                 CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.UseCompileTimeType, null),
                                 CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.UseCompileTimeType, null),
                             }
-                        )); 
-                _dynamicInvokeWrapFunc[returnType] = tSite;
-            }
+                        )));
             return (Delegate) tSite.Target(tSite, typeof(InvokeHelper), invokable, length);
         }
     }
