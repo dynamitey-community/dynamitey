@@ -4,7 +4,6 @@ using System.Dynamic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Dynamitey.Internal.Optimization;
-using Microsoft.CSharp.RuntimeBinder;
 using System.Reflection;
 using Dynamitey.Internal.Compat;
 using System.Collections;
@@ -294,41 +293,14 @@ namespace Dynamitey
                     InvokeHelper.InvokeMemberActionCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite);
                     return null;
                 case InvocationKind.InvokeMemberUnknown:
-                    {
-                       
-                            try
-                            {
-                                var tObj = InvokeHelper.InvokeMemberCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite);
-                                return tObj;
-                            }
-                            catch (RuntimeBinderException)
-                            {
-                                InvokeHelper.InvokeMemberActionCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite2);
-                            return null;
-
-                            }
-                          
-                    }
+                    return InvokeHelper.InvokeMemberUnknownCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite, ref _callSite2);
                 case InvocationKind.Invoke:
                     return InvokeHelper.InvokeDirectCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
                 case InvocationKind.InvokeAction:
                     InvokeHelper.InvokeDirectActionCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
                     return null;
                 case InvocationKind.InvokeUnknown:
-                    {
-
-                        try
-                        {
-                            var tObj = InvokeHelper.InvokeDirectCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
-                            return tObj;
-                        }
-                        catch (RuntimeBinderException)
-                        {
-                            InvokeHelper.InvokeDirectActionCallSite(target, args, _argNames, _context, _staticContext, ref _callSite2);
-                            return null;
-
-                        }
-                    }
+                    return InvokeHelper.InvokeDirectUnknownCallSite(target, args, _argNames, _context, _staticContext, ref _callSite, ref _callSite2);
                 case InvocationKind.AddAssign:
                     InvokeHelper.InvokeAddAssignCallSite(target, Name!.Name, args, _argNames, _context, _staticContext,ref _callSite,ref  _callSite2,ref _callSite3, ref _callSite4);
                     return null;

@@ -782,6 +782,77 @@ namespace Dynamitey.Internal.Optimization
             return InvokeMember<object>(ref callSite, tBinderType, KnownMember, tBinder, name, tStaticContext, tContext, tArgNames, target, args!);
         }
 
+        // Binding failure (void member, missing member) has no frame in the target.
+        // A RuntimeBinderException thrown from inside the target — either `throw new
+        // RuntimeBinderException` or a nested dynamic bind — does. That is the
+        // binding/execution boundary for #102; the exception *message* is not used.
+        internal static bool ExceptionEscapedFromTarget(RuntimeBinderException exception, object target)
+        {
+            var tType = target as Type
+                        ?? (target as Delegate)?.Method.DeclaringType
+                        ?? target.GetType();
+
+            for (Exception? tScan = exception; tScan != null; tScan = tScan.InnerException)
+            {
+                if (StackContainsType(tScan.StackTrace, tType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool StackContainsType(string? stackTrace, Type targetType)
+        {
+            if (stackTrace is null || stackTrace.Length == 0)
+            {
+                return false;
+            }
+
+            // Nested types use '+' in FullName and '.' in stack frames, so match on Name.
+            var tToken = "." + targetType.Name;
+#if NETSTANDARD2_0
+            return stackTrace.IndexOf(tToken + ".", StringComparison.Ordinal) >= 0
+                   || stackTrace.IndexOf(tToken + "(", StringComparison.Ordinal) >= 0
+                   || stackTrace.IndexOf(tToken + "`", StringComparison.Ordinal) >= 0;
+#else
+            return stackTrace.Contains(tToken + ".", StringComparison.Ordinal)
+                   || stackTrace.Contains(tToken + "(", StringComparison.Ordinal)
+                   || stackTrace.Contains(tToken + "`", StringComparison.Ordinal);
+#endif
+        }
+
+        [RequiresUnreferencedCode("Calls InvokeMemberCallSite/InvokeMemberActionCallSite; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Both paths bind through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
+        internal static object? InvokeMemberUnknownCallSite(object target, InvokeMemberName name, object?[] args, string?[]? argNames, Type context, bool staticContext, ref CallSite? valueSite, ref CallSite? actionSite)
+        {
+            try
+            {
+                return InvokeMemberCallSite(target, name, args, argNames, context, staticContext, ref valueSite);
+            }
+            catch (RuntimeBinderException tException) when (!ExceptionEscapedFromTarget(tException, target))
+            {
+                InvokeMemberActionCallSite(target, name, args, argNames, context, staticContext, ref actionSite);
+                return null;
+            }
+        }
+
+        [RequiresUnreferencedCode("Calls InvokeDirectCallSite/InvokeDirectActionCallSite; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Both paths bind through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
+        internal static object? InvokeDirectUnknownCallSite(object target, object?[] args, string?[]? argNames, Type context, bool staticContext, ref CallSite? valueSite, ref CallSite? actionSite)
+        {
+            try
+            {
+                return InvokeDirectCallSite(target, args, argNames, context, staticContext, ref valueSite);
+            }
+            catch (RuntimeBinderException tException) when (!ExceptionEscapedFromTarget(tException, target))
+            {
+                InvokeDirectActionCallSite(target, args, argNames, context, staticContext, ref actionSite);
+                return null;
+            }
+        }
+
         [RequiresUnreferencedCode("Resolves target's invoke/call operator via Binder.Invoke; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object? InvokeDirectCallSite(object target, object?[] args, string?[]? tArgNames, Type tContext, bool tStaticContext, ref CallSite? callSite)

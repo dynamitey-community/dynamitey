@@ -19,6 +19,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Dynamitey.Internal.Optimization;
 using Microsoft.CSharp;
@@ -248,24 +249,18 @@ namespace Dynamitey.DynamicObjects
             }
 
             var tArgs = Util.NameArgsIfNecessary(binder.CallInfo, args!);
-
+            var tTarget = CallTarget.GetTargetContext(out var tContext, out var tStaticContext);
+            var tInvokeArgs = Util.GetArgsAndNames(tArgs, out var tArgNames);
+            CallSite? tValueSite = null;
+            CallSite? tActionSite = null;
             try
             {
-                result = Dynamic.Invoke(CallTarget, tArgs);
-
+                result = InvokeHelper.InvokeDirectUnknownCallSite(tTarget, tInvokeArgs, tArgNames, tContext, tStaticContext, ref tValueSite, ref tActionSite);
             }
-            catch (RuntimeBinderException)
+            catch (RuntimeBinderException tException) when (!InvokeHelper.ExceptionEscapedFromTarget(tException, tTarget))
             {
                 result = null;
-                try
-                {
-                    Dynamic.InvokeAction(CallTarget, tArgs);
-                }
-                catch (RuntimeBinderException)
-                {
-
-                    return false;
-                }
+                return false;
             }
             return true;
         }
@@ -341,23 +336,18 @@ namespace Dynamitey.DynamicObjects
 
             var name = InvokeMemberName.Create;
             var fullName = name(binder.Name, types);
+            var tTarget = CallTarget.GetTargetContext(out var tContext, out var tStaticContext);
+            var tInvokeArgs = Util.GetArgsAndNames(tArgs, out var tArgNames);
+            CallSite? tValueSite = null;
+            CallSite? tActionSite = null;
             try
             {
-                result = Dynamic.InvokeMember(CallTarget, fullName, tArgs);
-               
+                result = InvokeHelper.InvokeMemberUnknownCallSite(tTarget, fullName, tInvokeArgs, tArgNames, tContext, tStaticContext, ref tValueSite, ref tActionSite);
             }
-            catch (RuntimeBinderException)
+            catch (RuntimeBinderException tException) when (!InvokeHelper.ExceptionEscapedFromTarget(tException, tTarget))
             {
                 result = null;
-                try
-                {
-                    Dynamic.InvokeMemberAction(CallTarget, fullName, tArgs);
-                }
-                catch (RuntimeBinderException)
-                {
-
-                    return false;
-                }
+                return false;
             }
             return true;
         }
