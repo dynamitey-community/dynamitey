@@ -83,7 +83,7 @@ var value = Dynamic.InvokeMember(context, "StaticMethod", args);
 ```
 
 > [!WARNING]
-> Binder caches are shared across call sites, so a static-context call can behave differently depending on what ran earlier in the process. Tests that touch static context must control execution order or they can pass for the wrong reason.
+> Binder caches are shared across call sites. Tests that need a cold cache should call `Dynamic.ClearCaches()`.
 
 ## Where to go next
 

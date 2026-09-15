@@ -35,6 +35,6 @@ Reach for `CacheableInvocation` when the same operation runs many times — a ma
 ## Shared cache state
 
 > [!WARNING]
-> Binder caches are shared across call sites. That is what makes reuse fast, and it also means a call's behavior can depend on what ran earlier in the process — particularly for static contexts.
+> Binder caches are shared across call sites. That is what makes reuse fast. Static versus instance context is part of the cache key, so a later call should not pick up the wrong kind of binder from an earlier one.
 >
-> That was the mechanism behind a reported process-order bug (fixed). Any test that touches static context must still control its ordering, or it may pass for the wrong reason.
+> Tests that need a cold cache should call `Dynamic.ClearCaches()` rather than rely on execution order.
