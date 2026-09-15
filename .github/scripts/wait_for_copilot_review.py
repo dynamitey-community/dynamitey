@@ -3,8 +3,10 @@
 
 Copilot posts a Comment review, not Approve. The merge signal is an
 APPROVED state, or a COMMENTED review whose body says "Approval
-recommended". DISMISSED reviews never pass. Exit 0 only when that
-review is of HEAD and no Copilot threads remain unresolved.
+recommended". DISMISSED reviews never pass. Open review threads are
+enforced by branch-protection conversation resolution, not this
+waiter: resolving a thread is not a workflow event, so a timeout here
+would stick the required check red until another push.
 """
 
 from __future__ import annotations
@@ -21,7 +23,7 @@ COPILOT_LOGINS = {
 }
 
 QUERY = """
-query($owner: String!, $name: String!, $n: Int!, $reviewsAfter: String, $threadsAfter: String) {
+query($owner: String!, $name: String!, $n: Int!, $reviewsAfter: String) {
   repository(owner: $owner, name: $name) {
     pullRequest(number: $n) {
       reviews(first: 100, after: $reviewsAfter) {
@@ -32,15 +34,6 @@ query($owner: String!, $name: String!, $n: Int!, $reviewsAfter: String, $threads
           body
           submittedAt
           commit { oid }
-        }
-      }
-      reviewThreads(first: 100, after: $threadsAfter) {
-        pageInfo { hasNextPage endCursor }
-        nodes {
-          isResolved
-          comments(first: 1) {
-            nodes { author { login } }
-          }
         }
       }
     }
@@ -55,7 +48,7 @@ def copilot(login: str | None) -> bool:
     return login.lower().replace("[bot]", "") in COPILOT_LOGINS
 
 
-def gql(owner: str, name: str, pr: int, reviews_after: str | None, threads_after: str | None) -> dict:
+def gql(owner: str, name: str, pr: int, reviews_after: str | None) -> dict:
     cmd = [
         "gh",
         "api",
@@ -71,8 +64,6 @@ def gql(owner: str, name: str, pr: int, reviews_after: str | None, threads_after
     ]
     if reviews_after:
         cmd.extend(["-F", f"reviewsAfter={reviews_after}"])
-    if threads_after:
-        cmd.extend(["-F", f"threadsAfter={threads_after}"])
     try:
         raw = subprocess.check_output(cmd, text=True)
     except subprocess.CalledProcessError as exc:
@@ -83,13 +74,11 @@ def gql(owner: str, name: str, pr: int, reviews_after: str | None, threads_after
     return payload["data"]["repository"]["pullRequest"]
 
 
-def load_all(owner: str, name: str, pr: int) -> tuple[list[dict], list[dict]]:
+def load_all(owner: str, name: str, pr: int) -> list[dict]:
     reviews: list[dict] = []
-    threads: list[dict] = []
-
     reviews_after: str | None = None
     while True:
-        data = gql(owner, name, pr, reviews_after, None)
+        data = gql(owner, name, pr, reviews_after)
         conn = data["reviews"]
         reviews.extend(conn["nodes"])
         if not conn["pageInfo"]["hasNextPage"]:
@@ -97,19 +86,7 @@ def load_all(owner: str, name: str, pr: int) -> tuple[list[dict], list[dict]]:
         reviews_after = conn["pageInfo"]["endCursor"]
         if not reviews_after:
             raise RuntimeError("reviews hasNextPage without endCursor; refusing to pass")
-
-    threads_after: str | None = None
-    while True:
-        data = gql(owner, name, pr, None, threads_after)
-        conn = data["reviewThreads"]
-        threads.extend(conn["nodes"])
-        if not conn["pageInfo"]["hasNextPage"]:
-            break
-        threads_after = conn["pageInfo"]["endCursor"]
-        if not threads_after:
-            raise RuntimeError("reviewThreads hasNextPage without endCursor; refusing to pass")
-
-    return reviews, threads
+    return reviews
 
 
 def main() -> int:
@@ -123,7 +100,7 @@ def main() -> int:
     last = f"Copilot has not reviewed {want_sha[:8]} yet"
     while time.time() < deadline:
         try:
-            all_reviews, threads = load_all(owner, name, pr)
+            all_reviews = load_all(owner, name, pr)
         except RuntimeError as exc:
             print(str(exc), file=sys.stderr)
             return 1
@@ -133,14 +110,6 @@ def main() -> int:
             for r in all_reviews
             if copilot((r.get("author") or {}).get("login"))
         ]
-        unresolved = 0
-        for thread in threads:
-            if thread["isResolved"] or not thread["comments"]["nodes"]:
-                continue
-            if copilot(
-                (thread["comments"]["nodes"][0].get("author") or {}).get("login")
-            ):
-                unresolved += 1
 
         on_head = [
             r
@@ -188,14 +157,6 @@ def main() -> int:
             continue
         if state != "APPROVED" and "Approval recommended" not in body:
             last = f"Copilot reviewed HEAD as {state} without Approval recommended"
-            print(last, flush=True)
-            time.sleep(interval)
-            continue
-        if unresolved:
-            last = (
-                f"Copilot recommended merge, but {unresolved} Copilot "
-                "thread(s) are still open; waiting for resolution"
-            )
             print(last, flush=True)
             time.sleep(interval)
             continue

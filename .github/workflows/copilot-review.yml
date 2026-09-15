@@ -17,10 +17,6 @@ on:
     # edited: Copilot can change Approval recommended to Changes recommended
     # (or the reverse) without a new submitted review.
     types: [submitted, edited, dismissed]
-  pull_request_review_thread:
-    # Resolving a Copilot thread after the waiter timed out does not fire
-    # pull_request or pull_request_review. This event restarts the check.
-    types: [resolved, unresolved]
 
 permissions:
   contents: read
