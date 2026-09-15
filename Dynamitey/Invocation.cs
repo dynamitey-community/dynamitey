@@ -17,7 +17,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Microsoft.CSharp.RuntimeBinder;
+using System.Runtime.CompilerServices;
+using Dynamitey.Internal.Optimization;
 
 namespace Dynamitey
 {
@@ -313,16 +314,11 @@ namespace Dynamitey
                     return null;
                 case InvocationKind.InvokeMemberUnknown:
                     {
-                        try
-                        {
-                            return Dynamic.InvokeMember(target, Name!, args!);
-                        }
-                        catch (RuntimeBinderException)
-                        {
-
-                            Dynamic.InvokeMemberAction(target, Name!, args!);
-                            return null;
-                        }
+                        var tTarget = target.GetTargetContext(out var tContext, out var tStaticContext);
+                        var tArgs = Util.GetArgsAndNames(args ?? Array.Empty<object?>(), out var tArgNames);
+                        CallSite? tValueSite = null;
+                        CallSite? tActionSite = null;
+                        return InvokeHelper.InvokeMemberUnknownCallSite(tTarget, (InvokeMemberName)Name!, tArgs, tArgNames, tContext, tStaticContext, ref tValueSite, ref tActionSite);
                     }
                 case InvocationKind.Invoke:
                     return Dynamic.Invoke(target, args!);
@@ -331,16 +327,11 @@ namespace Dynamitey
                     return null;
                 case InvocationKind.InvokeUnknown:
                     {
-                        try
-                        {
-                            return Dynamic.Invoke(target, args!);
-                        }
-                        catch (RuntimeBinderException)
-                        {
-
-                            Dynamic.InvokeAction(target, args!);
-                            return null;
-                        }
+                        var tTarget = target.GetTargetContext(out var tContext, out var tStaticContext);
+                        var tArgs = Util.GetArgsAndNames(args ?? Array.Empty<object?>(), out var tArgNames);
+                        CallSite? tValueSite = null;
+                        CallSite? tActionSite = null;
+                        return InvokeHelper.InvokeDirectUnknownCallSite(tTarget, tArgs, tArgNames, tContext, tStaticContext, ref tValueSite, ref tActionSite);
                     }
                 case InvocationKind.AddAssign:
                     Dynamic.InvokeAddAssignMember(target, Name!.Name, args!.FirstOrDefault());
