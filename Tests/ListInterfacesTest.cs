@@ -200,6 +200,76 @@ namespace Dynamitey.Tests
             }));
         }
 
+        // Issue #101. RemoveHelper treated a null item as "no item argument", skipped
+        // IndexOf, and removed index 0. Remove(null) must mean "remove a null
+        // element", not "remove the first element". Mutable backing list required:
+        // an array is fixed-size and would mask the defect with NotSupportedException.
+        [Test]
+        public void RemoveNullWhenAbsentLeavesContentsAndReturnsFalse()
+        {
+            var tList = new DynamicObjects.List(new List<object> { "keep", "last" });
+            var tEvents = new List<NotifyCollectionChangedEventArgs>();
+            tList.CollectionChanged += (s, e) => tEvents.Add(e);
+
+            Assert.That(tList.Remove(null), Is.False);
+            Assert.That(tList, Is.EqualTo(new object[] { "keep", "last" }));
+            Assert.That(tEvents, Is.Empty);
+        }
+
+        [Test]
+        public void RemoveNullWhenPresentRemovesTheFirstNull()
+        {
+            var tList = new DynamicObjects.List(new List<object> { "keep", null, "last" });
+            var tEvents = new List<NotifyCollectionChangedEventArgs>();
+            tList.CollectionChanged += (s, e) => tEvents.Add(e);
+
+            Assert.That(tList.Remove(null), Is.True);
+            Assert.That(tList, Is.EqualTo(new object[] { "keep", "last" }));
+            Assert.That(tEvents, Has.Count.EqualTo(1));
+            Assert.That(tEvents[0].Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
+            Assert.That(tEvents[0].OldItems, Is.EqualTo(new object[] { null }));
+            Assert.That(tEvents[0].OldStartingIndex, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void RemoveNullOnEmptyListReturnsFalseWithoutThrowing()
+        {
+            var tList = new DynamicObjects.List(new List<object>());
+
+            Assert.That(tList.Remove(null), Is.False);
+            Assert.That(tList, Is.Empty);
+        }
+
+        [Test]
+        public void RemoveNullThroughGenericAndNonGenericInterfaces()
+        {
+            var tGeneric = (IList<object>)new DynamicObjects.List(new List<object> { "keep", "last" });
+            Assert.That(tGeneric.Remove(null!), Is.False);
+            Assert.That(tGeneric, Is.EqualTo(new object[] { "keep", "last" }));
+
+            var tNonGeneric = (IList)new DynamicObjects.List(new List<object> { "keep", "last" });
+            tNonGeneric.Remove(null);
+            Assert.That(tNonGeneric, Is.EqualTo(new object[] { "keep", "last" }));
+
+            var tGenericWithNull = (IList<object>)new DynamicObjects.List(new List<object> { "keep", null, "last" });
+            Assert.That(tGenericWithNull.Remove(null!), Is.True);
+            Assert.That(tGenericWithNull, Is.EqualTo(new object[] { "keep", "last" }));
+
+            var tNonGenericWithNull = (IList)new DynamicObjects.List(new List<object> { "keep", null, "last" });
+            tNonGenericWithNull.Remove(null);
+            Assert.That(tNonGenericWithNull, Is.EqualTo(new object[] { "keep", "last" }));
+        }
+
+        [Test]
+        public void RemoveAtStillRemovesByIndex()
+        {
+            var tList = new DynamicObjects.List(new List<object> { "keep", "last" });
+
+            tList.RemoveAt(0);
+
+            Assert.That(tList, Is.EqualTo(new object[] { "last" }));
+        }
+
         [Test]
         public void TestEqualsAndHashCode()
         {
