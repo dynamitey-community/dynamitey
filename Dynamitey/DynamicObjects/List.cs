@@ -288,9 +288,12 @@ namespace Dynamitey.DynamicObjects
                 // "no item" made Remove(null) delete index 0 (#101).
                 if (!index.HasValue)
                 {
-                    // IList<object>.IndexOf is annotated non-null; the non-generic
-                    // IList.IndexOf takes object? and is how a null element is found.
-                    index = ((IList)_list).IndexOf(item);
+                    // IList<object>.IndexOf is annotated non-null, but List<object>
+                    // and the public IndexOf above already pass null through it at
+                    // runtime. Do not cast to non-generic IList: the constructor
+                    // keeps any IList<object> the caller supplied, and that
+                    // interface does not inherit IList.
+                    index = _list.IndexOf(item!);
                     if (index < 0)
                         return false;
                 }
