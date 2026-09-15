@@ -336,9 +336,11 @@ namespace Dynamitey
         /// type's public <c>Result</c> property rather than assumed to be <see cref="Task{TResult}"/>
         /// itself, so this also catches a <see cref="Task"/> subclass that declares its own <c>Result</c>.
         /// A plain, non-generic <see cref="Task"/> has no <c>Result</c> property and is never wrapped.
+        /// <see cref="CacheableInvocation"/> uses this same helper for InvokeMember and
+        /// InvokeMemberUnknown so cached dispatch matches <see cref="InvokeMember"/>. ValueTask wrapping is #100.
         /// </summary>
         [RequiresUnreferencedCode("Reads the task's 'Result' property via Type.GetProperty(nameof(Result)) reflection; trimming can remove that property from the task's concrete type.")]
-        private static object? WrapIfResultTypeInaccessible(object? result)
+        internal static object? WrapIfResultTypeInaccessible(object? result)
         {
             if (result is Task task)
             {

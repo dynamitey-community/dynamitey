@@ -309,12 +309,14 @@ namespace Dynamitey
                     InvokeHelper.InvokeSetIndexCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
                     return null;
                 case InvocationKind.InvokeMember:
-                    return InvokeHelper.InvokeMemberCallSite(target, (InvokeMemberName) Name!, args, _argNames, _context, _staticContext, ref _callSite);
+                    return Dynamic.WrapIfResultTypeInaccessible(
+                        InvokeHelper.InvokeMemberCallSite(target, (InvokeMemberName) Name!, args, _argNames, _context, _staticContext, ref _callSite));
                 case InvocationKind.InvokeMemberAction:
                     InvokeHelper.InvokeMemberActionCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite);
                     return null;
                 case InvocationKind.InvokeMemberUnknown:
-                    return InvokeHelper.InvokeMemberUnknownCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite, ref _callSite2);
+                    return Dynamic.WrapIfResultTypeInaccessible(
+                        InvokeHelper.InvokeMemberUnknownCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite, ref _callSite2));
                 case InvocationKind.Invoke:
                     return InvokeHelper.InvokeDirectCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
                 case InvocationKind.InvokeAction:
