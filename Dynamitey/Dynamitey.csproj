@@ -28,7 +28,7 @@
     <LangVersion>latest</LangVersion>
     <Description>(pronounced dyna-mighty) flexes DLR muscle to do meta-mazing things in .net. This package is a community continuation fork; it is not the original `Dynamitey` package published by Ekon Benefits.</Description>
     <Company>The dynamitey-community contributors</Company>
-    <Authors>Ekon Benefits; The dynamitey-community contributors</Authors>
+    <Authors>Jay Tuley; Ekon Benefits; The dynamitey-community contributors</Authors>
     <Copyright>Copyright 2010-2024 Ekon Benefits. Copyright 2026 The dynamitey-community contributors.</Copyright>
     <PackageProjectUrl>https://github.com/dynamitey-community/dynamitey</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dynamitey-community/dynamitey.git</RepositoryUrl>
