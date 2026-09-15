@@ -5,6 +5,6 @@ Last successful `Code coverage` job on `main`. The shipped
 
 | Metric | Value |
 | --- | ---: |
-| Tests | 801 |
-| Line | 95.6% |
+| Tests | 815 |
+| Line | 95.7% |
 | Branch | 85.4% |
