@@ -73,12 +73,19 @@ namespace Dynamitey
         /// </summary>
         /// <param name="kind">The kind.</param>
         /// <param name="name">The name.</param>
-        /// <param name="argCount">The arg count.</param>
+        /// <param name="argCount">
+        /// Expected argument count. When omitted (0), inferred from
+        /// <paramref name="storedArgs"/> or <paramref name="argNames"/>.
+        /// Must match <paramref name="storedArgs"/> length when both are supplied.
+        /// </param>
         /// <param name="argNames">The arg names.</param>
         /// <param name="context">The context.</param>
         /// <param name="convertType">Type of the convert.</param>
         /// <param name="convertExplicit"><c>true</c> to use an explicit conversion, <c>false</c> for an implicit one.</param>
-        /// <param name="storedArgs">The stored args.</param>
+        /// <param name="storedArgs">
+        /// Arguments for <see cref="Invocation.InvokeWithStoredArgs"/>.
+        /// Their length is the argument count when <paramref name="argCount"/> is omitted.
+        /// </param>
         public CacheableInvocation(InvocationKind kind,
                                    String_OR_InvokeMemberName? name=null,
                                    int argCount =0,
@@ -97,7 +104,6 @@ namespace Dynamitey
 
             if (storedArgs != null)
             {
-                _argCount = storedArgs.Length;
                 Args = Util.GetArgsAndNames(storedArgs, out var tArgNames);
                 // GetArgsAndNames returns a null tArgNames when none of storedArgs was an
                 // InvokeArg - i.e. there are no names to merge in, so _argNames is left as-is.
@@ -105,23 +111,33 @@ namespace Dynamitey
                 {
                     _argNames = tArgNames;
                 }
+
+                if (argCount > 0 && argCount != storedArgs.Length)
+                {
+                    throw new ArgumentException(
+                        "argCount must match storedArgs.Length when both are supplied.",
+                        nameof(argCount));
+                }
             }
+
+            var tStoredCount = storedArgs?.Length ?? 0;
+            var tEffectiveCount = Math.Max(argCount, Math.Max(tStoredCount, _argNames.Length));
 
             switch (kind) //Set required argcount values
             {
                 case InvocationKind.GetIndex:
-                    if (argCount < 1)
+                    if (tEffectiveCount < 1)
                     {
                         throw new ArgumentException("Arg Count must be at least 1 for a GetIndex", nameof(argCount));
                     }
-                    _argCount = argCount;
+                    _argCount = tEffectiveCount;
                     break;
                 case InvocationKind.SetIndex:
-                    if (argCount < 2)
+                    if (tEffectiveCount < 2)
                     {
                         throw new ArgumentException("Arg Count Must be at least 2 for a SetIndex", nameof(argCount));
                     }
-                    _argCount = argCount;
+                    _argCount = tEffectiveCount;
                     break;
                 case InvocationKind.Convert:
                     _argCount = 0;
@@ -138,7 +154,7 @@ namespace Dynamitey
                     _argCount = 0;
                     break;
                 default:
-                    _argCount = Math.Max(argCount, _argNames.Length);
+                    _argCount = tEffectiveCount;
                     break;
             }
 
