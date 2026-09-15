@@ -60,9 +60,11 @@ Jira keys. Work is tracked in GitHub issues.
 
 **`main` is protected.** PRs required (0 approvals, so a solo maintainer is not
 locked out), linear history, no force pushes, no deletions, conversation
-resolution required, admins included, and seven required status checks. A merge
-is blocked until every review thread is resolved — including Copilot's, which
-reviews PRs automatically.
+resolution required, admins included. `copilot-review.yml` waits until Copilot's
+latest review of HEAD says approval recommended — Copilot still posts a Comment
+review, not Approve, so the heading is the merge signal — but that job is **not**
+a required status check. A ruleset auto-requests Copilot on each push and on
+drafts. Conversation resolution still applies. See #119.
 
 **Issue labels that carry meaning beyond the default set:**
 
@@ -131,27 +133,30 @@ passes" and "the suite covers the code" are two different gates here.
 
 ## Continuous integration
 
-Three workflows, all pinned to current action majors:
+Workflows, all pinned to current action majors:
 
 | Workflow | Does |
 | --- | --- |
 | `ci.yml` | Four jobs on every run: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test. On `main` only, a fifth job (`Publish README badges`) renders test-count and coverage SVGs onto the `badges` branch — `contents: write` on that job, `GITHUB_TOKEN`, no extra secret. The README points at those files; do not pin the numbers. |
 | `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
 | `dependencies.yml` | Three jobs on **different triggers**: dependency review on PRs only; `dotnet list package --vulnerable --include-transitive` on everything; and **OWASP Dependency-Check** weekly and on demand but never on a PR — a cold-cache scan takes about an hour, and it blocks nothing |
+| `copilot-review.yml` | Waits until Copilot's latest review of HEAD recommends merge. Runs on `pull_request` (including `ready_for_review` and `edited`) and on Copilot's `copilot-pull-request-reviewer` check completing. Not a required status check. See #119 |
+| `docs.yml` | Builds the DocFX site on every pull request (`Build the site` is required); deploys only from `main` |
+| `release.yml` | Manual `workflow_dispatch` dry run: build, test, pack, upload artifacts. No tag trigger and no publish (gated on #8) |
 
 `push` only triggers CI on `main`; `pull_request` covers everything else, which
 is what stops every branch push producing a duplicate run. Do not add branches
 to the `push` trigger without a reason.
 
-**A job existing is not the same as a job gating a merge.** Eight checks are
-required by branch protection: the three `Build and test` legs, `Benchmarks
-compile and run`, `AOT smoke test`, `Analyze C#`, `NuGet audit` and `Dependency
-review`. `Code coverage`, `Publish README badges`, and `OWASP dependency check`
-run but are **not** required, so a red coverage floor does not block a merge
-today. The badges job only runs on `main` anyway, so making it required would
-block every pull request. Adding a check
-to the required list is a repository settings change, separate from adding the
-job — and adding one that cannot report on a pull request would block every pull
+**A job existing is not the same as a job gating a merge.** Branch protection
+requires the three `Build and test` legs, `Benchmarks compile and run`,
+`AOT smoke test`, `Analyze C#`, `NuGet audit`, `Dependency review`, and
+`Build the site`. `Code coverage`, `Publish README badges`, `Copilot review`,
+and `OWASP dependency check` run but are **not** required, so a red coverage
+floor does not block a merge today. The badges job only runs on `main` anyway,
+so making it required would block every pull request. Adding a check to the
+required list is a repository settings change, separate from adding the job —
+and adding one that cannot report on a pull request would block every pull
 request permanently, which is why the OWASP job's trigger and the required list
 have to be considered together.
 

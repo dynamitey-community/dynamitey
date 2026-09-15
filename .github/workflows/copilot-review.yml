@@ -1,0 +1,76 @@
+# Blocks merge until Copilot's latest review of HEAD recommends it.
+#
+# Copilot still posts a Comment review, not Approve (that preview toggle is
+# off, and raising required approvals to 1 would lock out the solo maintainer).
+# Conversation resolution is already required, but Copilot often finishes at
+# or after merge — so unresolved 🟡 comments land on main. This check waits
+# for the review of the current head SHA and fails on "Changes recommended",
+# a failed review, or a timeout. See #119.
+name: Copilot review
+
+on:
+  pull_request:
+    # Defaults plus ready_for_review and edited: a draft timeout or a
+    # retargeted base must start a run so the required check is not pending
+    # forever with no synchronize.
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  # pull_request_review is intentionally not configured: Copilot's review
+  # event is marked action_required, which left PRs UNSTABLE. Re-evaluate
+  # when the Copilot agent check_run copilot-pull-request-reviewer completes
+  # instead. A review edited without a new agent run is not observed.
+  check_run:
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  # Include the triggering SHA so a late Copilot check for H1 cannot
+  # cancel the waiter already running for H2.
+  group: copilot-review-${{ github.event.pull_request.number || github.event.check_run.pull_requests[0].number }}-${{ github.event.pull_request.head.sha || github.event.check_run.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  copilot-review:
+    name: Copilot review
+    if: >
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'check_run' &&
+       github.event.check_run.name == 'copilot-pull-request-reviewer' &&
+       github.event.check_run.head_sha == github.event.check_run.pull_requests[0].head.sha)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Fail if Copilot's agent check failed
+        if: github.event_name == 'check_run' && github.event.check_run.conclusion != 'success'
+        run: |
+          echo "copilot-pull-request-reviewer concluded ${{ github.event.check_run.conclusion }}"
+          exit 1
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # Once this file exists on main, ignore a PR that rewrites the waiter.
+      # The workflow YAML itself still comes from the pull_request event; a
+      # ruleset required-workflow from main is the remaining lock and can be
+      # added after this lands on the default branch.
+      - name: Prefer the gate script from the base branch
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.check_run.pull_requests[0].base.sha }}
+        run: |
+          git fetch --depth=1 origin "$BASE_SHA"
+          if git cat-file -e "${BASE_SHA}:.github/scripts/wait_for_copilot_review.py"; then
+            git checkout "$BASE_SHA" -- .github/scripts/wait_for_copilot_review.py
+          fi
+
+      - name: Wait for Copilot to recommend merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.check_run.pull_requests[0].number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.check_run.pull_requests[0].head.sha }}
+          TIMEOUT_SECONDS: "900"
+          POLL_SECONDS: "20"
+        run: python3 .github/scripts/wait_for_copilot_review.py
