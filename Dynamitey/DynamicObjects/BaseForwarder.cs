@@ -468,8 +468,9 @@ namespace Dynamitey.DynamicObjects
                 return false;
             }
 
-            var tCombinedArgs = indexes!.Concat(new[] { value }).ToArray();
-            object?[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, tCombinedArgs);
+            // CallInfo names the indexes only. Name those first, then append
+            // the setter value; combining first then naming drops the value (#106).
+            object?[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, indexes!).Concat(new[] { value }).ToArray();
             try
             {
 
