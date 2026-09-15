@@ -192,8 +192,12 @@ namespace Dynamitey
                 return true;
             }
             var tInvokeDirect = String.IsNullOrWhiteSpace(_memberName);
+            // Names live on stored InvokeArg values as well as this binder.
+            // CacheableInvocation / FastDynamicInvoke ignore those wrappers (#105).
+            var tHasNames = binder.CallInfo.ArgumentNames.Count > 0
+                            || tNewArgs.OfType<InvokeArg>().Any();
 
-            if (tInvokeDirect && binder.CallInfo.ArgumentNames.Count == 0 && _target is Delegate tDel)
+            if (tInvokeDirect && !tHasNames && _target is Delegate tDel)
             //Optimization for direct delegate calls
             {
                 result = tDel.FastDynamicInvoke(tNewArgs);
@@ -202,7 +206,7 @@ namespace Dynamitey
 
 
             Invocation tInvocation;
-            if (binder.CallInfo.ArgumentNames.Count == 0) //If no argument names we can cache the callsite
+            if (!tHasNames) //If no argument names we can cache the callsite
             {
                 if (!_cacheableInvocation.TryGetValue(tNewArgs.Length, out var tCacheableInvocation))
                 {
