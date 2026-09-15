@@ -12,8 +12,13 @@ using System.Collections.Generic;
 namespace Dynamitey
 {
     /// <summary>
-    /// Cacheable representation of an invocation without the target or arguments  also by default only does public methods to make it easier to cache.
-    ///  /// </summary>
+    /// Cacheable representation of an invocation without the target or arguments.
+    /// By default only public members are bound, which makes the CallSite easier to reuse.
+    /// Accessibility and static context are taken from the constructor
+    /// <c>context</c> argument and are not updated if <see cref="Invoke"/> is later
+    /// passed an <see cref="InvokeContext"/>; that wrapper is unwrapped to its
+    /// <see cref="InvokeContext.Target"/> only.
+    /// </summary>
 
     public class CacheableInvocation:Invocation
     {
@@ -285,7 +290,7 @@ namespace Dynamitey
                 case InvocationKind.GetIndex:
                     return InvokeHelper.InvokeGetIndexCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
                 case InvocationKind.SetIndex:
-                    Dynamic.InvokeSetIndex(target, args);
+                    InvokeHelper.InvokeSetIndexCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
                     return null;
                 case InvocationKind.InvokeMember:
                     return InvokeHelper.InvokeMemberCallSite(target, (InvokeMemberName) Name!, args, _argNames, _context, _staticContext, ref _callSite);
