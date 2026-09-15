@@ -146,7 +146,6 @@ def main() -> int:
             r
             for r in reviews
             if ((r.get("commit") or {}).get("oid") or "").lower() == want_sha
-            and (r.get("state") or "") != "DISMISSED"
         ]
         on_head.sort(key=lambda r: r.get("submittedAt") or "")
         latest = on_head[-1] if on_head else None
