@@ -665,7 +665,36 @@ namespace Dynamitey.Internal.Optimization
             throw new RuntimeBinderException($"'{targetType}' does not contain an accessible definition for '{name}'");
         }
 
+        [RequiresUnreferencedCode("Converts 'value' to memberType via Binder.Convert; trimming can remove a user-defined conversion.")]
+        [RequiresDynamicCode("Binder.Convert requires the DLR's runtime code generation; not supported when AOT-compiled.")]
+        private static object? ConvertForStaticAssignment(Type memberType, object? value, Type context)
+        {
+            // FieldInfo/PropertyInfo.SetValue does not apply C# implicit conversions
+            // (#103): int-to-decimal throws, and null-to-int writes default(T).
+            // Binder.Convert is the same implicit-conversion rule instance Set uses.
+            // This is not the get_/set_ InvokeMember path that #31 poisons.
+            if (value is null)
+            {
+                if (memberType.IsValueType && Nullable.GetUnderlyingType(memberType) is null)
+                {
+                    throw new RuntimeBinderException(
+                        $"Cannot convert null to '{memberType}' because it is a non-nullable value type");
+                }
+
+                return null;
+            }
+
+            if (memberType.IsInstanceOfType(value))
+            {
+                return value;
+            }
+
+            CallSite? tCallSite = null;
+            return InvokeConvertCallSite(value, explict: false, memberType, context, ref tCallSite);
+        }
+
         [RequiresUnreferencedCode("Resolves 'name' via reflection against the static members of the target type; trimming can remove the member being resolved.")]
+        [RequiresDynamicCode("Converts the assigned value through Binder.Convert; not supported when AOT-compiled.")]
         private static void SetStaticMemberByReflection(Type targetType, string name, Type context, object? value)
         {
             // Same accessibility gate as GetStaticMemberByReflection above.
@@ -674,14 +703,14 @@ namespace Dynamitey.Internal.Optimization
             var tField = targetType.GetField(name, StaticMemberFlags);
             if (tField != null && (tField.IsPublic || tContextOwnsPrivateAccess))
             {
-                tField.SetValue(null, value);
+                tField.SetValue(null, ConvertForStaticAssignment(tField.FieldType, value, context));
                 return;
             }
 
             var tProperty = targetType.GetProperty(name, StaticMemberFlags);
             if (tProperty?.SetMethod != null && (tProperty.SetMethod.IsPublic || tContextOwnsPrivateAccess))
             {
-                tProperty.SetValue(null, value);
+                tProperty.SetValue(null, ConvertForStaticAssignment(tProperty.PropertyType, value, context));
                 return;
             }
 
