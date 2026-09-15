@@ -14,6 +14,8 @@ tuple manipulation, and duck-typed proxies.
 
 ## What this repository is
 
+**Jay Tuley ([@jbtule](https://github.com/jbtule)) wrote Dynamitey.** He started it around 2010 and designed the late-binding surface this repository still ships.
+
 **This is a community continuation of [`ekonbenefits/dynamitey`](https://github.com/ekonbenefits/dynamitey), which has been dormant since its 3.0.3 release in November 2023.**
 
 It is a *detached* fork rather than a GitHub network fork — created by
