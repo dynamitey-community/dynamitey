@@ -37,4 +37,4 @@ Reach for `CacheableInvocation` when the same operation runs many times — a ma
 > [!WARNING]
 > Binder caches are shared across call sites. That is what makes reuse fast, and it also means a call's behavior can depend on what ran earlier in the process — particularly for static contexts.
 >
-> This is not theoretical: it is the mechanism behind a reported bug where results changed depending on execution order. Any test that touches static context must control its ordering, or it may pass for the wrong reason.
+> That was the mechanism behind a reported process-order bug (fixed). Any test that touches static context must still control its ordering, or it may pass for the wrong reason.

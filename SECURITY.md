@@ -56,8 +56,9 @@ defects:
   names as you would treat SQL: never build them from untrusted input.
 - **The library is not trim-safe or AOT-safe and never will be.** Trimming a
   consuming application can remove members this library resolves at runtime,
-  turning a working call into a runtime failure. Tracked as
-  [#4](https://github.com/dynamitey-community/dynamitey/issues/4).
+  turning a working call into a runtime failure. The public surface carries
+  `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]` so that fails at
+  build time ([#4](https://github.com/dynamitey-community/dynamitey/issues/4)).
 
 Reports that this library will invoke whatever member it is asked to invoke are
 not vulnerabilities. Reports that it can be made to invoke something it was

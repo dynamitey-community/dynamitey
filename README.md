@@ -48,9 +48,10 @@ or reserve a package ID.
 **If there is no reply by 2026-09-26**, the block lifts and 4.0.0 publishes as
 `Dynamitey.Community`. The reasoning behind that date, and what happens either
 way, is recorded on
-[#8](https://github.com/dynamitey-community/dynamitey/issues/8). The package
-identity question that comes with it is
-[#3](https://github.com/dynamitey-community/dynamitey/issues/3).
+[#8](https://github.com/dynamitey-community/dynamitey/issues/8). Package and
+assembly identity are already `Dynamitey.Community`
+([#3](https://github.com/dynamitey-community/dynamitey/issues/3)); only the
+NuGet push is gated.
 
 If you depend on Dynamitey today, keep using upstream's 3.0.3. This repository
 is where the work to move it forward is happening, not yet where you get it.
@@ -104,10 +105,10 @@ repository's own test project does exactly that.
 | --- | --- |
 | Target frameworks | `netstandard2.0;net10.0` — `net40` dropped |
 | Tests | `net10.0`, NUnit 4, green on Linux, macOS and Windows |
-| CI | Rebuilt: build and test on three platforms, code coverage with enforced floors, CodeQL, dependency review, NuGet audit, OWASP Dependency-Check, and AOT and benchmark smoke jobs |
+| CI | Rebuilt: build and test on three platforms, code coverage with enforced floors, CodeQL, dependency review, NuGet audit, OWASP Dependency-Check, DocFX site, and AOT and benchmark smoke jobs |
 | Static analysis | .NET analyzers at `AnalysisMode=All`, plus Roslynator, SonarAnalyzer, AsyncFixer, IDisposableAnalyzers and PublicApiAnalyzers. Every remaining suppression carries a written reason |
 | Public API | Frozen by `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` — a change to the public surface fails the build until it is declared |
-| Coverage | 90%+ of lines and 80%+ of branches, enforced in CI |
+| Coverage | Floors in CI (`MIN_LINE` 95, `MIN_BRANCH` 84 in `ci.yml`), measuring the shipped `Dynamitey.Community` assembly only |
 | Benchmarks | The old wall-clock `SpeedTest` fixture is now a BenchmarkDotNet project |
 | Dependencies | All current; no known vulnerable or deprecated packages |
 
@@ -141,9 +142,9 @@ this fork's retarget and cannot cover what 4.0.0 changed.
 
 ### Awaiting a result whose type you cannot see
 
-If you invoke an async method whose `Task<T>` has a `T` that is internal to
-another assembly — the exact situation this library exists to reach into —
-`await Dynamic.InvokeMember(...)` just works:
+If you invoke an async method whose `Task<T>` or `ValueTask<T>` has a `T` that
+is internal to another assembly — the exact situation this library exists to
+reach into — `await Dynamic.InvokeMember(...)` just works:
 
 ```csharp
 // Works
@@ -153,15 +154,16 @@ var result = await Dynamic.InvokeMember(target, "SomeInternalAsyncMethod", args)
 `await` on a `dynamic` compiles to dynamic calls to `GetAwaiter`, `IsCompleted`
 and `GetResult`, which the C# runtime binder resolves in *your* assembly's
 accessibility context — it cannot hand you a value of a type you cannot see.
-`Dynamic.InvokeMember` detects this case (a `Task<T>` whose `T` is not visible
-outside its declaring assembly) and returns the result wrapped in an
-`AwaitableResult` instead of the raw task. Every member the dynamic `await`
-pattern needs on that wrapper is declared publicly, with `GetResult` returning
-`object` rather than `T`, so the binder never needs to see the inaccessible
-type. Faults and cancellation still propagate normally — the original
-exception, never wrapped in an `AggregateException`. A `Task<T>` whose `T` is
-public (or a nested public type, or a plain non-generic `Task`) is returned
-completely unchanged.
+`Dynamic.InvokeMember` detects this case (a `Task<T>` or `ValueTask<T>` whose
+`T` is not visible outside its declaring assembly) and returns the result
+wrapped in an `AwaitableResult` instead of the raw task. An inaccessible
+`ValueTask<T>` is converted with `AsTask()` first. Every member the dynamic
+`await` pattern needs on that wrapper is declared publicly, with `GetResult`
+returning `object` rather than `T`, so the binder never needs to see the
+inaccessible type. Faults and cancellation still propagate normally — the
+original exception, never wrapped in an `AggregateException`. A `Task<T>` or
+`ValueTask<T>` whose `T` is public (or a nested public type, or a plain
+non-generic `Task`) is returned completely unchanged.
 
 `Dynamic.InvokeMemberAsync` is still supported for callers who prefer a single
 non-dynamic `Task<object>`-returning call, without an intermediate `dynamic`
@@ -238,7 +240,7 @@ dotnet test Tests/Tests.csproj -c Release \
   --settings coverlet.runsettings --collect:"XPlat Code Coverage"
 ```
 
-`coverlet.runsettings` restricts the report to the `Dynamitey` assembly, which
+`coverlet.runsettings` restricts the report to `[Dynamitey.Community]*`, which
 is the figure CI measures — without it the number also covers `SupportLibrary`,
 a fixture that exists only to be called from tests.
 
@@ -271,7 +273,7 @@ To report a security problem, do **not** open a public issue. See
 
 ## License and attribution
 
-Apache License 2.0. See [License.txt](LICENSE) and [NOTICE](NOTICE).
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 Dynamitey was created and maintained by Ekon Benefits. This fork retains that
 copyright and adds its own for changes made after `upstream-baseline`, as

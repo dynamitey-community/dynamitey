@@ -32,11 +32,10 @@ both .NET Framework and modern .NET from one assembly, and upstream has 53
 dependent packages. Please do not "simplify" it away.
 
 **Call-site caching is shared across sites.** `BinderHash.cs` and
-`CacheableInvocation.cs` mean behavior can depend on what ran earlier in the
-process — see
-[#13](https://github.com/dynamitey-community/dynamitey/issues/13). A test
-touching static context must control its own ordering or it will pass for the
-wrong reason.
+`CacheableInvocation.cs` mean a test touching static context must control its
+own ordering or it can pass for the wrong reason. That was the mechanism behind
+[#13](https://github.com/dynamitey-community/dynamitey/issues/13) (fixed); the
+cache is still process-wide.
 
 **Never push to the upstream repository.** The `upstream` remote here is
 fetch-only by design. Please also avoid *clickable* links to upstream issues or
