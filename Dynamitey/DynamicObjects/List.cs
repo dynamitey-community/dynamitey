@@ -281,19 +281,23 @@ namespace Dynamitey.DynamicObjects
 
         private bool RemoveHelper(object? item = null, int? index = null)
         {
-      
             lock (ListLock)
             {
-                if (item != null)
+                // Distinguish RemoveAt (index supplied) from Remove(item) by whether
+                // index was passed, not by whether item is null. Treating null as
+                // "no item" made Remove(null) delete index 0 (#101).
+                if (!index.HasValue)
                 {
-                    index = _list.IndexOf(item);
+                    // IList<object>.IndexOf is annotated non-null; the non-generic
+                    // IList.IndexOf takes object? and is how a null element is found.
+                    index = ((IList)_list).IndexOf(item);
                     if (index < 0)
                         return false;
                 }
 
-                item  = item ?? _list[index.GetValueOrDefault()];
-                _list.RemoveAt(index.GetValueOrDefault());
-            } 
+                item = _list[index.Value];
+                _list.RemoveAt(index.Value);
+            }
             OnCollectionChanged(NotifyCollectionChangedAction.Remove, oldItem: item, oldIndex: index);
 
             return true;
