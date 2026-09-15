@@ -57,8 +57,10 @@ Summary of the changes made after that point, at the time of writing:
   - The test suite was moved to NUnit 4, and its wall-clock performance
     fixture was moved out of the test suite into a separate benchmark project.
   - The public API is frozen by PublicAPI analyzers. Dynamic-dispatch entry
-    points carry RequiresUnreferencedCode and RequiresDynamicCode; a few
-    members that do not bind through the DLR are exempt.
+    points carry RequiresUnreferencedCode and RequiresDynamicCode.
+    ClearCaches and GenericDelegateType carry neither. AwaitResult carries
+    RequiresUnreferencedCode only (it reflects Task.Result; it does not use
+    the DLR).
   - Four ported upstream reports were fixed in source (#11, #12, #13, #16).
     Two were closed as unreproducible (#14, #15). Later dispatch defects in
     this continuation were also fixed (static members, events, CallSite cache

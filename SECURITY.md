@@ -59,8 +59,9 @@ defects:
   turning a working call into a runtime failure. Dynamic-dispatch entry points
   carry `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]` so that fails
   at build time ([#4](https://github.com/dynamitey-community/dynamitey/issues/4)).
-  A few public members that do not bind through the DLR (`ClearCaches`,
-  `GenericDelegateType`; `AwaitResult` is reflection-only) are exempt.
+  `ClearCaches` and `GenericDelegateType` carry neither attribute.
+  `AwaitResult` still has `[RequiresUnreferencedCode]` because it reflects
+  over `Task.Result`; it does not have `[RequiresDynamicCode]`.
 
 Reports that this library will invoke whatever member it is asked to invoke are
 not vulnerabilities. Reports that it can be made to invoke something it was
