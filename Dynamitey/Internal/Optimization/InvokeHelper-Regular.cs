@@ -684,7 +684,7 @@ namespace Dynamitey.Internal.Optimization
                 return true;
             }
 
-            if (SharesPrivateScope(context, declaringType))
+            if (ContextIsDeclaringTypeOrNestedInIt(context, declaringType))
             {
                 return true;
             }
@@ -720,9 +720,12 @@ namespace Dynamitey.Internal.Optimization
             return false;
         }
 
-        private static bool SharesPrivateScope(Type left, Type right)
+        // Nested types can read enclosing private members. The reverse is not
+        // C#: the enclosing type is not in the nested type's family and cannot
+        // see its private/protected members. Direction is context → declaring.
+        private static bool ContextIsDeclaringTypeOrNestedInIt(Type context, Type declaringType)
         {
-            return left == right || IsNestedIn(left, right) || IsNestedIn(right, left);
+            return context == declaringType || IsNestedIn(context, declaringType);
         }
 
         private static bool IsNestedIn(Type nested, Type enclosing)
@@ -1117,19 +1120,20 @@ namespace Dynamitey.Internal.Optimization
         [RequiresUnreferencedCode("Resolves 'name' via reflection against the static events of the target type; trimming can remove the member being resolved.")]
         private static bool IsStaticEventByReflection(Type targetType, string name, Type context)
         {
-            return GetAccessibleStaticEvent(targetType, name, context) is not null;
+            return GetAccessibleStaticEvent(targetType, name, context, forRemove: false) is not null;
         }
 
         [RequiresUnreferencedCode("Resolves 'name' via reflection against the static events of the target type; trimming can remove the member being resolved.")]
-        private static EventInfo? GetAccessibleStaticEvent(Type targetType, string name, Type context)
+        private static EventInfo? GetAccessibleStaticEvent(Type targetType, string name, Type context, bool forRemove)
         {
             var tEvent = targetType.GetEvent(name, StaticMemberFlags);
-            if (tEvent?.AddMethod is null)
+            var tAccessor = forRemove ? tEvent?.RemoveMethod : tEvent?.AddMethod;
+            if (tAccessor is null)
             {
                 return null;
             }
 
-            if (ContextCanAccess(context, tEvent.AddMethod))
+            if (ContextCanAccess(context, tAccessor))
             {
                 return tEvent;
             }
@@ -1140,7 +1144,7 @@ namespace Dynamitey.Internal.Optimization
         [RequiresUnreferencedCode("Calls GetAccessibleStaticEvent; trimming can remove the event being resolved.")]
         private static void AddStaticEventByReflection(Type targetType, string name, Type context, object? handler)
         {
-            var tEvent = GetAccessibleStaticEvent(targetType, name, context)
+            var tEvent = GetAccessibleStaticEvent(targetType, name, context, forRemove: false)
                          ?? throw new RuntimeBinderException($"'{targetType}' does not contain an accessible definition for '{name}'");
             // AddEventHandler requires a public add accessor. Protected add
             // (derived-context #108) is invoked directly.
@@ -1150,9 +1154,9 @@ namespace Dynamitey.Internal.Optimization
         [RequiresUnreferencedCode("Calls GetAccessibleStaticEvent; trimming can remove the event being resolved.")]
         private static void RemoveStaticEventByReflection(Type targetType, string name, Type context, object? handler)
         {
-            var tEvent = GetAccessibleStaticEvent(targetType, name, context)
+            var tEvent = GetAccessibleStaticEvent(targetType, name, context, forRemove: true)
                          ?? throw new RuntimeBinderException($"'{targetType}' does not contain an accessible definition for '{name}'");
-            tEvent.RemoveMethod?.Invoke(null, new object?[] { handler });
+            tEvent.RemoveMethod!.Invoke(null, new object?[] { handler });
         }
 
         [RequiresUnreferencedCode("Resolves 'name' via Binder.IsEvent for an instance context, or via reflection for a static context; trimming can remove the member being resolved.")]

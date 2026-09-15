@@ -822,4 +822,21 @@ namespace Dynamitey.SupportLibrary
         }
     }
 
+    /// <summary>
+    /// For issue #108. Cross-assembly accessibility of <c>protected internal</c>
+    /// and <c>private protected</c> static members. Tests derive from this type
+    /// in another assembly.
+    /// </summary>
+    public class Issue108CrossAssemblyBase
+    {
+        protected internal static int ProtectedInternal { get; set; } = 6;
+        private protected static int PrivateProtected { get; set; } = 5;
+
+        public static void Reset()
+        {
+            ProtectedInternal = 6;
+            PrivateProtected = 5;
+        }
+    }
+
 }

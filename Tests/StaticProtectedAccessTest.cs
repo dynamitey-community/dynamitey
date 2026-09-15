@@ -3,6 +3,7 @@
 // has protected access to the base static member. Private must stay rejected
 // from derived and unrelated contexts. Types here exist only for this fixture.
 using System;
+using Dynamitey.SupportLibrary;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
 
@@ -17,6 +18,10 @@ namespace Dynamitey.Tests
             Issue108Outer.Reset();
             Issue108InternalHolder.Value = 4;
             Issue108ProtectedEvent.Handlers = null;
+            Issue108PiLocal.Reset();
+            Issue108PpLocal.Reset();
+            Issue108CrossAssemblyBase.Reset();
+            Issue108NestHost.Nested.Reset();
         }
 
         [Test]
@@ -86,6 +91,63 @@ namespace Dynamitey.Tests
                 typeof(Issue108InternalHolder), typeof(Issue108Unrelated));
 
             Assert.That(Dynamic.InvokeGet(tContext, "Value"), Is.EqualTo(4));
+        }
+
+        [Test]
+        public void EnclosingTypeCannotGetNestedPrivateStatic()
+        {
+            var tContext = InvokeContext.CreateStaticWithContext(
+                typeof(Issue108NestHost.Nested), typeof(Issue108NestHost));
+
+            Assert.That(() => Dynamic.InvokeGet(tContext, "Hidden"),
+                Throws.InstanceOf<RuntimeBinderException>());
+        }
+
+        [Test]
+        public void SameAssemblyUnrelatedContextCanGetProtectedInternal()
+        {
+            var tContext = InvokeContext.CreateStaticWithContext(
+                typeof(Issue108PiLocal), typeof(Issue108Unrelated));
+
+            Assert.That(Dynamic.InvokeGet(tContext, "Value"), Is.EqualTo(8));
+        }
+
+        [Test]
+        public void SameAssemblyDerivedContextCanGetPrivateProtected()
+        {
+            var tContext = InvokeContext.CreateStaticWithContext(
+                typeof(Issue108PpLocal), typeof(Issue108PpDerived));
+
+            Assert.That(Dynamic.InvokeGet(tContext, "Value"), Is.EqualTo(5));
+        }
+
+        [Test]
+        public void CrossAssemblyDerivedContextCanGetProtectedInternal()
+        {
+            var tContext = InvokeContext.CreateStaticWithContext(
+                typeof(Issue108CrossAssemblyBase), typeof(Issue108CrossDerived));
+
+            Assert.That(Dynamic.InvokeGet(tContext, "ProtectedInternal"), Is.EqualTo(6));
+        }
+
+        [Test]
+        public void CrossAssemblyDerivedContextCannotGetPrivateProtected()
+        {
+            var tContext = InvokeContext.CreateStaticWithContext(
+                typeof(Issue108CrossAssemblyBase), typeof(Issue108CrossDerived));
+
+            Assert.That(() => Dynamic.InvokeGet(tContext, "PrivateProtected"),
+                Throws.InstanceOf<RuntimeBinderException>());
+        }
+
+        [Test]
+        public void CrossAssemblyUnrelatedContextCannotGetProtectedInternal()
+        {
+            var tContext = InvokeContext.CreateStaticWithContext(
+                typeof(Issue108CrossAssemblyBase), typeof(Issue108Unrelated));
+
+            Assert.That(() => Dynamic.InvokeGet(tContext, "ProtectedInternal"),
+                Throws.InstanceOf<RuntimeBinderException>());
         }
 
         [Test]
@@ -166,6 +228,47 @@ namespace Dynamitey.Tests
     }
 
     public class Issue108DerivedEvent : Issue108ProtectedEvent
+    {
+    }
+
+    public class Issue108NestHost
+    {
+        public class Nested
+        {
+            private static int Hidden { get; set; } = 9;
+
+            public static void Reset()
+            {
+                Hidden = 9;
+            }
+        }
+    }
+
+    public class Issue108PiLocal
+    {
+        protected internal static int Value { get; set; } = 8;
+
+        public static void Reset()
+        {
+            Value = 8;
+        }
+    }
+
+    public class Issue108PpLocal
+    {
+        private protected static int Value { get; set; } = 5;
+
+        public static void Reset()
+        {
+            Value = 5;
+        }
+    }
+
+    public class Issue108PpDerived : Issue108PpLocal
+    {
+    }
+
+    public class Issue108CrossDerived : Issue108CrossAssemblyBase
     {
     }
 }
