@@ -331,13 +331,15 @@ namespace Dynamitey
 
         /// <summary>
         /// Wraps <paramref name="result"/> in an <see cref="AwaitableResult"/> when it is a
-        /// <see cref="Task{TResult}"/> whose <c>TResult</c> is not visible to callers outside its declaring
-        /// assembly; otherwise returns it unchanged. <c>TResult</c>'s visibility is read off the runtime
-        /// type's public <c>Result</c> property rather than assumed to be <see cref="Task{TResult}"/>
-        /// itself, so this also catches a <see cref="Task"/> subclass that declares its own <c>Result</c>.
-        /// A plain, non-generic <see cref="Task"/> has no <c>Result</c> property and is never wrapped.
-        /// <see cref="CacheableInvocation"/> uses this same helper for InvokeMember and
-        /// InvokeMemberUnknown so cached dispatch matches <see cref="InvokeMember"/>. ValueTask wrapping is #100.
+        /// <see cref="Task{TResult}"/> or a <c>ValueTask&lt;TResult&gt;</c> whose <c>TResult</c> is not
+        /// visible to callers outside its declaring assembly; otherwise returns it unchanged.
+        /// <c>TResult</c>'s visibility is read off the runtime type's public <c>Result</c> property rather
+        /// than assumed to be <see cref="Task{TResult}"/> itself, so this also catches a
+        /// <see cref="Task"/> subclass that declares its own <c>Result</c>. A plain, non-generic
+        /// <see cref="Task"/> has no <c>Result</c> property and is never wrapped. An inaccessible
+        /// <c>ValueTask&lt;TResult&gt;</c> is converted with <c>AsTask()</c> then wrapped, so
+        /// <see cref="AwaitableResult"/> stays Task-based. <see cref="CacheableInvocation"/> uses this
+        /// same helper for InvokeMember and InvokeMemberUnknown.
         /// </summary>
         [RequiresUnreferencedCode("Reads the task's 'Result' property via Type.GetProperty(nameof(Result)) reflection; trimming can remove that property from the task's concrete type.")]
         internal static object? WrapIfResultTypeInaccessible(object? result)
@@ -348,6 +350,29 @@ namespace Dynamitey
                 if (resultProperty != null && !resultProperty.PropertyType.IsVisible)
                 {
                     return new AwaitableResult(task);
+                }
+
+                return result;
+            }
+
+            // ValueTask<T> is not in netstandard2.0's BCL. Detect by name so this
+            // assembly does not take a System.Threading.Tasks.Extensions dependency.
+            if (result is not null)
+            {
+                var tType = result.GetType();
+                if (tType.IsGenericType
+                    && tType.Namespace == "System.Threading.Tasks"
+                    && tType.Name == "ValueTask`1")
+                {
+                    var resultProperty = tType.GetProperty("Result");
+                    if (resultProperty != null && !resultProperty.PropertyType.IsVisible)
+                    {
+                        var tAsTask = tType.GetMethod("AsTask", Type.EmptyTypes);
+                        if (tAsTask?.Invoke(result, null) is Task tValueTaskAsTask)
+                        {
+                            return new AwaitableResult(tValueTaskAsTask);
+                        }
+                    }
                 }
             }
 

@@ -126,6 +126,17 @@ namespace Dynamitey.SupportLibrary
             await Task.Delay(1);
             return new InternalResult { Value = value };
         }
+
+        public async ValueTask<InternalResult> GetInternalValueTaskAsync(string value)
+        {
+            await Task.Delay(1);
+            return new InternalResult { Value = value };
+        }
+
+        public ValueTask<InternalResult> GetCompletedInternalValueTaskAsync(string value)
+        {
+            return new ValueTask<InternalResult>(new InternalResult { Value = value });
+        }
     }
 
     // For issue #16's scoped-wrapper fix: T (string) is public here, so this is the
@@ -134,6 +145,12 @@ namespace Dynamitey.SupportLibrary
     internal class PublicAsyncResultPoco
     {
         public async Task<string> GetPublicResultAsync(string value)
+        {
+            await Task.Delay(1);
+            return value;
+        }
+
+        public async ValueTask<string> GetPublicValueTaskAsync(string value)
         {
             await Task.Delay(1);
             return value;
