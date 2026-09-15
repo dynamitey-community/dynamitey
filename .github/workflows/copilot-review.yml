@@ -10,8 +10,17 @@ name: Copilot review
 
 on:
   pull_request:
+    # Defaults plus ready_for_review: a draft that timed out before Copilot
+    # finished would otherwise stay red after the PR is marked ready.
+    types: [opened, synchronize, reopened, ready_for_review]
   pull_request_review:
-    types: [submitted, dismissed]
+    # edited: Copilot can change Approval recommended to Changes recommended
+    # (or the reverse) without a new submitted review.
+    types: [submitted, edited, dismissed]
+  pull_request_review_thread:
+    # Resolving a Copilot thread after the waiter timed out does not fire
+    # pull_request or pull_request_review. This event restarts the check.
+    types: [resolved, unresolved]
 
 permissions:
   contents: read
