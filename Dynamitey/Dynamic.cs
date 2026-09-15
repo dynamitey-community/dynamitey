@@ -307,12 +307,15 @@ namespace Dynamitey
         /// </code>
         /// </example>
         /// <remarks>
-        /// If the invoked member's result is a <see cref="Task{TResult}"/> whose <c>TResult</c> is not
-        /// visible to the calling assembly (see <see cref="Type.IsVisible"/>), the result is wrapped in an
+        /// If the invoked member's result is a <see cref="Task{TResult}"/> or a
+        /// <c>ValueTask&lt;TResult&gt;</c> whose <c>TResult</c> is not visible to the calling assembly
+        /// (see <see cref="Type.IsVisible"/>), the result is wrapped in an
         /// <see cref="AwaitableResult"/> instead of being returned directly, so that
         /// <c>await Dynamic.InvokeMember(...)</c> succeeds instead of throwing
-        /// <see cref="Microsoft.CSharp.RuntimeBinder.RuntimeBinderException"/>. Every other result -
-        /// including a plain <see cref="Task"/>, or a <see cref="Task{TResult}"/> whose <c>TResult</c> is
+        /// <see cref="Microsoft.CSharp.RuntimeBinder.RuntimeBinderException"/>. An inaccessible
+        /// <c>ValueTask&lt;TResult&gt;</c> is converted with <c>AsTask()</c> first.
+        /// Every other result - including a plain <see cref="Task"/>, or a
+        /// <see cref="Task{TResult}"/> / <c>ValueTask&lt;TResult&gt;</c> whose <c>TResult</c> is
         /// visible - is returned unchanged. See <see cref="AwaitableResult"/> for why this is safe.
         /// </remarks>
         [RequiresUnreferencedCode("Resolves 'name' on target's runtime type via the DLR binder; if trimming has removed the member, this throws RuntimeBinderException reporting the member as entirely absent, even when the untrimmed source plainly declares it.")]
