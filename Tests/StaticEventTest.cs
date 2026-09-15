@@ -112,10 +112,14 @@ namespace Dynamitey.Tests
 
     public class Issue97PrivateStaticEvent
     {
+        // Named only for Dynamic.InvokeIsEvent via reflection. Nothing in this
+        // fixture subscribes in C#, which is CS0067; the test is the reference.
+#pragma warning disable CS0067
         private static event EventHandler<EventArgs> Hidden
         {
             add { }
             remove { }
         }
+#pragma warning restore CS0067
     }
 }
