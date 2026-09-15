@@ -76,10 +76,14 @@ namespace Dynamitey.Tests
         [Test]
         public void FifteenArgCallSiteIsReusedOnRepeatInvoke()
         {
-            var tStatic = InvokeContext.CreateStaticWithContext(typeof(Issue96StaticSame), typeof(object));
+            // Dynamic.InvokeMember allocates a fresh local CallSite each call, so it
+            // cannot observe the emit-path assignment. CacheableInvocation keeps the
+            // site on the instance.
+            var tContext = InvokeContext.CreateStaticWithContext(typeof(Issue96StaticSame), typeof(object));
+            var tInvocation = new CacheableInvocation(InvocationKind.InvokeMember, "Same", argCount: 15, context: tContext);
 
-            Assert.That(Dynamic.InvokeMember(tStatic, "Same", FifteenArgs), Is.EqualTo("static"));
-            Assert.That(Dynamic.InvokeMember(tStatic, "Same", FifteenArgs), Is.EqualTo("static"));
+            Assert.That(tInvocation.Invoke(tContext, FifteenArgs), Is.EqualTo("static"));
+            Assert.That(tInvocation.Invoke(tContext, FifteenArgs), Is.EqualTo("static"));
         }
     }
 
