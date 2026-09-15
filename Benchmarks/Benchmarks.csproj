@@ -17,7 +17,7 @@
          benchmarks compare Tupler against F# reflection, and the useful
          comparison is against the F# a consumer would actually have, not the
          4.7.2 the retired SpeedTest fixture happened to reference. -->
-    <PackageReference Include="FSharp.Core" Version="10.1.400" />
+    <PackageReference Include="FSharp.Core" Version="10.1.401" />
   </ItemGroup>
 
   <ItemGroup>
