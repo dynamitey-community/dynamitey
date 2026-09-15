@@ -56,11 +56,13 @@ Summary of the changes made after that point, at the time of writing:
   - The inherited build and publish automation was removed and replaced.
   - The test suite was moved to NUnit 4, and its wall-clock performance
     fixture was moved out of the test suite into a separate benchmark project.
-  - The public API is frozen by PublicAPI analyzers. The public surface carries
-    RequiresUnreferencedCode and RequiresDynamicCode.
-  - Ported upstream bugs and later dispatch defects in this continuation have
-    been fixed in source (static members, events, CallSite cache keys,
-    inaccessible Task/ValueTask await, and others).
+  - The public API is frozen by PublicAPI analyzers. Dynamic-dispatch entry
+    points carry RequiresUnreferencedCode and RequiresDynamicCode; a few
+    members that do not bind through the DLR are exempt.
+  - Four ported upstream reports were fixed in source (#11, #12, #13, #16).
+    Two were closed as unreproducible (#14, #15). Later dispatch defects in
+    this continuation were also fixed (static members, events, CallSite cache
+    keys, inaccessible Task/ValueTask await, and others).
   - Dependencies were updated.
 
 The `Dynamitey` package on nuget.org remains the original authors' work. This

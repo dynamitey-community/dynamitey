@@ -28,7 +28,8 @@ if a reproduction would change the outcome.
   storing this file cannot notify anyone. The same discipline was used when the
   issues were ported.
 - **Package identity is `Dynamitey.Community`.** #3 already renamed package and
-  assembly. The install lines below use that ID.
+  assembly. The drafts below name the repository, not a `PackageReference` line;
+  add one when 4.0.0 is actually on nuget.org.
 - **`jbtule` is a special case.** He is the original maintainer, whose reply
   still gates #8, and a participant on #11. If the outreach is still
   unanswered when 4.0.0 ships, decide whether the #11 message is the right

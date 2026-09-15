@@ -66,8 +66,9 @@ resolution still applies.
 
 **Issue labels that carry meaning beyond the default set:**
 
-- `ported-from-upstream` — carried over from `ekonbenefits/dynamitey`. The six
-  original reports (#11–#16) have been reproduced and closed.
+- `ported-from-upstream` — carried over from `ekonbenefits/dynamitey`. Four
+  reports were reproduced and fixed (#11, #12, #13, #16). Two were closed as
+  unreproducible (#14, #15).
 - `notify-on-close` — the original reporter must be `@`-mentioned in the closing
   comment when the fix ships. They were deliberately not notified when the issue
   was ported. `gh issue list --label notify-on-close --state all` lists them.
@@ -306,9 +307,10 @@ The ceiling is still the emit path, and AOT still cannot run it (#27).
 
 **Call-site caching.** `Internal/Optimization/BinderHash.cs` keys cached binders
 and `CacheableInvocation.cs` exposes reuse deliberately. Cache state is shared
-across call sites. That was the mechanism behind #13 (fixed). Any test touching
-static context must still control execution order or it can pass for the wrong
-reason. The three process-wide CallSite maps are `ConcurrentDictionary` (#99).
+across call sites. #13 was process-order dependence on a missing `StaticContext`
+cache key; that key is in `BinderHash` now. Tests that need a cold cache should
+call `Dynamic.ClearCaches()` rather than rely on execution order. The three
+process-wide CallSite maps are `ConcurrentDictionary` (#99).
 
 `Internal/Compat/Net40.cs` survived the `net40` removal because its non-Framework
 arm supplies `GetDefaultThreadCurrentCulture`, called from `Dynamic.cs`. The

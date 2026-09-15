@@ -47,7 +47,7 @@ The major version moved because `net40` was dropped, which removes support for a
 | --- | --- |
 | Target frameworks | `netstandard2.0;net10.0` — `net40` dropped |
 | Public API | Unchanged apart from additions |
-| Trimming and AOT | The public surface now carries `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`, so a trimmed or AOT project gets build-time warnings instead of runtime failures |
-| Bug fixes | Including the six ported upstream reports, static get/set/events, inaccessible `Task<T>` / `ValueTask<T>` await, and CallSite cache keys |
+| Trimming and AOT | Dynamic-dispatch entry points carry `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`, so a trimmed or AOT project gets build-time warnings instead of runtime failures |
+| Bug fixes | Including four ported upstream reports (#11, #12, #13, #16), static get/set/events, inaccessible `Task<T>` / `ValueTask<T>` await, and CallSite cache keys. Two ported reports (#14, #15) were closed as unreproducible |
 
 If you are on .NET Framework 4.0, stay on 3.0.3. `netstandard2.0` reaches .NET Framework 4.6.1 and later.
