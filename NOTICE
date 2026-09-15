@@ -51,13 +51,20 @@ Summary of the changes made after that point, at the time of writing:
   - Target frameworks changed from netstandard2.0;net40 to
     netstandard2.0;net10.0. The test project moved from net8.0;net48 to
     net10.0.
+  - Package ID and assembly name are Dynamitey.Community; the root namespace
+    remains Dynamitey. Nothing has been published to NuGet yet.
   - The inherited build and publish automation was removed and replaced.
   - The test suite was moved to NUnit 4, and its wall-clock performance
     fixture was moved out of the test suite into a separate benchmark project.
+  - The public API is frozen by PublicAPI analyzers. The public surface carries
+    RequiresUnreferencedCode and RequiresDynamicCode.
+  - Ported upstream bugs and later dispatch defects in this continuation have
+    been fixed in source (static members, events, CallSite cache keys,
+    inaccessible Task/ValueTask await, and others).
   - Dependencies were updated.
 
-No change has been made to the identity of the published package. The
-`Dynamitey` package on nuget.org remains the original authors' work, and this
-project has not published a package or reserved a package identifier.
+The `Dynamitey` package on nuget.org remains the original authors' work. This
+project has not published a package or reserved a package identifier on
+nuget.org.
 
 This NOTICE file is an addition. The original work did not include one.

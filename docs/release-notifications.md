@@ -27,10 +27,10 @@ if a reproduction would change the outcome.
 - **Add the `@` to the names below.** They are written plain deliberately, so
   storing this file cannot notify anyone. The same discipline was used when the
   issues were ported.
-- **Check the 4.0.0 package identity.** #3 may rename the package; if it does,
-  every "install this" line below is wrong.
-- **`jbtule` is a special case.** He is both the original maintainer, whose
-  reply gates #3 and #8, and a participant on #11. If the outreach is still
+- **Package identity is `Dynamitey.Community`.** #3 already renamed package and
+  assembly. The install lines below use that ID.
+- **`jbtule` is a special case.** He is the original maintainer, whose reply
+  still gates #8, and a participant on #11. If the outreach is still
   unanswered when 4.0.0 ships, decide whether the #11 message is the right
   first contact or whether something more direct should come first.
 
