@@ -12,11 +12,10 @@ on:
   pull_request:
     # Defaults plus ready_for_review: a draft that timed out before Copilot
     # finished would otherwise stay red after the PR is marked ready.
+    # Do not also subscribe to pull_request_review: Copilot's review event
+    # starts a sibling run that GitHub marks action_required, cancels this
+    # waiter via concurrency, and leaves the PR UNSTABLE.
     types: [opened, synchronize, reopened, ready_for_review]
-  pull_request_review:
-    # edited: Copilot can change Approval recommended to Changes recommended
-    # (or the reverse) without a new submitted review.
-    types: [submitted, edited, dismissed]
 
 permissions:
   contents: read
