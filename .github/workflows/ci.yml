@@ -110,6 +110,12 @@ jobs:
   coverage:
     name: Code coverage
     runs-on: ubuntu-latest
+    # tests / line / branch feed the main-only publish-badges job. Empty when
+    # this job fails, and that job is skipped — last successful SVGs stay.
+    outputs:
+      tests: ${{ steps.badges.outputs.tests }}
+      line: ${{ steps.floors.outputs.line }}
+      branch: ${{ steps.floors.outputs.branch }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -132,14 +138,20 @@ jobs:
       # Without it the figure also covers SupportLibrary, a fixture that exists
       # only to be called from tests, so the number would describe the fixtures
       # rather than the library being shipped.
+      # tee is so the badge job can read Total: from the same run that produced
+      # the cobertura file. pipefail because otherwise tee's 0 would hide a
+      # failed suite — same belt-and-braces as the build-test job.
       - name: Test with coverage
-        run: >
-          dotnet test Tests/Tests.csproj
-          --configuration Release
-          --no-build
-          --settings coverlet.runsettings
-          --collect:"XPlat Code Coverage"
-          --results-directory TestResults
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet test Tests/Tests.csproj \
+            --configuration Release \
+            --no-build \
+            --settings coverlet.runsettings \
+            --collect:"XPlat Code Coverage" \
+            --results-directory TestResults \
+            | tee test-output.txt
 
       # ReportGenerator as a local tool rather than a third-party action: one
       # fewer external action in the supply chain. The explicit --version is the
@@ -171,6 +183,7 @@ jobs:
       # dispatch code is mostly branches, so a high line figure can hide a lot
       # of untested decisions.
       - name: Enforce coverage floors
+        id: floors
         shell: bash
         env:
           MIN_LINE: '95'
@@ -212,7 +225,24 @@ jobs:
             echo "::error::Branch coverage ${tBranchPct}% is below the ${MIN_BRANCH}% floor."
             tFailed=1
           fi
+
+          echo "line=${tLinePct}" >> "$GITHUB_OUTPUT"
+          echo "branch=${tBranchPct}" >> "$GITHUB_OUTPUT"
           exit $tFailed
+
+      # Executed total, not a hand count of [Test] attributes. NUnit expands
+      # [TestCase] / [TestCaseSource], so those two figures do not match.
+      - name: Record test total for badges
+        id: badges
+        shell: bash
+        run: |
+          tLine=$(grep -oE 'Failed: +[0-9]+, Passed: +[0-9]+, Skipped: +[0-9]+, Total: +[0-9]+' test-output.txt | tail -1)
+          if [ -z "$tLine" ]; then
+            echo "::error::Could not find a test summary line in the coverage test output."
+            exit 1
+          fi
+          tTotal=$(echo "$tLine" | sed -E 's/.*Total: +([0-9]+).*/\1/')
+          echo "tests=${tTotal}" >> "$GITHUB_OUTPUT"
 
       - name: Upload coverage report
         if: always()
@@ -221,6 +251,93 @@ jobs:
           name: coverage-report
           path: CoverageReport
           retention-days: 14
+
+  # README badges (#112). Not a required check, and it never runs on a pull
+  # request — the images reflect the last successful coverage run on main.
+  #
+  # Mechanism: this job renders three shields.io SVGs from the coverage job's
+  # outputs and commits them to the `badges` orphan branch. The README points
+  # at raw.githubusercontent.com URLs for those files, so a suite change does
+  # not need a README commit.
+  #
+  # Why this, and not the alternatives the issue listed:
+  # - A gist + shields endpoint needs a PAT with gist scope. The repo's only
+  #   Actions secret is NVD_API_KEY. GITHUB_TOKEN cannot write gists.
+  # - Publishing the SVGs via GitHub Pages would fight docs.yml, which owns
+  #   the Pages artifact; a second deploy overwrites the documentation site.
+  # - Codecov / Coveralls are the third-party hosts the issue ruled out.
+  # - ReportGenerator's Badges report type is a different visual language
+  #   from the shields.io CI / CodeQL / License row already on the README.
+  #
+  # Permission: contents: write on this job only, using GITHUB_TOKEN. No
+  # extra secret. Do not protect the `badges` branch — a protection rule
+  # would block the bot. Do not add `badges` to this workflow's push
+  # trigger; that would loop. Do not force-push the branch.
+  publish-badges:
+    name: Publish README badges
+    # success() is load-bearing: a job-level `if` replaces the implicit
+    # "needs jobs succeeded" check, so without it this would still run
+    # (and fail on empty outputs) when coverage is red.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && success()
+    needs: coverage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Render badge SVGs
+        env:
+          TESTS: ${{ needs.coverage.outputs.tests }}
+          LINE: ${{ needs.coverage.outputs.line }}
+          BRANCH: ${{ needs.coverage.outputs.branch }}
+        run: |
+          set -euo pipefail
+          if [ -z "$TESTS" ] || [ -z "$LINE" ] || [ -z "$BRANCH" ]; then
+            echo "::error::Coverage job did not produce badge values."
+            exit 1
+          fi
+          mkdir -p badges
+          curl -fsSL -A "dynamitey-community-ci" \
+            "https://img.shields.io/badge/tests-${TESTS}-informational" \
+            -o badges/tests.svg
+          curl -fsSL -A "dynamitey-community-ci" \
+            "https://img.shields.io/badge/line_coverage-${LINE}%25-brightgreen" \
+            -o badges/line-coverage.svg
+          curl -fsSL -A "dynamitey-community-ci" \
+            "https://img.shields.io/badge/branch_coverage-${BRANCH}%25-brightgreen" \
+            -o badges/branch-coverage.svg
+
+      - name: Push to the badges branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          repo="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          if git ls-remote --exit-code --heads "$repo" badges >/dev/null; then
+            git clone --depth 1 --branch badges "$repo" badges-repo
+          else
+            git clone --depth 1 "$repo" badges-repo
+            git -C badges-repo checkout --orphan badges
+            git -C badges-repo rm -rf --quiet . || true
+          fi
+
+          cp badges/tests.svg badges/line-coverage.svg badges/branch-coverage.svg badges-repo/
+          cat > badges-repo/README.md <<'EOF'
+          Generated test-count and coverage badge SVGs. Written by the
+          `Publish README badges` job in `.github/workflows/ci.yml` on `main`.
+          Do not edit by hand. See issue #112.
+          EOF
+
+          git -C badges-repo add tests.svg line-coverage.svg branch-coverage.svg README.md
+          if git -C badges-repo diff --cached --quiet; then
+            echo "Badges unchanged."
+            exit 0
+          fi
+          git -C badges-repo commit -m "Update test and coverage badges"
+          git -C badges-repo push origin badges
 
   benchmarks-smoke:
     name: Benchmarks compile and run

@@ -135,7 +135,7 @@ Three workflows, all pinned to current action majors:
 
 | Workflow | Does |
 | --- | --- |
-| `ci.yml` | Four jobs: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test |
+| `ci.yml` | Four jobs on every run: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test. On `main` only, a fifth job (`Publish README badges`) renders test-count and coverage SVGs onto the `badges` branch — `contents: write` on that job, `GITHUB_TOKEN`, no extra secret. The README points at those files; do not pin the numbers. |
 | `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
 | `dependencies.yml` | Three jobs on **different triggers**: dependency review on PRs only; `dotnet list package --vulnerable --include-transitive` on everything; and **OWASP Dependency-Check** weekly and on demand but never on a PR — a cold-cache scan takes about an hour, and it blocks nothing |
 
@@ -146,8 +146,10 @@ to the `push` trigger without a reason.
 **A job existing is not the same as a job gating a merge.** Eight checks are
 required by branch protection: the three `Build and test` legs, `Benchmarks
 compile and run`, `AOT smoke test`, `Analyze C#`, `NuGet audit` and `Dependency
-review`. `Code coverage` and `OWASP dependency check` run but are **not**
-required, so a red coverage floor does not block a merge today. Adding a check
+review`. `Code coverage`, `Publish README badges`, and `OWASP dependency check`
+run but are **not** required, so a red coverage floor does not block a merge
+today. The badges job only runs on `main` anyway, so making it required would
+block every pull request. Adding a check
 to the required list is a repository settings change, separate from adding the
 job — and adding one that cannot report on a pull request would block every pull
 request permanently, which is why the OWASP job's trigger and the required list
