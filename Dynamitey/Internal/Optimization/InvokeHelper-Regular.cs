@@ -637,27 +637,131 @@ namespace Dynamitey.Internal.Optimization
         private const BindingFlags StaticMemberFlags =
             BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
 
+        // C# accessibility of a static member from `context`, not "any
+        // non-public if the types are equal". Equal types still see private
+        // members; a derived context sees protected, not private; nested
+        // types share the enclosing type's private scope. Replacing the old
+        // `context == targetType` gate with `IsSubclassOf` would leak private
+        // members to derived types (#108).
+        private static bool ContextCanAccess(Type context, FieldInfo field)
+        {
+            return ContextCanAccess(
+                context,
+                field.DeclaringType ?? field.ReflectedType!,
+                field.IsPublic,
+                field.IsPrivate,
+                field.IsFamily,
+                field.IsAssembly,
+                field.IsFamilyOrAssembly,
+                field.IsFamilyAndAssembly);
+        }
+
+        private static bool ContextCanAccess(Type context, MethodInfo method)
+        {
+            return ContextCanAccess(
+                context,
+                method.DeclaringType ?? method.ReflectedType!,
+                method.IsPublic,
+                method.IsPrivate,
+                method.IsFamily,
+                method.IsAssembly,
+                method.IsFamilyOrAssembly,
+                method.IsFamilyAndAssembly);
+        }
+
+        private static bool ContextCanAccess(
+            Type context,
+            Type declaringType,
+            bool isPublic,
+            bool isPrivate,
+            bool isFamily,
+            bool isAssembly,
+            bool isFamilyOrAssembly,
+            bool isFamilyAndAssembly)
+        {
+            if (isPublic)
+            {
+                return true;
+            }
+
+            if (SharesPrivateScope(context, declaringType))
+            {
+                return true;
+            }
+
+            var tDerived = IsDerivedOrNestedOfDerived(context, declaringType);
+            var tSameAssembly = context.Assembly.Equals(declaringType.Assembly);
+
+            if (isPrivate)
+            {
+                return false;
+            }
+
+            if (isFamilyAndAssembly)
+            {
+                return tDerived && tSameAssembly;
+            }
+
+            if (isFamilyOrAssembly)
+            {
+                return tDerived || tSameAssembly;
+            }
+
+            if (isFamily)
+            {
+                return tDerived;
+            }
+
+            if (isAssembly)
+            {
+                return tSameAssembly;
+            }
+
+            return false;
+        }
+
+        private static bool SharesPrivateScope(Type left, Type right)
+        {
+            return left == right || IsNestedIn(left, right) || IsNestedIn(right, left);
+        }
+
+        private static bool IsNestedIn(Type nested, Type enclosing)
+        {
+            for (var tScan = nested.DeclaringType; tScan != null; tScan = tScan.DeclaringType)
+            {
+                if (tScan == enclosing)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsDerivedOrNestedOfDerived(Type context, Type declaringType)
+        {
+            for (Type? tScan = context; tScan != null; tScan = tScan.DeclaringType)
+            {
+                if (tScan == declaringType || tScan.IsSubclassOf(declaringType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         [RequiresUnreferencedCode("Resolves 'name' via reflection against the static members of the target type; trimming can remove the member being resolved.")]
         private static object? GetStaticMemberByReflection(Type targetType, string name, Type context)
         {
-            // "context" is Dynamitey's accessibility control (see
-            // TestInvokeDoNotExposePrivateMethod in PrivateTest.cs) - a
-            // caller who deliberately supplies a context unrelated to the
-            // target type is asserting that it should NOT see the target's
-            // private members. A PUBLIC member is visible from any context.
-            // A NON-PUBLIC member is only returned when "context" is the
-            // target type itself - the ordinary InvokeContext.CreateStatic(type)
-            // case, where GetTargetContext defaulted context to target.
-            var tContextOwnsPrivateAccess = context == targetType;
-
             var tField = targetType.GetField(name, StaticMemberFlags);
-            if (tField != null && (tField.IsPublic || tContextOwnsPrivateAccess))
+            if (tField != null && ContextCanAccess(context, tField))
             {
                 return tField.GetValue(null);
             }
 
             var tProperty = targetType.GetProperty(name, StaticMemberFlags);
-            if (tProperty?.GetMethod != null && (tProperty.GetMethod.IsPublic || tContextOwnsPrivateAccess))
+            if (tProperty?.GetMethod != null && ContextCanAccess(context, tProperty.GetMethod))
             {
                 return tProperty.GetValue(null);
             }
@@ -697,18 +801,15 @@ namespace Dynamitey.Internal.Optimization
         [RequiresDynamicCode("Converts the assigned value through Binder.Convert; not supported when AOT-compiled.")]
         private static void SetStaticMemberByReflection(Type targetType, string name, Type context, object? value)
         {
-            // Same accessibility gate as GetStaticMemberByReflection above.
-            var tContextOwnsPrivateAccess = context == targetType;
-
             var tField = targetType.GetField(name, StaticMemberFlags);
-            if (tField != null && (tField.IsPublic || tContextOwnsPrivateAccess))
+            if (tField != null && ContextCanAccess(context, tField))
             {
                 tField.SetValue(null, ConvertForStaticAssignment(tField.FieldType, value, context));
                 return;
             }
 
             var tProperty = targetType.GetProperty(name, StaticMemberFlags);
-            if (tProperty?.SetMethod != null && (tProperty.SetMethod.IsPublic || tContextOwnsPrivateAccess))
+            if (tProperty?.SetMethod != null && ContextCanAccess(context, tProperty.SetMethod))
             {
                 tProperty.SetValue(null, ConvertForStaticAssignment(tProperty.PropertyType, value, context));
                 return;
@@ -1028,9 +1129,7 @@ namespace Dynamitey.Internal.Optimization
                 return null;
             }
 
-            // Same exact-type gate as GetStaticMemberByReflection. Derived-context
-            // protected access is #108; do not invent a second rule here.
-            if (tEvent.AddMethod.IsPublic || context == targetType)
+            if (ContextCanAccess(context, tEvent.AddMethod))
             {
                 return tEvent;
             }
@@ -1043,7 +1142,9 @@ namespace Dynamitey.Internal.Optimization
         {
             var tEvent = GetAccessibleStaticEvent(targetType, name, context)
                          ?? throw new RuntimeBinderException($"'{targetType}' does not contain an accessible definition for '{name}'");
-            tEvent.AddEventHandler(null, (Delegate)handler!);
+            // AddEventHandler requires a public add accessor. Protected add
+            // (derived-context #108) is invoked directly.
+            tEvent.AddMethod!.Invoke(null, new object?[] { handler });
         }
 
         [RequiresUnreferencedCode("Calls GetAccessibleStaticEvent; trimming can remove the event being resolved.")]
@@ -1051,7 +1152,7 @@ namespace Dynamitey.Internal.Optimization
         {
             var tEvent = GetAccessibleStaticEvent(targetType, name, context)
                          ?? throw new RuntimeBinderException($"'{targetType}' does not contain an accessible definition for '{name}'");
-            tEvent.RemoveEventHandler(null, (Delegate)handler!);
+            tEvent.RemoveMethod?.Invoke(null, new object?[] { handler });
         }
 
         [RequiresUnreferencedCode("Resolves 'name' via Binder.IsEvent for an instance context, or via reflection for a static context; trimming can remove the member being resolved.")]
