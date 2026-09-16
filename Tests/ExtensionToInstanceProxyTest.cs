@@ -16,6 +16,21 @@ namespace Dynamitey.Tests
         public static string BarNull(this IExtProxyTestFoo f) => null;
     }
 
+    public interface IIssue134
+    {
+        int N { get; }
+    }
+
+    public class Issue134Impl : IIssue134
+    {
+        public int N { get; set; }
+    }
+
+    public static class Issue134Extensions
+    {
+        public static IIssue134 Clone(this IIssue134 x) => new Issue134Impl { N = x.N };
+    }
+
     // Issue #42 gaps 2 and 3: ExtensionToInstanceProxy dereferenced possibly-null values that
     // the nullable pass (#29) suppressed with `!` rather than fixed.
     [TestFixture]
@@ -79,6 +94,33 @@ namespace Dynamitey.Tests
                 new[] { typeof(ExtProxyTestFooExtensions) });
 
             Assert.That((string)proxy.BarNull(), Is.Null);
+        }
+
+        [Test]
+        public void InterfaceReturnWithoutInstanceHints_DoesNotThrowNre()
+        {
+            var tTarget = new Issue134Impl { N = 1 };
+            dynamic tProxy = new ExtensionToInstanceProxy(tTarget, typeof(IIssue134),
+                new[] { typeof(Issue134Extensions) });
+            Dynamic.ApplyEquivalentType((IEquivalentType)tProxy, typeof(Issue134Extensions));
+
+            object tResult = tProxy.Clone();
+
+            Assert.That(tResult, Is.InstanceOf<Issue134Impl>());
+            Assert.That(((Issue134Impl)tResult).N, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void InterfaceReturnWithInstanceHints_StillWraps()
+        {
+            var tTarget = new Issue134Impl { N = 1 };
+            dynamic tProxy = new ExtensionToInstanceProxy(tTarget, typeof(IIssue134),
+                new[] { typeof(Issue134Extensions) }, new[] { typeof(IIssue134) });
+            Dynamic.ApplyEquivalentType((IEquivalentType)tProxy, typeof(Issue134Extensions));
+
+            object tResult = tProxy.Clone();
+
+            Assert.That(tResult, Is.InstanceOf<ExtensionToInstanceProxy>());
         }
 
         // ExtensionToInstanceProxy.Invoker.TryGetMember has two branches beyond the
