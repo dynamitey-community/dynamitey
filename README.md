@@ -214,8 +214,9 @@ two are not edge cases: a plain `InvokeGet` on an ordinary public property
 fails exactly the same way. Do not rely on trimming/AOT + Dynamitey working
 just because your target member "looks safe"; treat every `IL2026`/`IL3050`
 on a Dynamitey call as a real, load-bearing warning, and keep argument counts
-at 14 or fewer regardless (Reflection.Emit is unavailable on every AOT/trimmed
-runtime, not just occasionally).
+at 14 or fewer on NativeAOT (and other AOT-only platforms) — Reflection.Emit is
+unavailable there. A trimmed JIT runtime can still emit; trim failures on the
+0–14 path are missing members, not missing Emit.
 
 ---
 
