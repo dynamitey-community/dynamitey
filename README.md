@@ -116,9 +116,10 @@ repository's own test project does exactly that.
 reaches both .NET Framework 4.6.1–4.8.1 and modern .NET from a single assembly.
 
 The [roadmap](https://github.com/dynamitey-community/dynamitey/issues/10) tracks
-what is planned and in what order. The six issues carried over from upstream,
+what is planned and in what order. Six issues carried over from upstream,
 labelled [`ported-from-upstream`](https://github.com/dynamitey-community/dynamitey/labels/ported-from-upstream),
-have all been resolved.
+are closed: four were fixed (#11, #12, #13, #16) and two were closed as
+unreproducible (#14, #15).
 
 ---
 
