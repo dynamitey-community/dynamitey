@@ -65,5 +65,24 @@ namespace Dynamitey.Tests
             Assert.That(tType, Is.Not.Null);
             Assert.That(tType, Is.EqualTo(typeof(object)));
         }
+
+        [Test]
+        public void NestedTypeMemberIsThatTypeNotObject()
+        {
+            var tDict = new DynamicObjects.Dictionary();
+            ((IEquivalentType)tDict).EquivalentType = typeof(Issue132Outer);
+
+            var tFound = tDict.TryTypeForName("Nested", out var tType);
+
+            Assert.That(tFound, Is.True);
+            Assert.That(tType, Is.EqualTo(typeof(Issue132Outer.Nested)));
+        }
+    }
+
+    public class Issue132Outer
+    {
+        public class Nested
+        {
+        }
     }
 }

@@ -88,6 +88,8 @@ namespace Dynamitey.DynamicObjects
                                       return e.EventHandlerType;
                                   case TypeInfo t:
                                        return t.UnderlyingSystemType;
+                                  case Type t:
+                                       return t;
                                   default:
                                       return typeof (object);
                                }
