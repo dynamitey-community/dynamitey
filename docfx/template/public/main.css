@@ -239,9 +239,15 @@ article table thead th {
   border-top: 0;
 }
 
-/* DocFX renders NOTE/WARNING/IMPORTANT blocks as .alert. A left rule carries
-   the severity more quietly than Bootstrap's filled backgrounds. */
-.alert {
+/* DocFX modern template renders NOTE/WARNING/IMPORTANT as <div class="WARNING">
+   (no Bootstrap .alert). A left rule carries the severity more quietly than
+   filled backgrounds. Keep .alert.* for older templates that emit both. */
+.alert,
+.NOTE,
+.TIP,
+.WARNING,
+.CAUTION,
+.IMPORTANT {
   border: 1px solid var(--bs-border-color);
   border-left: 3px solid var(--bs-primary);
   border-radius: var(--dy-radius);
@@ -249,16 +255,24 @@ article table thead th {
   color: var(--bs-body-color);
 }
 
+.WARNING,
+.CAUTION,
 .alert.WARNING,
 .alert.CAUTION {
   border-left-color: #d94f2b;
 }
 
+.IMPORTANT,
 .alert.IMPORTANT {
   border-left-color: var(--dy-amber-500);
 }
 
-.alert > p:last-child {
+.alert > p:last-child,
+.NOTE > p:last-child,
+.TIP > p:last-child,
+.WARNING > p:last-child,
+.CAUTION > p:last-child,
+.IMPORTANT > p:last-child {
   margin-bottom: 0;
 }
 

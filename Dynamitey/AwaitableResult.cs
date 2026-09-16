@@ -22,10 +22,11 @@ namespace Dynamitey
     using System;
 
     /// <summary>
-    /// Wraps a <see cref="Task"/> - specifically a <see cref="Task{TResult}"/> whose <c>TResult</c> is not
-    /// accessible to the calling assembly - so that <c>await</c>, including a dynamically-bound
-    /// <c>await</c> on the <see langword="dynamic"/> result of <see cref="Dynamic.InvokeMember"/>, can
-    /// complete without the C# runtime binder ever needing to know <c>TResult</c>.
+    /// Wraps a <see cref="Task"/> - specifically a <see cref="Task{TResult}"/> or a
+    /// <c>ValueTask&lt;TResult&gt;</c> whose <c>TResult</c> is not accessible to the calling
+    /// assembly - so that <c>await</c>, including a dynamically-bound <c>await</c> on the
+    /// <see langword="dynamic"/> result of <see cref="Dynamic.InvokeMember"/>, can complete without
+    /// the C# runtime binder ever needing to know <c>TResult</c>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -50,12 +51,14 @@ namespace Dynamitey
     /// boxed as <see cref="object"/> instead of typed as <c>TResult</c>.
     /// </para>
     /// <para>
-    /// <see cref="Dynamic.InvokeMember"/> returns this wrapper only when the invoked member's result is a
-    /// <see cref="Task{TResult}"/> whose <c>TResult</c> is not visible outside its declaring assembly (see
-    /// <see cref="Type.IsVisible"/>, which - unlike <see cref="Type.IsPublic"/> - correctly treats a public
-    /// type nested inside another public type as visible). Every other result - a plain <see cref="Task"/>,
-    /// or a <see cref="Task{TResult}"/> whose <c>TResult</c> is visible to callers - passes through
-    /// unwrapped and behaves exactly as before.
+    /// <see cref="Dynamic.InvokeMember"/> returns this wrapper when the invoked member's result is a
+    /// <see cref="Task{TResult}"/> or a <c>ValueTask&lt;TResult&gt;</c> whose <c>TResult</c> is not
+    /// visible outside its declaring assembly (see <see cref="Type.IsVisible"/>, which - unlike
+    /// <see cref="Type.IsPublic"/> - correctly treats a public type nested inside another public type
+    /// as visible). An inaccessible <c>ValueTask&lt;TResult&gt;</c> is converted with <c>AsTask()</c>
+    /// first so this wrapper stays Task-based. Every other result - a plain <see cref="Task"/>, or a
+    /// <see cref="Task{TResult}"/> / <c>ValueTask&lt;TResult&gt;</c> whose <c>TResult</c> is visible
+    /// to callers - passes through unwrapped and behaves exactly as before.
     /// </para>
     /// </remarks>
     /// <seealso cref="Dynamic.InvokeMember"/>
