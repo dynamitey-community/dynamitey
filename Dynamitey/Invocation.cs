@@ -318,7 +318,8 @@ namespace Dynamitey
                         var tArgs = Util.GetArgsAndNames(args ?? Array.Empty<object?>(), out var tArgNames);
                         CallSite? tValueSite = null;
                         CallSite? tActionSite = null;
-                        return InvokeHelper.InvokeMemberUnknownCallSite(tTarget, (InvokeMemberName)Name!, tArgs, tArgNames, tContext, tStaticContext, ref tValueSite, ref tActionSite);
+                        return Dynamic.WrapIfResultTypeInaccessible(
+                            InvokeHelper.InvokeMemberUnknownCallSite(tTarget, (InvokeMemberName)Name!, tArgs, tArgNames, tContext, tStaticContext, ref tValueSite, ref tActionSite));
                     }
                 case InvocationKind.Invoke:
                     return Dynamic.Invoke(target, args!);
