@@ -475,7 +475,8 @@ namespace Dynamitey.DynamicObjects
                     // A null result (e.g. from a nullable-returning extension method) is never
                     // meaningful to wrap in a self-referential proxy - only a genuine instance is.
                     if (result != null
-                        && InstanceHints!.Select(it => tIsGeneric && it.GetTypeInfo().IsGenericType ? it.GetGenericTypeDefinition() : it)
+                        && InstanceHints != null
+                        && InstanceHints.Select(it => tIsGeneric && it.GetTypeInfo().IsGenericType ? it.GetGenericTypeDefinition() : it)
                             .Any(it=> it.Name == tOutType.Name))
                     {
                         result = CreateSelf(result, _extendedType, _staticTypes, _instanceHints);
