@@ -2,6 +2,7 @@
 // member when the target type hides it with a different member of the same
 // name. Get tries field first, so a derived property hiding a base field
 // was invisible. Types here exist only for this fixture.
+using System;
 using NUnit.Framework;
 
 namespace Dynamitey.Tests
@@ -15,6 +16,7 @@ namespace Dynamitey.Tests
             Issue133Derived.Value = 2;
             Issue133FieldHides.Value = 3;
             Issue133Inherited.Keep = 4;
+            Issue133EventBase.Handlers = null;
         }
 
         [Test]
@@ -53,6 +55,33 @@ namespace Dynamitey.Tests
             Dynamic.InvokeSet(tStatic, "Keep", 5);
             Assert.That(Issue133Base.Keep, Is.EqualTo(5));
         }
+
+        [Test]
+        public void InheritedStaticEventBindsThroughDerivedType()
+        {
+            var tStatic = InvokeContext.CreateStatic(typeof(Issue133EventDerived));
+            var tHit = false;
+            EventHandler tHandler = (s, e) => tHit = true;
+
+            Assert.That(Dynamic.InvokeIsEvent(tStatic, "Changed"), Is.True);
+            Dynamic.InvokeAddAssignMember(tStatic, "Changed", tHandler);
+            Issue133EventBase.Raise();
+            Assert.That(tHit, Is.True);
+
+            tHit = false;
+            Dynamic.InvokeSubtractAssignMember(tStatic, "Changed", tHandler);
+            Issue133EventBase.Raise();
+            Assert.That(tHit, Is.False);
+        }
+
+        [Test]
+        public void DerivedPropertyHidesBaseStaticEvent()
+        {
+            var tStatic = InvokeContext.CreateStatic(typeof(Issue133EventHides));
+
+            Assert.That(Dynamic.InvokeIsEvent(tStatic, "Changed"), Is.False);
+            Assert.That(Dynamic.InvokeGet(tStatic, "Changed"), Is.EqualTo(0));
+        }
     }
 
     public class Issue133Base
@@ -73,5 +102,30 @@ namespace Dynamitey.Tests
 
     public class Issue133Inherited : Issue133Base
     {
+    }
+
+    public class Issue133EventBase
+    {
+        public static EventHandler Handlers;
+
+        public static event EventHandler Changed
+        {
+            add => Handlers += value;
+            remove => Handlers -= value;
+        }
+
+        public static void Raise()
+        {
+            Handlers?.Invoke(null, EventArgs.Empty);
+        }
+    }
+
+    public class Issue133EventDerived : Issue133EventBase
+    {
+    }
+
+    public class Issue133EventHides : Issue133EventBase
+    {
+        public static new int Changed { get; set; }
     }
 }
