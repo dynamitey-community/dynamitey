@@ -635,8 +635,8 @@ namespace Dynamitey.Internal.Optimization
         // Set ~1.63x - about what the DLR trick already cost - because the
         // static path never had a real DLR fast path to lose; it was always
         // the slow, uncommon case relative to instance access.
-        private const BindingFlags StaticMemberFlags =
-            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
+        private const BindingFlags StaticDeclaredFlags =
+            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
         // C# accessibility of a static member from `context`, not "any
         // non-public if the types are equal". Equal types still see private
@@ -755,17 +755,45 @@ namespace Dynamitey.Internal.Optimization
             return false;
         }
 
+        // FlattenHierarchy can bind a base member that C# hiding would skip,
+        // and can throw AmbiguousMatchException (#133). Walk DeclaredOnly and
+        // stop at the first type that declares any static member of that name.
+        [RequiresUnreferencedCode("Walks the type hierarchy with GetField/GetProperty/GetEvent; trimming can remove the member being resolved.")]
+        private static bool FindStaticMember(Type targetType, string name, out FieldInfo? field, out PropertyInfo? property, out EventInfo? evt)
+        {
+            for (Type? tScan = targetType; tScan != null; tScan = tScan.BaseType)
+            {
+                field = tScan.GetField(name, StaticDeclaredFlags);
+                property = tScan.GetProperty(name, StaticDeclaredFlags);
+                evt = tScan.GetEvent(name, StaticDeclaredFlags);
+                if (field != null || property != null || evt != null)
+                {
+                    return true;
+                }
+            }
+
+            field = null;
+            property = null;
+            evt = null;
+            return false;
+        }
+
         [RequiresUnreferencedCode("Resolves 'name' via reflection against the static members of the target type; trimming can remove the member being resolved.")]
         private static object? GetStaticMemberByReflection(Type targetType, string name, Type context)
         {
-            var tField = targetType.GetField(name, StaticMemberFlags);
-            if (tField != null && ContextCanAccess(context, tField))
+            if (!FindStaticMember(targetType, name, out var tField, out var tProperty, out _))
             {
-                return tField.GetValue(null);
+                throw new RuntimeBinderException($"'{targetType}' does not contain an accessible definition for '{name}'");
             }
 
-            var tProperty = targetType.GetProperty(name, StaticMemberFlags);
-            if (tProperty?.GetMethod != null && ContextCanAccess(context, tProperty.GetMethod))
+            if (tField != null)
+            {
+                if (ContextCanAccess(context, tField))
+                {
+                    return tField.GetValue(null);
+                }
+            }
+            else if (tProperty?.GetMethod != null && ContextCanAccess(context, tProperty.GetMethod))
             {
                 return tProperty.GetValue(null);
             }
@@ -805,15 +833,20 @@ namespace Dynamitey.Internal.Optimization
         [RequiresDynamicCode("Converts the assigned value through Binder.Convert; not supported when AOT-compiled.")]
         private static void SetStaticMemberByReflection(Type targetType, string name, Type context, object? value)
         {
-            var tField = targetType.GetField(name, StaticMemberFlags);
-            if (tField != null && ContextCanAccess(context, tField))
+            if (!FindStaticMember(targetType, name, out var tField, out var tProperty, out _))
             {
-                tField.SetValue(null, ConvertForStaticAssignment(tField.FieldType, value, context));
-                return;
+                throw new RuntimeBinderException($"'{targetType}' does not contain an accessible, settable definition for '{name}'");
             }
 
-            var tProperty = targetType.GetProperty(name, StaticMemberFlags);
-            if (tProperty?.SetMethod != null && ContextCanAccess(context, tProperty.SetMethod))
+            if (tField != null)
+            {
+                if (ContextCanAccess(context, tField))
+                {
+                    tField.SetValue(null, ConvertForStaticAssignment(tField.FieldType, value, context));
+                    return;
+                }
+            }
+            else if (tProperty?.SetMethod != null && ContextCanAccess(context, tProperty.SetMethod))
             {
                 tProperty.SetValue(null, ConvertForStaticAssignment(tProperty.PropertyType, value, context));
                 return;
@@ -1127,7 +1160,7 @@ namespace Dynamitey.Internal.Optimization
         [RequiresUnreferencedCode("Resolves 'name' via reflection against the static events of the target type; trimming can remove the member being resolved.")]
         private static EventInfo? GetAccessibleStaticEvent(Type targetType, string name, Type context, bool forRemove)
         {
-            var tEvent = targetType.GetEvent(name, StaticMemberFlags);
+            FindStaticMember(targetType, name, out _, out _, out var tEvent);
             var tAccessor = forRemove ? tEvent?.RemoveMethod : tEvent?.AddMethod;
             if (tAccessor is null)
             {
