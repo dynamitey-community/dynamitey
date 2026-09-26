@@ -109,18 +109,11 @@ In order:
 3. **Tag it and push the tag.** `4.0.0`, or `v4.0.0`. GitVersion accepts either.
    That runs Release. Non-version tags such as `upstream-baseline` do not match
    the trigger.
-4. **Discharge the `notify-on-close` obligations** once `Dynamitey.Community` is
-   actually on nuget.org. Six ported issues carry that label. #11 has **two**
-   people on it, not one.
-
-   ```bash
-   gh issue list --label notify-on-close --state all
-   ```
-
-   The messages are drafted in `docs/release-notifications.md`. Add the `@` when
-   sending. The drafts name `Dynamitey.Community` as the package to install.
-5. **Close #8 and #10.** #10 is the roadmap. #95 stays open; it is the 5.0.0
-   targeting change and says so in the issue.
+4. The six ported `notify-on-close` messages went out on 2026-09-26. The
+   record is `docs/release-notifications.md`. Do not send those six again.
+   A later issue with that label gets one comment when a release makes the
+   fix installable. The `@` goes on that comment, not in the record file.
+5. #8 and #10 are closed. #95 stays open. It is the 5.0.0 targeting change.
 
 ## Standing constraints
 
