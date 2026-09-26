@@ -264,4 +264,4 @@ For context only, so you understand why the baseline matters. Do not start any o
 4. Add trim and AOT analyzer annotations. This library is DLR-based and will never be trim-safe or AOT-safe, so the public surface should carry `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]` to give consumers build-time warnings instead of runtime failures.
 5. README, NOTICE, SECURITY.md, CI, NuGet Trusted Publishing via OIDC.
 
-Publishing went ahead on 2026-09-26 as `Dynamitey.Community` after the NuGet "Contact owners" message of 2026-09-05 went unanswered. The original `Dynamitey` package id was not reused. See #8.
+The 2026-09-26 deadline passed with no reply, so 4.0.0 publishes as `Dynamitey.Community` when that version tag is pushed. The original `Dynamitey` package id is not reused. See #8.
