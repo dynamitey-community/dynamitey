@@ -13,19 +13,6 @@ using Binder = Microsoft.CSharp.RuntimeBinder.Binder;
 
 namespace Dynamitey.Internal.Optimization
 {
-    // Suppressed rather than fixed or deleted: an exhaustive repository-wide search (including the
-    // .tt templates and generated files) found zero references to DummmyNull anywhere - not even a
-    // typeof() cache-key use like IsEventBinderDummy/InvokeConstructorDummy below have. That reads
-    // as genuinely dead code, but this batch's hard rule for CA1812 in a DLR library is "prefer
-    // suppression with evidence over deletion" precisely because reflection/emitted call sites can
-    // instantiate a type in ways static analysis (and a grep) cannot see. Left in place as a
-    // candidate for a future issue to actually remove, rather than deleted on this analyzer's
-    // say-so without a stronger check than a search.
-    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification =
-        "See the comment on this type.")]
-    internal sealed class DummmyNull
-    {
-    }
 
     internal static partial class InvokeHelper
     {

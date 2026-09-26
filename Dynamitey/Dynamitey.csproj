@@ -301,15 +301,8 @@
                        made static: both are referenced only as typeof(...)
                        cache keys passed to CreateCallSite, never `new`'d, and
                        typeof() works the same on a static class. DummmyNull
-                       SUPPRESSED, not deleted: an exhaustive repository-wide
-                       search (including the .tt templates) found zero
-                       references anywhere, not even a typeof() use - genuinely
-                       dead code by every check available, but this batch's
-                       standing rule for CA1812 in a DLR library is evidence-
-                       based suppression over deletion, because reflection or
-                       an emitted call site can instantiate a type in ways a
-                       search cannot see. Left as a candidate for a future
-                       issue to actually remove.
+                       DELETED (#144): nothing in the library or the templates
+                       refers to it, so the type and its suppression are gone.
            CA2201 (4)  FIXED, and an OBSERVABLE BEHAVIOR CHANGE (see the batch
                        4 release notes): Dynamic.cs's four `throw new
                        Exception(...)` sites now throw FormatException (the
