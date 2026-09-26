@@ -2,12 +2,11 @@
 
 ## Installing
 
-> [!IMPORTANT]
-> Nothing has been published yet. This section describes what installation will look like once 4.0.0 ships; today there is no `Dynamitey.Community` package on NuGet. See [issue #8](https://github.com/dynamitey-community/dynamitey/issues/8) for the current state.
-
 ```xml
 <PackageReference Include="Dynamitey.Community" Version="4.0.0" />
 ```
+
+The package id is `Dynamitey.Community`. The original `Dynamitey` package is a different package and does not contain this code.
 
 The namespace is `Dynamitey`, not `Dynamitey.Community`. That split is deliberate: the package and assembly are renamed so they cannot collide with the original package, while the namespace stays put so existing code needs no source change. See [Migrating](migrating.md).
 

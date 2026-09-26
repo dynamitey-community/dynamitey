@@ -9,8 +9,9 @@ once, reviewed, and ready — not composed hurriedly at release time.
 
 ## When these go out
 
-**When 4.0.0 ships**, not before. Nothing is released yet; there are no `4.x`
-tags and publishing is blocked on #8.
+**When `Dynamitey.Community` 4.0.0 is on nuget.org**, not before. The package id
+in every message is `Dynamitey.Community`. The original `Dynamitey` package is
+upstream's and is not what these fixes ship in.
 
 The reason is deliberate. These people did not ask for this fork, and each is
 worth interrupting exactly once. A message saying "fixed on `main`, but there
@@ -27,13 +28,10 @@ if a reproduction would change the outcome.
 - **Add the `@` to the names below.** They are written plain deliberately, so
   storing this file cannot notify anyone. The same discipline was used when the
   issues were ported.
-- **Package identity is `Dynamitey.Community`.** #3 already renamed package and
-  assembly. The drafts below name the repository, not a `PackageReference` line;
-  add one when 4.0.0 is actually on nuget.org.
-- **`jbtule` is a special case.** He is the original maintainer, whose reply
-  still gates #8, and a participant on #11. If the outreach is still
-  unanswered when 4.0.0 ships, decide whether the #11 message is the right
-  first contact or whether something more direct should come first.
+- **Package identity is `Dynamitey.Community`.** The drafts name that package,
+  not the original `Dynamitey` id.
+- **`jbtule` is on #11.** The #8 fallback sends that message to both people on
+  the issue. The package it points at is `Dynamitey.Community`.
 
 ---
 
@@ -57,7 +55,7 @@ if a reproduction would change the outcome.
 > did not. There is now a test for that shape specifically, alongside 14, 15, 16
 > and 20 argument cases.
 >
-> Released in 4.0.0.
+> Released as `Dynamitey.Community` 4.0.0. The original `Dynamitey` package is unchanged.
 
 ### #12 → `PiotrZierhoffer`
 
@@ -74,7 +72,7 @@ if a reproduction would change the outcome.
 > untouched, and it is gated on the caller's context so it cannot read members a
 > restricted context should not see.
 >
-> Released in 4.0.0.
+> Released as `Dynamitey.Community` 4.0.0. The original `Dynamitey` package is unchanged.
 
 ### #13 → `tpluscode`
 
@@ -97,7 +95,7 @@ if a reproduction would change the outcome.
 > then setting the same static property in one process used to fail with
 > "cannot explicitly call operator or accessor".
 >
-> Released in 4.0.0.
+> Released as `Dynamitey.Community` 4.0.0. The original `Dynamitey` package is unchanged.
 
 ### #16 → `fmichellonet`
 
@@ -119,7 +117,7 @@ if a reproduction would change the outcome.
 > is entirely public, so your line works unchanged. A `Task<T>` with a visible
 > `T` is returned exactly as before.
 >
-> Released in 4.0.0.
+> Released as `Dynamitey.Community` 4.0.0. The original `Dynamitey` package is unchanged.
 
 ---
 

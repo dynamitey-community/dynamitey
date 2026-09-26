@@ -33,35 +33,31 @@ The tag [`upstream-baseline`](https://github.com/dynamitey-community/dynamitey/r
 marks commit `c44f5c5`, the last commit that is purely upstream's work.
 Everything after it belongs to this project.
 
-### Status: not published
+### Package identity
 
-> **There is no `dynamitey-community` package on NuGet, and nothing here has
-> been released.** The `Dynamitey` package on nuget.org is upstream's, at 3.0.3.
-> Installing it does not get you this code.
+**Install `Dynamitey.Community`.** That is this project's package. The original
+`Dynamitey` package on nuget.org stays upstream's, at 3.0.3, and installing it
+does not get you this code.
 
-Publishing is deliberately on hold. An outreach message was sent to the original
-maintainer on **2026-09-05**, through the NuGet "Contact owners" form on the
-`Dynamitey` package — upstream has issue creation restricted, so its own tracker
-was not available. Until that is answered this project will not publish a package
-or reserve a package ID.
+The two ids are different on purpose. This continuation publishes only as
+`Dynamitey.Community`, so it cannot take a version number on the original
+package or collide with it at runtime. The namespace stays `Dynamitey`.
 
-**If there is no reply by 2026-09-26**, the block lifts and 4.0.0 publishes as
-`Dynamitey.Community`. The reasoning behind that date, and what happens either
-way, is recorded on
-[#8](https://github.com/dynamitey-community/dynamitey/issues/8). Package and
-assembly identity are already `Dynamitey.Community`
-([#3](https://github.com/dynamitey-community/dynamitey/issues/3)); only the
-NuGet push is gated.
-
-If you depend on Dynamitey today, keep using upstream's 3.0.3. This repository
-is where the work to move it forward is happening, not yet where you get it.
+The first release is **`Dynamitey.Community` 4.0.0**. An outreach message went to
+the original maintainer on **2026-09-05** through the NuGet "Contact owners"
+form on the `Dynamitey` package. No reply had arrived by **2026-09-26**, which
+is the deadline recorded on
+[#8](https://github.com/dynamitey-community/dynamitey/issues/8), so that is the
+id this repository publishes. The original `Dynamitey` package is left as it is.
+The identity was settled in
+[#3](https://github.com/dynamitey-community/dynamitey/issues/3).
 
 ### Installing, and moving from the original package
 
-This fork is configured to pack as **`Dynamitey.Community`**, not `Dynamitey`. The assembly is
-named `Dynamitey.Community` too, so once released it cannot collide with the original package on
-nuget.org — two assemblies claiming one identity resolve to a coin flip that
-surfaces as a runtime `MissingMethodException`.
+The package id and the assembly name are both **`Dynamitey.Community`**. They are
+not `Dynamitey`. Two assemblies claiming one identity resolve to a coin flip that
+surfaces as a runtime `MissingMethodException`, so this package does not reuse
+the original id.
 
 **The namespace is deliberately unchanged.** Everything still lives in
 `Dynamitey`, so moving from the original package is a one-line change and a

@@ -31,16 +31,14 @@ You will be credited in the advisory unless you ask not to be.
 
 ## Supported versions
 
-**No version of this fork has been released.** Nothing here has been published
-to NuGet, so there is no released artefact to patch — see
-[#8](https://github.com/dynamitey-community/dynamitey/issues/8).
+| Version | Supported |
+| --- | --- |
+| `Dynamitey.Community` 4.0.x | Yes |
+| The original `Dynamitey` package, including 3.0.3 | No. That package is upstream's. This project cannot issue fixes for it |
 
-The `Dynamitey` package on nuget.org is the original project's, published by its
-original maintainers. This project cannot issue fixes for it. A vulnerability
-affecting that published package should be reported to
-[`ekonbenefits/dynamitey`](https://github.com/ekonbenefits/dynamitey), not here.
-Reports about the code in this repository are welcome regardless, and once this
-project does publish, that is what this policy will cover.
+A vulnerability in the original `Dynamitey` package should be reported to
+`ekonbenefits/dynamitey`, not here. Reports about the code in this repository,
+and about `Dynamitey.Community`, are in scope for this policy.
 
 ## Scope
 
