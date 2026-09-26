@@ -1,5 +1,5 @@
-﻿using System.Dynamic;
-using NUnit.Framework;
+﻿using NUnit.Framework;
+using System.Dynamic;
 
 namespace Dynamitey.Tests
 {
@@ -14,13 +14,12 @@ namespace Dynamitey.Tests
             var tExpando = New.Object(
                 Test: "test1",
                 Test2: "Test 2nd"
-                );            
+                );
 
             var tExpandoNew = Expando.New(
                 Test: "test1",
                 Test2: "Test 2nd"
                 );
-
 
             Assert.That(tExpandoNew.Test, Is.EqualTo("test1"));
             Assert.That(tExpandoNew.Test2, Is.EqualTo("Test 2nd"));
@@ -30,10 +29,9 @@ namespace Dynamitey.Tests
             Assert.That(tExpandoNew.GetType(), Is.EqualTo(tExpando.GetType()));
         }
 
-
         [Test]
         public void TestExpando2()
-        {            
+        {
             dynamic NewD = new DynamicObjects.Builder<ExpandoObject>();
 
             var tExpandoNamedTest = NewD.Robot(

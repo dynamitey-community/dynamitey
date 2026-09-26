@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Dynamitey.DynamicObjects;
+using Microsoft.CSharp.RuntimeBinder;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -7,14 +9,10 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using Dynamitey.DynamicObjects;
-using Microsoft.CSharp.RuntimeBinder;
 using Binder = Microsoft.CSharp.RuntimeBinder.Binder;
-using Dynamitey.Internal.Compat;
 
 namespace Dynamitey.Internal.Optimization
 {
-
     // Suppressed rather than fixed or deleted: an exhaustive repository-wide search (including the
     // .tt templates and generated files) found zero references to DummmyNull anywhere - not even a
     // typeof() cache-key use like IsEventBinderDummy/InvokeConstructorDummy below have. That reads
@@ -27,23 +25,19 @@ namespace Dynamitey.Internal.Optimization
         "See the comment on this type.")]
     internal sealed class DummmyNull
     {
-
     }
-
 
     internal static partial class InvokeHelper
     {
-
-        internal const int Unknown =0;
+        internal const int Unknown = 0;
         internal const int KnownGet = 1;
         internal const int KnownSet = 2;
         internal const int KnownMember = 3;
         internal const int KnownDirect = 4;
         internal const int KnownConstructor = 5;
 
-
-
         private static readonly object _clearDynamicLock = new object();
+
         internal static IDictionary<Type, CallSite<DynamicCreateCallSite>> DynamicInvokeCreateCallSite
         {
             get
@@ -53,7 +47,6 @@ namespace Dynamitey.Internal.Optimization
                     return _dynamicInvokeCreateCallSite ?? (_dynamicInvokeCreateCallSite =
                                new Dictionary<Type, CallSite<DynamicCreateCallSite>>());
                 }
-
             }
         }
 
@@ -65,9 +58,9 @@ namespace Dynamitey.Internal.Optimization
             }
         }
 
-        private static bool TryDynamicCachedCallSite<T>(BinderHash<T> hash, int knownBinderType, [NotNullWhen(true)] out CallSite<T>? callSite) where T: class
+        private static bool TryDynamicCachedCallSite<T>(BinderHash<T> hash, int knownBinderType, [NotNullWhen(true)] out CallSite<T>? callSite) where T : class
         {
-            switch(knownBinderType)
+            switch (knownBinderType)
             {
                 default:
                     return BinderCache<T>.Cache.TryGetValue(hash, out callSite);
@@ -86,13 +79,8 @@ namespace Dynamitey.Internal.Optimization
 
                 case KnownConstructor:
                     return BinderConstructorCache<T>.Cache.TryGetValue(hash, out callSite);
-                            
             }
-
         }
-
-
-
 
         // Used only as a Dictionary<TKey,...> key: identifies a CallSite delegate
         // signature (its parameter types plus return type) so that a type emitted
@@ -146,8 +134,10 @@ namespace Dynamitey.Internal.Optimization
         // the whole method (cache lookup included) is simpler than lock-free
         // tricks and costs nothing that matters here.
         private static readonly object _emitLock = new object();
+
         private static readonly Dictionary<CallSiteDelegateSignature, Type> _emittedDelegateTypes =
             new Dictionary<CallSiteDelegateSignature, Type>();
+
         private static ModuleBuilder? _emittedModule;
         private static int _emittedTypeCount;
 
@@ -259,7 +249,6 @@ namespace Dynamitey.Internal.Optimization
         private static readonly object _callSiteCacheLock = new object();
         internal static IDictionary<Type, CallSite<DynamicCreateCallSite>>? _dynamicInvokeCreateCallSite;
 
-
         internal static void ClearAllCaches()
         {
             lock (_binderCacheLock)
@@ -279,8 +268,7 @@ namespace Dynamitey.Internal.Optimization
             }
         }
 
-
-        private static void SetDynamicCachedCallSite<T>(BinderHash<T> hash, int knownBinderType, CallSite<T> callSite) where T: class 
+        private static void SetDynamicCachedCallSite<T>(BinderHash<T> hash, int knownBinderType, CallSite<T> callSite) where T : class
         {
             switch (knownBinderType)
             {
@@ -288,22 +276,27 @@ namespace Dynamitey.Internal.Optimization
                     _allCaches.Add(BinderCache<T>.ClearCache);
                     BinderCache<T>.Cache[hash] = callSite;
                     break;
+
                 case KnownGet:
                     _allCaches.Add(BinderGetCache<T>.ClearCache);
                     BinderGetCache<T>.Cache[hash] = callSite;
                     break;
+
                 case KnownSet:
                     _allCaches.Add(BinderSetCache<T>.ClearCache);
                     BinderSetCache<T>.Cache[hash] = callSite;
                     break;
+
                 case KnownMember:
                     _allCaches.Add(BinderMemberCache<T>.ClearCache);
                     BinderMemberCache<T>.Cache[hash] = callSite;
                     break;
+
                 case KnownDirect:
                     _allCaches.Add(BinderDirectCache<T>.ClearCache);
                     BinderDirectCache<T>.Cache[hash] = callSite;
                     break;
+
                 case KnownConstructor:
                     _allCaches.Add(BinderConstructorCache<T>.ClearCache);
                     BinderConstructorCache<T>.Cache[hash] = callSite;
@@ -311,14 +304,10 @@ namespace Dynamitey.Internal.Optimization
             }
         }
 
-      
-
         /// <summary>
         /// LazyBinderType
         /// </summary>
         internal delegate CallSiteBinder LazyBinder();
-
-
 
         public static bool IsActionOrFunc(object target)
         {
@@ -332,9 +321,7 @@ namespace Dynamitey.Internal.Optimization
             }
 
             return FuncArgs.ContainsKey(tType) || ActionArgs.ContainsKey(tType);
-         }
-
-   
+        }
 
         [RequiresUnreferencedCode("Invokes tFunc via FastDynamicInvoke, which for a known arg count calls it through a 'dynamic' reference (the DLR); trimming can remove the member the DLR resolves.")]
         [RequiresDynamicCode("FastDynamicInvoke's DLR path requires the DLR's runtime code generation; not supported when AOT-compiled.")]
@@ -359,18 +346,13 @@ namespace Dynamitey.Internal.Optimization
             return result;
         }
 
-
-
         internal static IEnumerable<CSharpArgumentInfo> GetBindingArgumentList(object?[] args, string?[]? argNames, bool staticContext)
         {
-
             var tTargetFlag = CSharpArgumentInfoFlags.None;
             if (staticContext)
             {
                 tTargetFlag |= CSharpArgumentInfoFlags.IsStaticType | CSharpArgumentInfoFlags.UseCompileTimeType;
             }
-
-
 
             var tList = new BareBonesList<CSharpArgumentInfo>(args.Length + 1)
                         {
@@ -390,7 +372,6 @@ namespace Dynamitey.Internal.Optimization
                 if (!String.IsNullOrEmpty(tName))
                 {
                     tFlag |= CSharpArgumentInfoFlags.NamedArgument;
-
                 }
                 tList.Add(CSharpArgumentInfo.Create(
                     tFlag, tName));
@@ -400,11 +381,6 @@ namespace Dynamitey.Internal.Optimization
 
             return tList;
         }
-
-
-
-
-  
 
         [RequiresUnreferencedCode("Resolves and invokes the generic CreateCallSite<T> for delegateType via the DLR binder (Binder.InvokeMember); trimming can remove that generic method instantiation.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
@@ -418,7 +394,7 @@ namespace Dynamitey.Internal.Optimization
             string?[]? argNames = null,
             bool staticContext = false,
             bool isEvent = false
-           
+
             )
         {
             CallSite<DynamicCreateCallSite>? tSite;
@@ -482,8 +458,6 @@ namespace Dynamitey.Internal.Optimization
            bool isEvent
        );
 
-
-
         [RequiresUnreferencedCode("Calls binder() and CallSite<T>.Create; the binder itself resolves a member by name via Microsoft.CSharp.RuntimeBinder, and trimming can remove that member.")]
         [RequiresDynamicCode("CallSite<T>.Create requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static CallSite<T> CreateCallSite<T>(
@@ -535,7 +509,6 @@ namespace Dynamitey.Internal.Optimization
                 return tOut;
             }
         }
-
 
         internal delegate object DynamicInvokeMemberConstructorValueType(
             CallSite funcSite,
@@ -591,10 +564,9 @@ namespace Dynamitey.Internal.Optimization
             return tSite.Target(tSite, typeof(InvokeHelper), ref callsite, binderType, knownType, binder, name, staticContext, context, argNames, target, args);
         }
 
-
         [RequiresUnreferencedCode("Calls InvokeMemberTargetType<object,TReturn>, which binds through the DLR and can lose a trimmed member.")]
         [RequiresDynamicCode("InvokeMemberTargetType binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
-        internal static TReturn InvokeMember<TReturn>(ref CallSite? callsite, Type? binderType,int knownType, LazyBinder? binder,
+        internal static TReturn InvokeMember<TReturn>(ref CallSite? callsite, Type? binderType, int knownType, LazyBinder? binder,
                                        InvokeMemberName name,
                                      bool staticContext,
                                      Type context,
@@ -867,7 +839,7 @@ namespace Dynamitey.Internal.Optimization
             if (callsite == null)
             {
                 var tTargetFlag = CSharpArgumentInfoFlags.None;
-                LazyBinder tBinder = ()=> Binder.GetMember(CSharpBinderFlags.None, name,
+                LazyBinder tBinder = () => Binder.GetMember(CSharpBinderFlags.None, name,
                                                   context,
                                                   new List<CSharpArgumentInfo>
                                                       {
@@ -878,7 +850,7 @@ namespace Dynamitey.Internal.Optimization
                 callsite = CreateCallSite<Func<CallSite, object, object>>(typeof(GetMemberBinder), KnownGet, tBinder, name, context,
                                 staticContext: staticContext);
             }
-            var tCallSite = (CallSite<Func<CallSite, object, object>>) callsite;
+            var tCallSite = (CallSite<Func<CallSite, object, object>>)callsite;
 
             return tCallSite.Target(tCallSite, target);
         }
@@ -895,7 +867,7 @@ namespace Dynamitey.Internal.Optimization
 
             if (callSite == null)
             {
-                LazyBinder tBinder = ()=> Binder.SetMember(CSharpBinderFlags.None, name,
+                LazyBinder tBinder = () => Binder.SetMember(CSharpBinderFlags.None, name,
                                            context,
                                            new List<CSharpArgumentInfo>
                                                {
@@ -906,13 +878,12 @@ namespace Dynamitey.Internal.Optimization
                                                        CSharpArgumentInfoFlags.None
 
                                                        , null)
-
                                                });
 
-                callSite = CreateCallSite<Func<CallSite, object, object, object>>(typeof(SetMemberBinder),KnownSet, tBinder, name, context, staticContext: false);
+                callSite = CreateCallSite<Func<CallSite, object, object, object>>(typeof(SetMemberBinder), KnownSet, tBinder, name, context, staticContext: false);
             }
 
-            var tCallSiteResult = (CallSite<Func<CallSite, object, object, object>>) callSite;
+            var tCallSiteResult = (CallSite<Func<CallSite, object, object, object>>)callSite;
             // The generic call-site delegate's slots are always plain 'object' (the DLR itself is
             // nullable-oblivious); value's own nullability is preserved at runtime regardless.
             var tResult = tCallSiteResult.Target(tCallSiteResult, target, value!);
@@ -921,27 +892,25 @@ namespace Dynamitey.Internal.Optimization
 
         [RequiresUnreferencedCode("Resolves name.Name via Binder.InvokeMember; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        internal static object? InvokeMemberCallSite(object target,  InvokeMemberName name, object?[] args, string?[]? tArgNames, Type tContext, bool tStaticContext, ref CallSite? callSite)
+        internal static object? InvokeMemberCallSite(object target, InvokeMemberName name, object?[] args, string?[]? tArgNames, Type tContext, bool tStaticContext, ref CallSite? callSite)
         {
             LazyBinder? tBinder = null;
             Type? tBinderType = null;
             if (callSite == null)
             {
-              
                 tBinder = () =>
                 {
-                                var tList = GetBindingArgumentList(args, tArgNames, tStaticContext);
-                                var tFlag = CSharpBinderFlags.None;
-                                if (name.IsSpecialName)
-                                {
-                                    tFlag |= CSharpBinderFlags.InvokeSpecialName;
-                                }
-                                 return Binder.InvokeMember(tFlag, name.Name, name.GenericArgs,
-                                                             tContext, tList);
-                              };
-                tBinderType = typeof (InvokeMemberBinder);
+                    var tList = GetBindingArgumentList(args, tArgNames, tStaticContext);
+                    var tFlag = CSharpBinderFlags.None;
+                    if (name.IsSpecialName)
+                    {
+                        tFlag |= CSharpBinderFlags.InvokeSpecialName;
+                    }
+                    return Binder.InvokeMember(tFlag, name.Name, name.GenericArgs,
+                                                tContext, tList);
+                };
+                tBinderType = typeof(InvokeMemberBinder);
             }
-
 
             // InvokeMember's generated fast-path slots are always plain 'object' (see
             // InvokeHelper.tt); args' element nullability is preserved at runtime regardless
@@ -1029,51 +998,46 @@ namespace Dynamitey.Internal.Optimization
 
             if (callSite == null)
             {
-
                 tBinder = () =>
                 {
                     var tList = GetBindingArgumentList(args, tArgNames, tStaticContext);
                     var tFlag = CSharpBinderFlags.None;
-                    return Binder.Invoke(tFlag,tContext, tList);
+                    return Binder.Invoke(tFlag, tContext, tList);
                 };
                 tBinderType = typeof(InvokeBinder);
             }
 
-
-            return InvokeMember<object>(ref callSite, tBinderType, KnownDirect,tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, args!);
+            return InvokeMember<object>(ref callSite, tBinderType, KnownDirect, tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, args!);
         }
 
         [RequiresUnreferencedCode("Resolves target's indexer via Binder.GetIndex; trimming can remove the indexer being resolved.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        internal static object? InvokeGetIndexCallSite(object target, object?[] indexes, string?[]? argNames, Type context, bool tStaticContext,ref CallSite? callSite)
+        internal static object? InvokeGetIndexCallSite(object target, object?[] indexes, string?[]? argNames, Type context, bool tStaticContext, ref CallSite? callSite)
         {
-            LazyBinder? tBinder=null;
+            LazyBinder? tBinder = null;
             Type? tBinderType = null;
             if (callSite == null)
             {
-
                 tBinder = () =>
                               {
                                   var tList = GetBindingArgumentList(indexes, argNames,
                                                                                tStaticContext);
                                   return Binder.GetIndex(CSharpBinderFlags.None, context, tList);
                               };
-                tBinderType = typeof (GetIndexBinder);
-
+                tBinderType = typeof(GetIndexBinder);
             }
 
-            return InvokeMember<object>(ref callSite,tBinderType, Unknown, tBinder, Invocation.IndexBinderName, tStaticContext, context, argNames, target, indexes!);
+            return InvokeMember<object>(ref callSite, tBinderType, Unknown, tBinder, Invocation.IndexBinderName, tStaticContext, context, argNames, target, indexes!);
         }
 
         [RequiresUnreferencedCode("Resolves target's indexer setter via Binder.SetIndex; trimming can remove the indexer being resolved.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object? InvokeSetIndexCallSite(object target, object?[] indexesThenValue, string?[]? tArgNames, Type tContext, bool tStaticContext, ref CallSite? tCallSite)
         {
-            LazyBinder? tBinder =null;
+            LazyBinder? tBinder = null;
             Type? tBinderType = null;
             if (tCallSite == null)
             {
-
                 tBinder = () =>
                               {
                                   var tList = GetBindingArgumentList(indexesThenValue, tArgNames,
@@ -1081,7 +1045,7 @@ namespace Dynamitey.Internal.Optimization
                                   return Binder.SetIndex(CSharpBinderFlags.None, tContext, tList);
                               };
 
-                tBinderType = typeof (SetIndexBinder);
+                tBinderType = typeof(SetIndexBinder);
             }
 
             return InvokeMember<object>(ref tCallSite, tBinderType, Unknown, tBinder, Invocation.IndexBinderName, tStaticContext, tContext, tArgNames, target, indexesThenValue!);
@@ -1089,13 +1053,12 @@ namespace Dynamitey.Internal.Optimization
 
         [RequiresUnreferencedCode("Resolves name.Name via Binder.InvokeMember; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        internal static void InvokeMemberActionCallSite(object target,InvokeMemberName name, object?[] args, string?[]? tArgNames, Type tContext, bool tStaticContext,ref CallSite? callSite)
+        internal static void InvokeMemberActionCallSite(object target, InvokeMemberName name, object?[] args, string?[]? tArgNames, Type tContext, bool tStaticContext, ref CallSite? callSite)
         {
-            LazyBinder? tBinder =null;
+            LazyBinder? tBinder = null;
             Type? tBinderType = null;
             if (callSite == null)
             {
-
                 tBinder = () =>
                               {
                                   IEnumerable<CSharpArgumentInfo> tList;
@@ -1110,13 +1073,11 @@ namespace Dynamitey.Internal.Optimization
                                   return Binder.InvokeMember(tFlag, name.Name, name.GenericArgs,
                                                              tContext, tList);
                               };
-                tBinderType = typeof (InvokeMemberBinder);
+                tBinderType = typeof(InvokeMemberBinder);
             }
 
-
-            InvokeMemberAction(ref callSite,tBinderType, KnownMember, tBinder, name, tStaticContext, tContext, tArgNames, target, args!);
+            InvokeMemberAction(ref callSite, tBinderType, KnownMember, tBinder, name, tStaticContext, tContext, tArgNames, target, args!);
         }
-
 
         [RequiresUnreferencedCode("Resolves target's invoke/call operator via Binder.Invoke; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
@@ -1127,20 +1088,17 @@ namespace Dynamitey.Internal.Optimization
 
             if (callSite == null)
             {
-
                 tBinder = () =>
                 {
                     IEnumerable<CSharpArgumentInfo> tList;
                     tList = GetBindingArgumentList(args, tArgNames, tStaticContext);
 
                     var tFlag = CSharpBinderFlags.ResultDiscarded;
-                   
 
-                    return Binder.Invoke(tFlag,tContext, tList);
+                    return Binder.Invoke(tFlag, tContext, tList);
                 };
                 tBinderType = typeof(InvokeBinder);
             }
-
 
             InvokeMemberAction(ref callSite, tBinderType, KnownDirect, tBinder, String.Empty, tStaticContext, tContext, tArgNames, target, args!);
         }
@@ -1148,9 +1106,10 @@ namespace Dynamitey.Internal.Optimization
         // static, not merely sealed (CA1812): only ever referenced as typeof(IsEventBinderDummy), a
         // cache-key Type passed to CreateCallSite - never `new`'d - so nothing is lost by also
         // making it uninstantiable, and typeof() works identically on a static class.
-        internal static class IsEventBinderDummy{
-
+        internal static class IsEventBinderDummy
+        {
         }
+
         [RequiresUnreferencedCode("Resolves 'name' via reflection against the static events of the target type; trimming can remove the member being resolved.")]
         private static bool IsStaticEventByReflection(Type targetType, string name, Type context)
         {
@@ -1204,8 +1163,8 @@ namespace Dynamitey.Internal.Optimization
 
             if (callSite == null)
             {
-                LazyBinder tBinder = ()=> Binder.IsEvent(CSharpBinderFlags.None, name, tContext);
-                var tBinderType = typeof (IsEventBinderDummy);
+                LazyBinder tBinder = () => Binder.IsEvent(CSharpBinderFlags.None, name, tContext);
+                var tBinderType = typeof(IsEventBinderDummy);
                 callSite = CreateCallSite<Func<CallSite, object, bool>>(tBinderType, Unknown, tBinder, name, tContext, staticContext: false, isEvent: true);
             }
             var tCallSite = (CallSite<Func<CallSite, object, bool>>)callSite;
@@ -1216,9 +1175,8 @@ namespace Dynamitey.Internal.Optimization
         [RequiresUnreferencedCode("Calls InvokeIsEventCallSite/InvokeMemberActionCallSite/InvokeGetCallSite/InvokeSetCallSite and a 'dynamic +=' operator, each of which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Every path binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static void InvokeAddAssignCallSite(object target, string name, object?[] args, string?[]? argNames, Type context, bool staticContext, //lgtm [cs/too-many-ref-parameters]
-            ref CallSite? callSiteIsEvent, ref CallSite? callSiteAdd, ref CallSite? callSiteGet, ref CallSite? callSiteSet) //This is an optimization readability isn't the concern. 
+            ref CallSite? callSiteIsEvent, ref CallSite? callSiteAdd, ref CallSite? callSiteGet, ref CallSite? callSiteSet) //This is an optimization readability isn't the concern.
         {
-
             if (InvokeIsEventCallSite(target, name, context, staticContext, ref callSiteIsEvent))
             {
                 if (staticContext && target is Type tAddType)
@@ -1232,7 +1190,7 @@ namespace Dynamitey.Internal.Optimization
             }
             else
             {
-                dynamic tGet = InvokeGetCallSite(target,name, context, staticContext, ref callSiteGet)!;
+                dynamic tGet = InvokeGetCallSite(target, name, context, staticContext, ref callSiteGet)!;
                 tGet += (dynamic)(args[0]!);
                 InvokeSetCallSite(target, name,  (object)tGet, context, staticContext, ref callSiteSet);
             }
@@ -1241,7 +1199,7 @@ namespace Dynamitey.Internal.Optimization
         [RequiresUnreferencedCode("Calls InvokeIsEventCallSite/InvokeMemberActionCallSite/InvokeGetCallSite/InvokeSetCallSite and a 'dynamic -=' operator, each of which resolves a member via the DLR binder; trimming can remove the member being resolved.")]
         [RequiresDynamicCode("Every path binds through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static void InvokeSubtractAssignCallSite(object target, string name, object?[] args, string?[]? argNames, Type context, bool staticContext, // lgtm [cs/too-many-ref-parameters]
-            ref CallSite? callSiteIsEvent, ref CallSite? callSiteRemove, ref CallSite? callSiteGet, ref CallSite? callSiteSet) //This is an optimization readability isn't the concern. 
+            ref CallSite? callSiteIsEvent, ref CallSite? callSiteRemove, ref CallSite? callSiteGet, ref CallSite? callSiteSet) //This is an optimization readability isn't the concern.
         {
             if (InvokeIsEventCallSite(target, name, context, staticContext, ref callSiteIsEvent))
             {
@@ -1263,13 +1221,14 @@ namespace Dynamitey.Internal.Optimization
         }
 
         public delegate void DynamicAction(params object[] args);
+
         public delegate TReturn DynamicFunc<out TReturn>(params object[] args);
 
         [RequiresUnreferencedCode("Resolves the conversion to type via Binder.Convert; trimming can remove the conversion being resolved.")]
         [RequiresDynamicCode("MakeGenericType and the Binder.Convert binding both require the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal static object? InvokeConvertCallSite(object target, bool explict, Type type, Type context, ref CallSite? callSite)
         {
-            if (callSite == null) 
+            if (callSite == null)
             {
                 LazyBinder tBinder = () =>
                                          {
@@ -1277,12 +1236,11 @@ namespace Dynamitey.Internal.Optimization
 
                                              return Binder.Convert(tFlags, type, context);
                                          };
-                Type tBinderType = typeof (ConvertBinder);
+                Type tBinderType = typeof(ConvertBinder);
 
                 var tFunc = typeof(Func<,,>).MakeGenericType(typeof(CallSite), typeof(object), type);
 
-
-                callSite = CreateCallSite(tFunc, tBinderType,Unknown, tBinder,
+                callSite = CreateCallSite(tFunc, tBinderType, Unknown, tBinder,
                                           explict
                                               ? Invocation.ExplicitConvertBinderName
                                               : Invocation.ImplicitConvertBinderName, context);
@@ -1294,7 +1252,8 @@ namespace Dynamitey.Internal.Optimization
 
         // static, not merely sealed (CA1812): same reasoning as IsEventBinderDummy above - only
         // ever referenced as typeof(InvokeConstructorDummy), never `new`'d.
-        internal static class InvokeConstructorDummy{};
+        internal static class InvokeConstructorDummy
+        { };
 
         internal static readonly InvokeMemberName ConstructorName = new InvokeMemberName(Invocation.ConstructorBinderName);
 
@@ -1303,7 +1262,7 @@ namespace Dynamitey.Internal.Optimization
         internal static object? InvokeConstructorCallSite(Type type, bool isValueType, object?[] args, string?[]? argNames, ref CallSite? callSite)
         {
             LazyBinder? tBinder = null;
-            Type? tBinderType  = typeof (InvokeConstructorDummy);
+            Type? tBinderType = typeof(InvokeConstructorDummy);
             if (callSite == null || isValueType)
             {
                 if (isValueType && args.Length == 0)  //dynamic invocation doesn't see no argument constructors of value types
@@ -1311,14 +1270,12 @@ namespace Dynamitey.Internal.Optimization
                     return Activator.CreateInstance(type);
                 }
 
-
                 tBinder = () =>
                               {
                                   var tList = GetBindingArgumentList(args, argNames, true);
                                   return Binder.InvokeConstructor(CSharpBinderFlags.None, type, tList);
                               };
             }
-
 
             if (isValueType)
             {
@@ -1349,8 +1306,8 @@ namespace Dynamitey.Internal.Optimization
                     Binder.InvokeMember(
                         CSharpBinderFlags.None,
                         "WrapFuncHelper",
-                        new[] {tKey},
-                        typeof (InvokeHelper),
+                        new[] { tKey },
+                        typeof(InvokeHelper),
                         new[]
                             {
                                 CSharpArgumentInfo.Create(
@@ -1360,7 +1317,7 @@ namespace Dynamitey.Internal.Optimization
                                 CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.UseCompileTimeType, null),
                             }
                         )));
-            return (Delegate) tSite.Target(tSite, typeof(InvokeHelper), invokable, length);
+            return (Delegate)tSite.Target(tSite, typeof(InvokeHelper), invokable, length);
         }
     }
 }

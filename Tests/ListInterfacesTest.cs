@@ -5,12 +5,12 @@
 // implementations - the ones a caller reaches only by casting to the
 // interface - were never called. These tests go through each interface
 // directly.
+using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {
@@ -20,7 +20,9 @@ namespace Dynamitey.Tests
         // caller anywhere in the library itself.
         private class AccessibleList : DynamicObjects.List
         {
-            public AccessibleList(IEnumerable<object> contents = null) : base(contents) { }
+            public AccessibleList(IEnumerable<object> contents = null) : base(contents)
+            {
+            }
 
             public dynamic PublicGetRepresentedItem() => GetRepresentedItem();
         }

@@ -1,5 +1,5 @@
-using System.Reflection;
 using BenchmarkDotNet.Running;
+using System.Reflection;
 
 // Run everything:      dotnet run -c Release --project Benchmarks
 // Run one class:       dotnet run -c Release --project Benchmarks -- --filter *PropertyGet*

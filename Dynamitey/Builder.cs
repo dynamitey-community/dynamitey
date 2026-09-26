@@ -1,26 +1,24 @@
-﻿// 
+﻿//
 //  Copyright 2011 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+using Dynamitey.DynamicObjects;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Dynamitey.DynamicObjects;
 
 namespace Dynamitey
 {
-
-
     /// <summary>
     /// Builds Objects with a Fluent Syntax
     /// </summary>
@@ -37,8 +35,6 @@ namespace Dynamitey
             return new Builder<ChainableDictionary>();
         }
 
-       
-
         /// <summary>
         /// New Builder
         /// </summary>
@@ -50,8 +46,6 @@ namespace Dynamitey
         {
             return new Builder<TObjectPrototype>();
         }
-
-        
     }
 
     /// <summary>
@@ -92,21 +86,23 @@ namespace Dynamitey
     /// <typeparam name="TObjectPrototype">The type of the object prototype.</typeparam>
     public static class Build<TObjectPrototype> where TObjectPrototype : new()
     {
-// ReSharper disable StaticFieldInGenericType
+        // ReSharper disable StaticFieldInGenericType
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification =
             "Constructing a Builder<TObjectPrototype> (a BaseObject-derived type) requires the DLR " +
             "regardless of whether NewObject is ever used. This field initializer has no " +
             "caller to warn at; the actionable warning lives on NewObject itself.")]
         private static readonly dynamic _typedBuilder = new Builder<TObjectPrototype>().Object;
-// ReSharper restore StaticFieldInGenericType
 
-// ReSharper disable StaticFieldInGenericType
+        // ReSharper restore StaticFieldInGenericType
+
+        // ReSharper disable StaticFieldInGenericType
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
             "Constructs a Builder<TObjectPrototype>, calls its dynamic ListSetup<TObjectPrototype>()/List(), and curries the result - all DLR/reflection-heavy. This field initializer has no caller to warn at; the actionable " +
             "warning lives on the members that use it once resolved (NewList).")]
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same reasoning as the IL2026 suppression above.")]
         private static readonly dynamic _typedListBuilder = Dynamic.Curry(new Builder<TObjectPrototype>().ListSetup<TObjectPrototype>()).List();
-// ReSharper restore StaticFieldInGenericType
+
+        // ReSharper restore StaticFieldInGenericType
 
         /// <summary>
         /// Gets the new object builder.
@@ -154,7 +150,6 @@ namespace Dynamitey
             Arguments = tArg != null ? tArg : () => args;
         }
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Activate"/> class. With Factory Function
         /// </summary>
@@ -165,6 +160,7 @@ namespace Dynamitey
             Type = type;
             Arguments = args;
         }
+
         /// <summary>
         /// Gets or sets the constructor type.
         /// </summary>
@@ -228,9 +224,8 @@ namespace Dynamitey
         {
             var tArgs = Arguments();
 
-            if(tArgs.Length != 0)
+            if (tArgs.Length != 0)
                 return base.Create();
-
 
             TObjectPrototype tObjectPrototype;
             try
@@ -256,6 +251,4 @@ namespace Dynamitey
             return tObjectPrototype!;
         }
     }
-
-
 }

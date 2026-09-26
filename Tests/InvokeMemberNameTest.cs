@@ -2,8 +2,8 @@
 // Equals/GetHashCode were only ever exercised incidentally (as a parameter
 // passed through, never compared or converted directly). These tests cover
 // the conversions, factories, and every branch of EqualsHelper.
-using System;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {

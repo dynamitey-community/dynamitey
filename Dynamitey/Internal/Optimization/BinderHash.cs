@@ -1,12 +1,12 @@
-﻿// 
+﻿//
 //  Copyright 2011 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,16 +14,12 @@
 //    limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Dynamitey.Internal.Optimization
 {
     internal class BinderHash
     {
-   
-
         protected BinderHash(Type delegateType, String name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
         {
             KnownBinder = knownBinder;
@@ -36,8 +32,6 @@ namespace Dynamitey.Internal.Optimization
             Context = context;
             ArgNames = argNames;
             IsEvent = isEvent;
-
-
         }
 
         protected BinderHash(Type delegateType, InvokeMemberName name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
@@ -52,21 +46,16 @@ namespace Dynamitey.Internal.Optimization
             Context = context;
             ArgNames = argNames;
             IsEvent = isEvent;
-
-
         }
 
-
- 
-
         public bool KnownBinder { get; }
-        public Type BinderType { get;  }
+        public Type BinderType { get; }
         public bool StaticContext { get; }
-        public bool IsEvent { get;  }
+        public bool IsEvent { get; }
         public Type DelegateType { get; }
-        public string Name { get;  }
+        public string Name { get; }
         public bool IsSpecialName { get; }
-        public Type[]? GenericArgs { get;  }
+        public Type[]? GenericArgs { get; }
         public Type Context { get; }
         public string?[]? ArgNames { get; }
 
@@ -127,13 +116,12 @@ namespace Dynamitey.Internal.Optimization
             return CoreEquals(other) && other.DelegateType == DelegateType;
         }
 
-
         public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (!(obj is BinderHash)) return false;
-            return Equals((BinderHash) obj);
+            return Equals((BinderHash)obj);
         }
 
         public override int GetHashCode()
@@ -144,8 +132,6 @@ namespace Dynamitey.Internal.Optimization
 
                 int result = (tArgNames == null ? 0 : tArgNames.Length * 397);
                 result = (result  ^ StaticContext.GetHashCode());
-                //result = (result * 397) ^ DelegateType.GetHashCode();
-                //result = (result * 397) ^ Context.GetHashCode();
                 // Name.GetHashCode(StringComparison.Ordinal) rather than the parameterless overload
                 // (CA1307): CoreEquals compares Name via object.Equals(string, string), which is
                 // ordinal, so the Ordinal overload is not merely consistent but documented to
@@ -163,8 +149,6 @@ namespace Dynamitey.Internal.Optimization
         }
     }
 
-
-
     internal sealed class BinderHash<T> : BinderHash where T : class
     {
         public static BinderHash<T> Create(string name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
@@ -177,8 +161,8 @@ namespace Dynamitey.Internal.Optimization
             return new BinderHash<T>(name, context, argNames, binderType, staticContext, isEvent, knownBinder);
         }
 
-        private BinderHash(InvokeMemberName name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent,bool knownBinder)
-            : base(typeof(T), name, context, argNames, binderType, staticContext, isEvent,knownBinder)
+        private BinderHash(InvokeMemberName name, Type context, string?[]? argNames, Type binderType, bool staticContext, bool isEvent, bool knownBinder)
+            : base(typeof(T), name, context, argNames, binderType, staticContext, isEvent, knownBinder)
         {
         }
 

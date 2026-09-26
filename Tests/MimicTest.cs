@@ -1,5 +1,5 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {
@@ -76,13 +76,13 @@ namespace Dynamitey.Tests
             dynamic mimic = new DynamicObjects.Mimic();
 
             int Int32 = mimic;
-            Assert.That(Int32,Is.EqualTo(0));
+            Assert.That(Int32, Is.EqualTo(0));
             double Double = mimic;
             Assert.That(Double, Is.EqualTo(0.0d));
             float Float = mimic;
             Assert.That(Float, Is.EqualTo(0.0f));
             object Object = mimic;
-            Assert.That(Object,  Is.TypeOf<DynamicObjects.Mimic>());
+            Assert.That(Object, Is.TypeOf<DynamicObjects.Mimic>());
             Guid Guid = mimic;
             Assert.That(Guid, Is.EqualTo(Guid.Empty));
             DateTime DateTime = mimic;

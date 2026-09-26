@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
-using Dynamitey.DynamicObjects;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace Dynamitey.Tests
 {

@@ -1,31 +1,26 @@
-// 
+//
 //  Copyright 2011  Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-
+using Dynamitey.DynamicObjects;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Dynamitey.DynamicObjects;
-using Microsoft.CSharp.RuntimeBinder;
-using Dynamitey.Internal.Compat;
-
 
 namespace Dynamitey.Internal.Optimization
 {
@@ -41,7 +36,6 @@ namespace Dynamitey.Internal.Optimization
         /// Is Current Runtime Mono?
         /// </summary>
         public static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
-
 
         /// <summary>
         /// Determines whether [is anonymous type] [the specified target].
@@ -62,7 +56,6 @@ namespace Dynamitey.Internal.Optimization
                        typeof(CompilerGeneratedAttribute),
                        false);
         }
-
 
         /// <summary>
         /// Names the args if necessary.
@@ -109,7 +102,6 @@ namespace Dynamitey.Internal.Optimization
             return target;
         }
 
-
         /// <summary>
         /// Fixes the context.
         /// </summary>
@@ -121,12 +113,11 @@ namespace Dynamitey.Internal.Optimization
 
             if (context.IsArray)
             {
-                return typeof (object);
+                return typeof(object);
             }
             return context;
         }
 
-   
         [RequiresUnreferencedCode("Calls the annotated Dynamic.CoerceConvert/InvokeConstructor to coerce result to the interface type TryTypeForName resolved; trimming can remove the member either resolves.")]
         [RequiresDynamicCode("Dynamic.CoerceConvert/InvokeConstructor bind through the DLR, which requires runtime code generation; not supported when AOT-compiled.")]
         internal static bool MassageResultBasedOnInterface(this BaseObject target, string binderName, bool resultFound, ref object? result)
@@ -143,26 +134,26 @@ namespace Dynamitey.Internal.Optimization
                 return true;
             }
 
-            if(resultFound){
-              if (result is IDictionary<string, object> && !(result is BaseDictionary)
-                    && (!tTryType || tType == typeof(object)))
+            if (resultFound)
+            {
+                if (result is IDictionary<string, object> && !(result is BaseDictionary)
+                      && (!tTryType || tType == typeof(object)))
                 {
                     result = new Dictionary((IDictionary<string, object>)result);
                 }
-              else if (tTryType)
-              {
-                  result = Dynamic.CoerceConvert(result, tType!);
-              }
+                else if (tTryType)
+                {
+                    result = Dynamic.CoerceConvert(result, tType!);
+                }
             }
             else
             {
                 result = null;
                 if (!tTryType)
                 {
-
                     return false;
                 }
-                if (typeof (Delegate).GetTypeInfo().IsAssignableFrom(tType!))
+                if (typeof(Delegate).GetTypeInfo().IsAssignableFrom(tType!))
                 {
                     result = new BaseForwarder.AddRemoveMarker();
                 }
@@ -175,10 +166,7 @@ namespace Dynamitey.Internal.Optimization
             return true;
         }
 
-
-
-
-        internal static object?[] GetArgsAndNames(object?[]args,out string?[]?argNames)
+        internal static object?[] GetArgsAndNames(object?[] args, out string?[]? argNames)
         {
             if (args == null)
                 args = new object?[] { null };
@@ -201,7 +189,8 @@ namespace Dynamitey.Internal.Optimization
 
                     tNewArgs[i] = ((InvokeArg)tArg).Value;
                     tArgSet = true;
-                }else
+                }
+                else
                 {
                     tNewArgs[i] = tArg;
                 }

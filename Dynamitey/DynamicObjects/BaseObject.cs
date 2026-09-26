@@ -1,12 +1,12 @@
-// 
+//
 //  Copyright 2010  Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,17 +14,13 @@
 //    limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-using Dynamitey.Internal.Compat;
 
 namespace Dynamitey.DynamicObjects
 {
-
     /// <summary>
     /// Can Represent an equivalent static type to help dynamically convert member output
     /// </summary>
@@ -38,9 +34,6 @@ namespace Dynamitey.DynamicObjects
         /// </value>
         FauxType? EquivalentType { get; set; }
     }
-    
-    
-
 
     /// <summary>
     /// Dynamic Object that knows about the ImpromptuInterface return types;
@@ -55,10 +48,7 @@ namespace Dynamitey.DynamicObjects
         [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         protected BaseObject()
         {
-
         }
-
-
 
         /// <summary>
         /// Tries the name of the member to see if it has a type.
@@ -69,32 +59,35 @@ namespace Dynamitey.DynamicObjects
         [RequiresUnreferencedCode("Calls the annotated FauxType.GetMember, which for a RealType reflects over its target's members by name; trimming can remove the member being resolved.")]
         public bool TryTypeForName(string binderName, [NotNullWhen(true)] out Type? type)
         {
-           var eqType = (IEquivalentType) this;
-           type = null;
-           if (eqType.EquivalentType == null)
+            var eqType = (IEquivalentType)this;
+            type = null;
+            if (eqType.EquivalentType == null)
                 return false;
 
-           var types = eqType.EquivalentType.GetMember(binderName)
-               .Select(it =>
-                           {
+            var types = eqType.EquivalentType.GetMember(binderName)
+                .Select(it =>
+                            {
+                                switch (it)
+                                {
+                                    case PropertyInfo p:
+                                        return p.PropertyType;
 
-                               switch (it)
-                               {
-                                  case PropertyInfo p:
-                                      return p.PropertyType;
-                                  case MethodInfo m:
-                                      return m.ReturnType;
-                                  case EventInfo e:
-                                      return e.EventHandlerType;
-                                  case TypeInfo t:
-                                       return t.UnderlyingSystemType;
-                                  case Type t:
-                                       return t;
-                                  default:
-                                      return typeof (object);
-                               }
-                               
-                           }).ToList();
+                                    case MethodInfo m:
+                                        return m.ReturnType;
+
+                                    case EventInfo e:
+                                        return e.EventHandlerType;
+
+                                    case TypeInfo t:
+                                        return t.UnderlyingSystemType;
+
+                                    case Type t:
+                                        return t;
+
+                                    default:
+                                        return typeof(object);
+                                }
+                            }).ToList();
 
             if (types.Count == 0)
                 return false;
@@ -109,12 +102,11 @@ namespace Dynamitey.DynamicObjects
             {
                 tBest = currenttype != null && (tBest == null || tBest.Name == currenttype.Name)
                     ? currenttype
-                    : typeof (object);
+                    : typeof(object);
             }
             type = tBest ?? typeof(object);
             return true;
         }
-
 
         FauxType? IEquivalentType.EquivalentType { get; set; }
     }

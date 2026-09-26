@@ -4,7 +4,6 @@
 // Instance InvokeSet still uses Binder.SetMember, so the two paths disagree.
 // Types here exist only for this fixture. Reset statics in SetUp so tests
 // do not share leftover values.
-using System;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
 

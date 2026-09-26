@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Dynamitey;
 
 namespace Dynamitey.SupportLibrary
 {
@@ -44,6 +41,7 @@ namespace Dynamitey.SupportLibrary
         // propagate the original exception/OperationCanceledException, not an
         // AggregateException.
         public static object FaultingAsyncResultInstance => new FaultingAsyncResultPoco();
+
         public static object CancelingAsyncResultInstance => new CancelingAsyncResultPoco();
 
         // For issue #16's scoped-wrapper fix: a plain, non-generic Task result must
@@ -72,7 +70,6 @@ namespace Dynamitey.SupportLibrary
             public string Value { get; set; }
         }
     }
-
 
     internal class InternalType
     {
@@ -205,7 +202,6 @@ namespace Dynamitey.SupportLibrary
             return i;
         }
 
-
         public List<string> ReturnIt(List<string> i)
         {
             return i;
@@ -248,7 +244,6 @@ namespace Dynamitey.SupportLibrary
         PropPoco ReturnProp { get; set; }
     }
 
-
     public interface IPropPocoProp
     {
         PropPoco ReturnProp { get; set; }
@@ -259,10 +254,10 @@ namespace Dynamitey.SupportLibrary
         int Event { get; set; }
     }
 
-
     public interface IEvent
     {
         event EventHandler<EventArgs> Event;
+
         void OnEvent(object obj, EventArgs args);
     }
 
@@ -276,7 +271,6 @@ namespace Dynamitey.SupportLibrary
                 Event(obj, args);
         }
     }
-
 
     public class PocoOptConstructor
     {
@@ -328,13 +322,13 @@ namespace Dynamitey.SupportLibrary
     public interface ISimpleStringProperty
     {
         int Length { get; }
-
     }
 
     public interface IRobot
     {
         string Name { get; }
     }
+
     public class Robot
     {
         public string Name { get; set; }
@@ -343,25 +337,24 @@ namespace Dynamitey.SupportLibrary
     public interface ISimpleStringMethod
     {
         bool StartsWith(string value);
-
     }
 
     public interface ISimpleStringMethodCollision
     {
         int StartsWith(string value);
-
     }
 
     public interface ISimpeleClassMeth
     {
         void Action1();
+
         void Action2(bool value);
+
         string Action3();
     }
 
     public interface ISimpeleClassMeth2 : ISimpeleClassMeth
     {
-
         string Action4(int arg);
     }
 
@@ -385,22 +378,19 @@ namespace Dynamitey.SupportLibrary
     public interface IGenericMethWithConstraints
     {
         string Action<T>(T arg) where T : class;
+
         string Action2<T>(T arg) where T : IComparable;
     }
 
     public interface IGenericType<T>
     {
         string Funct(T arg);
-
-
     }
 
     public interface IGenericTypeConstraints<T> where T : class
     {
         string Funct(T arg);
-
     }
-
 
     public interface IOverloadingMethod
     {
@@ -408,7 +398,6 @@ namespace Dynamitey.SupportLibrary
 
         string Func(object arg);
     }
-
 
     public class PropPoco
     {
@@ -432,7 +421,6 @@ namespace Dynamitey.SupportLibrary
         public int Event { get; set; }
     }
 
-
     public interface IVoidMethod
     {
         void Action();
@@ -442,7 +430,6 @@ namespace Dynamitey.SupportLibrary
     {
         public void Action()
         {
-
         }
     }
 
@@ -457,6 +444,7 @@ namespace Dynamitey.SupportLibrary
         {
             return "object";
         }
+
         public string Func(object arg, object arg2, object arg3, object arg4, object arg5, object arg6)
         {
             return "object 6";
@@ -482,22 +470,20 @@ namespace Dynamitey.SupportLibrary
         }
     }
 
-
-    public class Thing { }
+    public class Thing
+    { }
 
     public interface IGenericTest
     {
         List<T> GetThings<T>(Guid test) where T : Thing;
     }
+
     public class OtherThing
     {
-
-
-        List<T> GetThings<T>(Guid test) where T : Thing
+        private List<T> GetThings<T>(Guid test) where T : Thing
         {
             return new List<T>();
         }
-
     }
 
     public class ForwardGenericMethodsTestClass
@@ -509,7 +495,6 @@ namespace Dynamitey.SupportLibrary
             return new T { Value = "test" + arg };
         }
     }
-
 
     public class GenericMethOutPoco
     {
@@ -670,7 +655,6 @@ namespace Dynamitey.SupportLibrary
         bool Func(out int result);
     }
 
-
     public class MethRefPoco
     {
         public bool Func(ref int result)
@@ -678,7 +662,6 @@ namespace Dynamitey.SupportLibrary
             result = result + 2;
             return true;
         }
-
     }
 
     public class PocoAdder
@@ -779,7 +762,6 @@ namespace Dynamitey.SupportLibrary
         public bool IsFixedSize => throw new NotImplementedException();
     }
 
-
     /// <summary>
     /// For issue #11. A params constructor, which is what the original upstream
     /// report used: 14 arguments worked and 15 threw InvalidCastException.
@@ -855,5 +837,4 @@ namespace Dynamitey.SupportLibrary
             PrivateProtected = 5;
         }
     }
-
 }

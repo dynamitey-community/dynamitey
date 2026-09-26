@@ -1,4 +1,3 @@
-using System;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
 

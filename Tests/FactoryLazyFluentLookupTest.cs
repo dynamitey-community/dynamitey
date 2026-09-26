@@ -3,13 +3,10 @@
 // existing fixtures happen to exercise the Impromptu-Interface-return-type
 // factory pattern, the Lazy<T> forwarder, or the string-lookup building
 // block. These tests exercise each directly.
-using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
 using Dynamitey.DynamicObjects;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
+using System.Dynamic;
 
 namespace Dynamitey.Tests
 {
@@ -18,13 +15,16 @@ namespace Dynamitey.Tests
         public interface IWidgetFactory
         {
             object WidgetProp { get; }
+
             Widget Widget(int id);
         }
 
         public class Widget
         {
             public int Id { get; }
-            public Widget(int id) { Id = id; }
+
+            public Widget(int id)
+            { Id = id; }
         }
 
         [Test]

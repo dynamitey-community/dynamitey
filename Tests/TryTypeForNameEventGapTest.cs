@@ -1,8 +1,8 @@
+using Dynamitey.DynamicObjects;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Dynamitey.DynamicObjects;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {
@@ -18,11 +18,15 @@ namespace Dynamitey.Tests
         public override Type EventHandlerType => null;
 
         public override MethodInfo GetAddMethod(bool nonPublic) => null;
+
         public override MethodInfo GetRemoveMethod(bool nonPublic) => null;
+
         public override MethodInfo GetRaiseMethod(bool nonPublic) => null;
 
         public override object[] GetCustomAttributes(bool inherit) => Array.Empty<object>();
+
         public override object[] GetCustomAttributes(Type attributeType, bool inherit) => Array.Empty<object>();
+
         public override bool IsDefined(Type attributeType, bool inherit) => false;
     }
 

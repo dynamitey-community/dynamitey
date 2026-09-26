@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 
 namespace Dynamitey
 {
-
-
     /// <summary>
     /// String or InvokeMemberName
     /// </summary>
@@ -47,7 +43,6 @@ namespace Dynamitey
             return new InvokeMemberName(name!, null);
         }
 
-
         /// <summary>
         /// Gets the name.
         /// </summary>
@@ -56,6 +51,7 @@ namespace Dynamitey
         // subclass (InvokeMemberName) always sets Name in every constructor it declares. The `= null!`
         // documents that invariant instead of leaving an unexplained non-null-without-assignment gap.
         public string Name { get; protected set; } = null!;
+
         /// <summary>
         /// Gets the generic args. <see langword="null"/> when this name was created without any
         /// (e.g. via the implicit <see cref="string"/> conversion), as distinct from an empty array.
@@ -71,13 +67,13 @@ namespace Dynamitey
         /// <value>
         /// 	<c>true</c> if this instance is special name; otherwise, <c>false</c>.
         /// </value>
-        public bool IsSpecialName { get;  protected set; }
+        public bool IsSpecialName { get; protected set; }
     }
 
     /// <summary>
     /// Name of Member with associated Generic parameters
     /// </summary>
-    public sealed class InvokeMemberName:String_OR_InvokeMemberName
+    public sealed class InvokeMemberName : String_OR_InvokeMemberName
     {
         /// <summary>
         /// Create Function can set to variable to make cleaner syntax;
@@ -96,9 +92,9 @@ namespace Dynamitey
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns>The result of the conversion.</returns>
-          public static implicit operator InvokeMemberName(string name)
+        public static implicit operator InvokeMemberName(string name)
         {
-            return new InvokeMemberName(name,null);
+            return new InvokeMemberName(name, null);
         }
 
         /// <summary>
@@ -107,12 +103,11 @@ namespace Dynamitey
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns>The result of the conversion.</returns>
-        public static new InvokeMemberName FromString(string name)
+        public new static InvokeMemberName FromString(string name)
         {
             return new InvokeMemberName(name, null);
         }
 
-       
         /// <summary>
         /// Initializes a new instance of the <see cref="InvokeMemberName"/> class.
         /// </summary>
@@ -150,10 +145,8 @@ namespace Dynamitey
 
         private bool EqualsHelper(InvokeMemberName other)
         {
-
             var tGenArgs = GenericArgs;
             var tOtherGenArgs = other.GenericArgs;
-
 
             return Equals(other.Name, Name)
                 && !(other.IsSpecialName ^ IsSpecialName)
@@ -162,9 +155,9 @@ namespace Dynamitey
                 //Exclusive Or makes sure this doesn't happen: the XOR check above already
                 //proves tOtherGenArgs is non-null whenever tGenArgs is, which the nullable
                 //analyzer can't see through - same reasoning ReSharper needed suppressing below.
-// ReSharper disable AssignNullToNotNullAttribute
+                // ReSharper disable AssignNullToNotNullAttribute
                 tGenArgs.SequenceEqual(tOtherGenArgs!));
-// ReSharper restore AssignNullToNotNullAttribute
+            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         /// <summary>
@@ -179,14 +172,14 @@ namespace Dynamitey
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (!(obj is InvokeMemberName)) return false;
-            return EqualsHelper((InvokeMemberName) obj);
+            return EqualsHelper((InvokeMemberName)obj);
         }
 
         /// <summary>
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {

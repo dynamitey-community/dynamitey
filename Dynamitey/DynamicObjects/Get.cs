@@ -1,26 +1,22 @@
-﻿// 
+﻿//
 //  Copyright 2011 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
-
 using Dynamitey.Internal.Optimization;
 using Microsoft.CSharp.RuntimeBinder;
+using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Dynamitey.DynamicObjects
 {
@@ -28,24 +24,18 @@ namespace Dynamitey.DynamicObjects
     /// Dynamic Proxy that exposes any properties of objects, and can massage results based on interface
     /// </summary>
 
-
     [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification =
         "See IBuilder.Object (Builder.cs); identical reasoning. Get names exactly what this proxy does.")]
-    public class Get:BaseForwarder
+    public class Get : BaseForwarder
     {
-     
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Get"/> class.
         /// </summary>
         /// <param name="target">The target.</param>
         [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        public Get(object target):base(target)
+        public Get(object target) : base(target)
         {
-            
         }
-
-
 
         /// <summary>
         /// Creates the proxy over the specified target.
@@ -57,6 +47,7 @@ namespace Dynamitey.DynamicObjects
         {
             return new Get(target);
         }
+
         /// <summary>
         /// Provides the implementation for operations that get member values. Classes derived from the <see cref="System.Dynamic.DynamicObject"/> class can override this method to specify dynamic behavior for operations such as getting a value for a property.
         /// </summary>
@@ -82,7 +73,6 @@ namespace Dynamitey.DynamicObjects
             return false;
         }
 
-
         /// <summary>
         /// Provides the implementation for operations that invoke a member. Classes derived from the <see cref="System.Dynamic.DynamicObject"/> class can override this method to specify dynamic behavior for operations such as calling a method.
         /// </summary>
@@ -102,7 +92,6 @@ namespace Dynamitey.DynamicObjects
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object?[]? args, out object? result)
         {
-
             if (!base.TryInvokeMember(binder, args, out result))
             {
                 try
@@ -128,8 +117,8 @@ namespace Dynamitey.DynamicObjects
                         result = this.InvokeMethodDelegate(tDel, args!);
                     }
                     catch (RuntimeBinderException)
-                        //If it has out parmaters etc it can't be invoked dynamically like this.
-                        //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation
+                    //If it has out parmaters etc it can't be invoked dynamically like this.
+                    //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation
                     {
                         return false;
                     }
@@ -139,15 +128,14 @@ namespace Dynamitey.DynamicObjects
                     result = Dynamic.Invoke(result!, Util.NameArgsIfNecessary(binder.CallInfo, args!));
                 }
                 catch (RuntimeBinderException)//If it has out parmaters etc it can't be invoked dynamically like this.
-                //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation 
+                //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation
                 {
                     return false;
-                } 
+                }
             }
 
             return this.MassageResultBasedOnInterface(binder.Name, true, ref result);
         }
-
 
         /// <summary>
         /// Tries the index of the get.
@@ -177,5 +165,4 @@ namespace Dynamitey.DynamicObjects
             return false;
         }
     }
-
 }

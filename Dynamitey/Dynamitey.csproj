@@ -474,18 +474,15 @@
     -->
     <NoWarn>$(NoWarn);CA1851</NoWarn>
 
-    <!-- Sonar's share of the backlog: 90 findings across 31 rules, on the same
-         terms as the CA list above. Its signal is different in kind - it found
+    <!-- Sonar's share of the backlog, on the same
+         terms as the CA list above. S125, S1481, S1854, and S1144 were cleared
+         and taken off NoWarn. Its signal is different in kind - it found
          the swapped NewItems/OldItems in List's Replace notification (#59),
          which the test suite, CodeQL and the CA rules had all passed over.
 
          Real defects, expected to end as fixes:
-           S1481 (8)  unused local variables
-           S125  (5)  commented-out code
            S112  (4)  System.Exception thrown directly
            S2094 (3)  empty classes
-           S1854 (2)  dead stores
-           S1144 (1)  unused private method
            S2372 (1)  property getter that throws
            S1871 (1)  two switch arms with identical bodies
          Overlaps something already known:
@@ -501,7 +498,7 @@
          Replace transposition at List.cs:326, and #60 fixed it - so the rule
          that caught a real bug is live, and a new transposition anywhere in this
          project fails the build. -->
-    <NoWarn>$(NoWarn);S101;S112;S125;S907;S927;S1133;S1144;S1481;S1854;S1871;S2094;S2219;S2223;S2325;S2328;S2372;S2743;S3011;S3218;S3247;S3260;S3265;S3267;S3897;S3963;S4019;S4035;S4050;S4136;S6608</NoWarn>
+    <NoWarn>$(NoWarn);S101;S112;S907;S927;S1133;S1871;S2094;S2219;S2223;S2325;S2328;S2372;S2743;S3011;S3218;S3247;S3260;S3265;S3267;S3897;S3963;S4019;S4035;S4050;S4136;S6608</NoWarn>
 
   </PropertyGroup>
 </Project>

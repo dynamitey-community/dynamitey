@@ -4,11 +4,10 @@
 // switch's cases - and Invocation's own Equals/GetHashCode/Create - were
 // never directly hit. These tests build an Invocation for every Kind and
 // call Invoke, asserting the real effect each one has.
+using Dynamitey.SupportLibrary;
+using NUnit.Framework;
 using System;
 using System.Dynamic;
-using Dynamitey.SupportLibrary;
-using Microsoft.CSharp.RuntimeBinder;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {

@@ -2,9 +2,9 @@
 // names are present. Invocation.InvokeMemberUnknown skipped
 // WrapIfResultTypeInaccessible, so named curry of an inaccessible Task<T>
 // failed dynamic await. Types live in SupportLibrary.
-using System.Threading.Tasks;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
+using System.Threading.Tasks;
 
 namespace Dynamitey.Tests
 {

@@ -6,8 +6,8 @@
 // behavior of an identity function - if a future edit ever started
 // wrapping or cloning the delegate instead, this would catch it) and then
 // invokes the result to confirm it still forwards arguments correctly.
-using System;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {
@@ -56,7 +56,7 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity1()
         {
-            Func<int,int> del = (a1) => a1;
+            Func<int, int> del = (a1) => a1;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
             Assert.That(result(1), Is.EqualTo(1));
@@ -65,10 +65,10 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnThisAndArgumentsArity1()
         {
-            ThisFunc<int,int> del = (@this,a1) => (int)@this+a1;
+            ThisFunc<int, int> del = (@this, a1) => (int)@this+a1;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1), Is.EqualTo(101));
+            Assert.That(result(100, 1), Is.EqualTo(101));
         }
 
         [Test]
@@ -87,10 +87,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int> del = (@this,a1) => { tSeenThis = @this; tTotal = a1; };
+            ThisAction<int> del = (@this, a1) => { tSeenThis = @this; tTotal = a1; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1);
+            result(999, 1);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(1));
         }
@@ -98,29 +98,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity2()
         {
-            Func<int,int,int> del = (a1,a2) => a1+a2;
+            Func<int, int, int> del = (a1, a2) => a1+a2;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2), Is.EqualTo(3));
+            Assert.That(result(1, 2), Is.EqualTo(3));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity2()
         {
-            ThisFunc<int,int,int> del = (@this,a1,a2) => (int)@this+a1+a2;
+            ThisFunc<int, int, int> del = (@this, a1, a2) => (int)@this+a1+a2;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2), Is.EqualTo(103));
+            Assert.That(result(100, 1, 2), Is.EqualTo(103));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity2()
         {
             var tTotal = 0;
-            Action<int,int> del = (a1,a2) => tTotal = a1+a2;
+            Action<int, int> del = (a1, a2) => tTotal = a1+a2;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2);
+            result(1, 2);
             Assert.That(tTotal, Is.EqualTo(3));
         }
 
@@ -129,10 +129,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int> del = (@this,a1,a2) => { tSeenThis = @this; tTotal = a1+a2; };
+            ThisAction<int, int> del = (@this, a1, a2) => { tSeenThis = @this; tTotal = a1+a2; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2);
+            result(999, 1, 2);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(3));
         }
@@ -140,29 +140,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity3()
         {
-            Func<int,int,int,int> del = (a1,a2,a3) => a1+a2+a3;
+            Func<int, int, int, int> del = (a1, a2, a3) => a1+a2+a3;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3), Is.EqualTo(6));
+            Assert.That(result(1, 2, 3), Is.EqualTo(6));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity3()
         {
-            ThisFunc<int,int,int,int> del = (@this,a1,a2,a3) => (int)@this+a1+a2+a3;
+            ThisFunc<int, int, int, int> del = (@this, a1, a2, a3) => (int)@this+a1+a2+a3;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3), Is.EqualTo(106));
+            Assert.That(result(100, 1, 2, 3), Is.EqualTo(106));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity3()
         {
             var tTotal = 0;
-            Action<int,int,int> del = (a1,a2,a3) => tTotal = a1+a2+a3;
+            Action<int, int, int> del = (a1, a2, a3) => tTotal = a1+a2+a3;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3);
+            result(1, 2, 3);
             Assert.That(tTotal, Is.EqualTo(6));
         }
 
@@ -171,10 +171,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int> del = (@this,a1,a2,a3) => { tSeenThis = @this; tTotal = a1+a2+a3; };
+            ThisAction<int, int, int> del = (@this, a1, a2, a3) => { tSeenThis = @this; tTotal = a1+a2+a3; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3);
+            result(999, 1, 2, 3);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(6));
         }
@@ -182,29 +182,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity4()
         {
-            Func<int,int,int,int,int> del = (a1,a2,a3,a4) => a1+a2+a3+a4;
+            Func<int, int, int, int, int> del = (a1, a2, a3, a4) => a1+a2+a3+a4;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4), Is.EqualTo(10));
+            Assert.That(result(1, 2, 3, 4), Is.EqualTo(10));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity4()
         {
-            ThisFunc<int,int,int,int,int> del = (@this,a1,a2,a3,a4) => (int)@this+a1+a2+a3+a4;
+            ThisFunc<int, int, int, int, int> del = (@this, a1, a2, a3, a4) => (int)@this+a1+a2+a3+a4;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4), Is.EqualTo(110));
+            Assert.That(result(100, 1, 2, 3, 4), Is.EqualTo(110));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity4()
         {
             var tTotal = 0;
-            Action<int,int,int,int> del = (a1,a2,a3,a4) => tTotal = a1+a2+a3+a4;
+            Action<int, int, int, int> del = (a1, a2, a3, a4) => tTotal = a1+a2+a3+a4;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4);
+            result(1, 2, 3, 4);
             Assert.That(tTotal, Is.EqualTo(10));
         }
 
@@ -213,10 +213,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int> del = (@this,a1,a2,a3,a4) => { tSeenThis = @this; tTotal = a1+a2+a3+a4; };
+            ThisAction<int, int, int, int> del = (@this, a1, a2, a3, a4) => { tSeenThis = @this; tTotal = a1+a2+a3+a4; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4);
+            result(999, 1, 2, 3, 4);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(10));
         }
@@ -224,29 +224,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity5()
         {
-            Func<int,int,int,int,int,int> del = (a1,a2,a3,a4,a5) => a1+a2+a3+a4+a5;
+            Func<int, int, int, int, int, int> del = (a1, a2, a3, a4, a5) => a1+a2+a3+a4+a5;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5), Is.EqualTo(15));
+            Assert.That(result(1, 2, 3, 4, 5), Is.EqualTo(15));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity5()
         {
-            ThisFunc<int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5) => (int)@this+a1+a2+a3+a4+a5;
+            ThisFunc<int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5) => (int)@this+a1+a2+a3+a4+a5;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5), Is.EqualTo(115));
+            Assert.That(result(100, 1, 2, 3, 4, 5), Is.EqualTo(115));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity5()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int> del = (a1,a2,a3,a4,a5) => tTotal = a1+a2+a3+a4+a5;
+            Action<int, int, int, int, int> del = (a1, a2, a3, a4, a5) => tTotal = a1+a2+a3+a4+a5;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5);
+            result(1, 2, 3, 4, 5);
             Assert.That(tTotal, Is.EqualTo(15));
         }
 
@@ -255,10 +255,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5; };
+            ThisAction<int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5);
+            result(999, 1, 2, 3, 4, 5);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(15));
         }
@@ -266,29 +266,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity6()
         {
-            Func<int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6) => a1+a2+a3+a4+a5+a6;
+            Func<int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6) => a1+a2+a3+a4+a5+a6;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6), Is.EqualTo(21));
+            Assert.That(result(1, 2, 3, 4, 5, 6), Is.EqualTo(21));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity6()
         {
-            ThisFunc<int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6) => (int)@this+a1+a2+a3+a4+a5+a6;
+            ThisFunc<int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6) => (int)@this+a1+a2+a3+a4+a5+a6;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6), Is.EqualTo(121));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6), Is.EqualTo(121));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity6()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6) => tTotal = a1+a2+a3+a4+a5+a6;
+            Action<int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6) => tTotal = a1+a2+a3+a4+a5+a6;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6);
+            result(1, 2, 3, 4, 5, 6);
             Assert.That(tTotal, Is.EqualTo(21));
         }
 
@@ -297,10 +297,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6; };
+            ThisAction<int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6);
+            result(999, 1, 2, 3, 4, 5, 6);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(21));
         }
@@ -308,29 +308,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity7()
         {
-            Func<int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7) => a1+a2+a3+a4+a5+a6+a7;
+            Func<int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7) => a1+a2+a3+a4+a5+a6+a7;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7), Is.EqualTo(28));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7), Is.EqualTo(28));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity7()
         {
-            ThisFunc<int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7) => (int)@this+a1+a2+a3+a4+a5+a6+a7;
+            ThisFunc<int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7) => (int)@this+a1+a2+a3+a4+a5+a6+a7;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7), Is.EqualTo(128));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7), Is.EqualTo(128));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity7()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7) => tTotal = a1+a2+a3+a4+a5+a6+a7;
+            Action<int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7) => tTotal = a1+a2+a3+a4+a5+a6+a7;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7);
+            result(1, 2, 3, 4, 5, 6, 7);
             Assert.That(tTotal, Is.EqualTo(28));
         }
 
@@ -339,10 +339,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7; };
+            ThisAction<int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7);
+            result(999, 1, 2, 3, 4, 5, 6, 7);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(28));
         }
@@ -350,29 +350,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity8()
         {
-            Func<int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8) => a1+a2+a3+a4+a5+a6+a7+a8;
+            Func<int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8) => a1+a2+a3+a4+a5+a6+a7+a8;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7,8), Is.EqualTo(36));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7, 8), Is.EqualTo(36));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity8()
         {
-            ThisFunc<int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8;
+            ThisFunc<int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7,8), Is.EqualTo(136));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7, 8), Is.EqualTo(136));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity8()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8;
+            Action<int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7,8);
+            result(1, 2, 3, 4, 5, 6, 7, 8);
             Assert.That(tTotal, Is.EqualTo(36));
         }
 
@@ -381,10 +381,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8; };
+            ThisAction<int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7,8);
+            result(999, 1, 2, 3, 4, 5, 6, 7, 8);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(36));
         }
@@ -392,29 +392,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity9()
         {
-            Func<int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9) => a1+a2+a3+a4+a5+a6+a7+a8+a9;
+            Func<int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9) => a1+a2+a3+a4+a5+a6+a7+a8+a9;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7,8,9), Is.EqualTo(45));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7, 8, 9), Is.EqualTo(45));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity9()
         {
-            ThisFunc<int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9;
+            ThisFunc<int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7,8,9), Is.EqualTo(145));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7, 8, 9), Is.EqualTo(145));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity9()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9;
+            Action<int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7,8,9);
+            result(1, 2, 3, 4, 5, 6, 7, 8, 9);
             Assert.That(tTotal, Is.EqualTo(45));
         }
 
@@ -423,10 +423,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9; };
+            ThisAction<int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7,8,9);
+            result(999, 1, 2, 3, 4, 5, 6, 7, 8, 9);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(45));
         }
@@ -434,29 +434,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity10()
         {
-            Func<int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10;
+            Func<int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7,8,9,10), Is.EqualTo(55));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), Is.EqualTo(55));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity10()
         {
-            ThisFunc<int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10;
+            ThisFunc<int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7,8,9,10), Is.EqualTo(155));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), Is.EqualTo(155));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity10()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10;
+            Action<int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7,8,9,10);
+            result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
             Assert.That(tTotal, Is.EqualTo(55));
         }
 
@@ -465,10 +465,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10; };
+            ThisAction<int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7,8,9,10);
+            result(999, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(55));
         }
@@ -476,29 +476,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity11()
         {
-            Func<int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11;
+            Func<int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7,8,9,10,11), Is.EqualTo(66));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), Is.EqualTo(66));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity11()
         {
-            ThisFunc<int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11;
+            ThisFunc<int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7,8,9,10,11), Is.EqualTo(166));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), Is.EqualTo(166));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity11()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11;
+            Action<int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7,8,9,10,11);
+            result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
             Assert.That(tTotal, Is.EqualTo(66));
         }
 
@@ -507,10 +507,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11; };
+            ThisAction<int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7,8,9,10,11);
+            result(999, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(66));
         }
@@ -518,29 +518,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity12()
         {
-            Func<int,int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
+            Func<int, int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7,8,9,10,11,12), Is.EqualTo(78));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), Is.EqualTo(78));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity12()
         {
-            ThisFunc<int,int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
+            ThisFunc<int, int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7,8,9,10,11,12), Is.EqualTo(178));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), Is.EqualTo(178));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity12()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
+            Action<int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7,8,9,10,11,12);
+            result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
             Assert.That(tTotal, Is.EqualTo(78));
         }
 
@@ -549,10 +549,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12; };
+            ThisAction<int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7,8,9,10,11,12);
+            result(999, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(78));
         }
@@ -560,29 +560,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity13()
         {
-            Func<int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13;
+            Func<int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7,8,9,10,11,12,13), Is.EqualTo(91));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), Is.EqualTo(91));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity13()
         {
-            ThisFunc<int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13;
+            ThisFunc<int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7,8,9,10,11,12,13), Is.EqualTo(191));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), Is.EqualTo(191));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity13()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13;
+            Action<int, int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7,8,9,10,11,12,13);
+            result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
             Assert.That(tTotal, Is.EqualTo(91));
         }
 
@@ -591,10 +591,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13; };
+            ThisAction<int, int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7,8,9,10,11,12,13);
+            result(999, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(91));
         }
@@ -602,29 +602,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity14()
         {
-            Func<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14;
+            Func<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7,8,9,10,11,12,13,14), Is.EqualTo(105));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14), Is.EqualTo(105));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity14()
         {
-            ThisFunc<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14;
+            ThisFunc<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7,8,9,10,11,12,13,14), Is.EqualTo(205));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14), Is.EqualTo(205));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity14()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14;
+            Action<int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7,8,9,10,11,12,13,14);
+            result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
             Assert.That(tTotal, Is.EqualTo(105));
         }
 
@@ -633,10 +633,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14; };
+            ThisAction<int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7,8,9,10,11,12,13,14);
+            result(999, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(105));
         }
@@ -644,29 +644,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity15()
         {
-            Func<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15;
+            Func<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), Is.EqualTo(120));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15), Is.EqualTo(120));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity15()
         {
-            ThisFunc<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15;
+            ThisFunc<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), Is.EqualTo(220));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15), Is.EqualTo(220));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity15()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15;
+            Action<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+            result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
             Assert.That(tTotal, Is.EqualTo(120));
         }
 
@@ -675,10 +675,10 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15; };
+            ThisAction<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+            result(999, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(120));
         }
@@ -686,29 +686,29 @@ namespace Dynamitey.Tests
         [Test]
         public void TestReturnArgumentsArity16()
         {
-            Func<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16;
+            Func<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16) => a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16;
             var result = Return<int>.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16), Is.EqualTo(136));
+            Assert.That(result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16), Is.EqualTo(136));
         }
 
         [Test]
         public void TestReturnThisAndArgumentsArity16()
         {
-            ThisFunc<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16;
+            ThisFunc<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16) => (int)@this+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16;
             var result = Return<int>.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            Assert.That(result(100,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16), Is.EqualTo(236));
+            Assert.That(result(100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16), Is.EqualTo(236));
         }
 
         [Test]
         public void TestReturnVoidArgumentsArity16()
         {
             var tTotal = 0;
-            Action<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16;
+            Action<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16) => tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16;
             var result = ReturnVoid.Arguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+            result(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
             Assert.That(tTotal, Is.EqualTo(136));
         }
 
@@ -717,13 +717,12 @@ namespace Dynamitey.Tests
         {
             object tSeenThis = -1;
             var tTotal = 0;
-            ThisAction<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int> del = (@this,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16; };
+            ThisAction<int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int> del = (@this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16) => { tSeenThis = @this; tTotal = a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16; };
             var result = ReturnVoid.ThisAndArguments(del);
             Assert.That(ReferenceEquals(result, del), Is.True);
-            result(999,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+            result(999, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
             Assert.That(tSeenThis, Is.EqualTo(999));
             Assert.That(tTotal, Is.EqualTo(136));
         }
-
     }
 }

@@ -1,9 +1,9 @@
 // Issue #105. PartialApply.TryInvoke chose CacheableInvocation / FastDynamicInvoke
 // from the current binder's names only. InvokeArg values stored in earlier
 // stages were passed as positional objects. Types here exist only for this fixture.
-using System;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {

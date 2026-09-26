@@ -3,11 +3,11 @@
 // throw during rehash or drop an entry. ClearCaches now empties them so this
 // fixture can start cold. NonParallelizable: ClearCaches must not race the rest
 // of the suite.
+using NUnit.Framework;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {

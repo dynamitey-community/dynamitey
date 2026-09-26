@@ -1,42 +1,35 @@
-﻿// 
+﻿//
 //  Copyright 2011  Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-
-using System;
+using Dynamitey.Internal.Optimization;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Dynamic;
 using System.Linq;
-
-using System.Text;
-using Dynamitey.Internal.Optimization;
-
 
 namespace Dynamitey.DynamicObjects
 {
     /// <summary>
     /// Proxy that Records Dynamic Invocations on an object
     /// </summary>
-    public class Recorder:BaseForwarder
+    public class Recorder : BaseForwarder
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Recorder"/> class.
         /// </summary>
         [RequiresDynamicCode("Constructing any BaseForwarder-derived type (and the Dummy target) instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        public Recorder():base(new Dummy())
+        public Recorder() : base(new Dummy())
         {
             Recording = new List<Invocation>();
         }
@@ -93,7 +86,7 @@ namespace Dynamitey.DynamicObjects
         {
             if (base.TryGetMember(binder, out result))
             {
-                Recording.Add(new Invocation(InvocationKind.Get,binder.Name));
+                Recording.Add(new Invocation(InvocationKind.Get, binder.Name));
                 return true;
             }
             return false;
@@ -111,7 +104,7 @@ namespace Dynamitey.DynamicObjects
         {
             if (base.TrySetMember(binder, value))
             {
-                Recording.Add(new Invocation(InvocationKind.Set,binder.Name,value));
+                Recording.Add(new Invocation(InvocationKind.Set, binder.Name, value));
                 return true;
             }
             return false;
@@ -174,6 +167,5 @@ namespace Dynamitey.DynamicObjects
             }
             return false;
         }
-
     }
 }

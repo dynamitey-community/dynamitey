@@ -1,17 +1,13 @@
-﻿using System;
+﻿using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Dynamitey;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {
     [TestFixture]
     public class TuplerTest
     {
-
         [Test]
         public void DynamicCreateTypedTuple()
         {
@@ -32,7 +28,7 @@ namespace Dynamitey.Tests
 
             var tup2 = Tuple.Create(1, "2", "3", 4, 5, 6, 7, "8");
 
-            Assert.That(tup,Is.TypeOf(tup2.GetType()));
+            Assert.That(tup, Is.TypeOf(tup2.GetType()));
 
             Assert.That(tup, Is.EqualTo(tup2));
         }
@@ -58,7 +54,7 @@ namespace Dynamitey.Tests
         {
             var tup = Tuple.Create(1, 2, 3, 4, 5);
 
-            Assert.That((object)Tupler.Size(tup),Is.EqualTo(5));
+            Assert.That((object)Tupler.Size(tup), Is.EqualTo(5));
         }
 
         // Guards the TupleArgs arity map in InvokeHelper (T4-generated). That dictionary keyed its
@@ -85,17 +81,19 @@ namespace Dynamitey.Tests
 
             Assert.That((object)Tupler.Size(tTuple), Is.EqualTo(tArity));
         }
+
         [Test]
         public void DynamicTupleSize8()
         {
-            var tup = Tuple.Create(1, 2, 3, 4, 5,6,7,8);
+            var tup = Tuple.Create(1, 2, 3, 4, 5, 6, 7, 8);
 
             Assert.That((object)Tupler.Size(tup), Is.EqualTo(8));
         }
+
         [Test]
         public void DynamicTupleSize20()
         {
-            var tup = Tupler.Create(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20);
+            var tup = Tupler.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20);
 
             Assert.That((object)Tupler.Size(tup), Is.EqualTo(20));
         }
@@ -103,10 +101,9 @@ namespace Dynamitey.Tests
         [Test]
         public void DynamicTupleToList()
         {
-            var tup =Tuple.Create(1, 2, 3, 4, 5);
-            var exp=Enumerable.Range(1,5).ToList();
-            Assert.That((object)Tupler.ToList(tup),Is.EqualTo(exp));
-
+            var tup = Tuple.Create(1, 2, 3, 4, 5);
+            var exp = Enumerable.Range(1, 5).ToList();
+            Assert.That((object)Tupler.ToList(tup), Is.EqualTo(exp));
         }
 
         [Test]
@@ -125,8 +122,6 @@ namespace Dynamitey.Tests
             Assert.That((object)Tupler.ToList(tup), Is.EqualTo(exp));
         }
 
-
-
         [Test]
         public void DynamicListToTuple()
         {
@@ -134,7 +129,6 @@ namespace Dynamitey.Tests
             var tup = exp.ToTuple();
             Assert.That((object)Tupler.IsTuple(tup), Is.True);
             Assert.That((object)Tupler.ToList(tup), Is.EqualTo(exp));
-
         }
 
         [Test]
@@ -149,20 +143,17 @@ namespace Dynamitey.Tests
         [Test]
         public void DynamicListToTuple20()
         {
-    
             var exp = Enumerable.Range(1, 20).ToList();
             var tup = exp.ToTuple();
             Assert.That((object)Tupler.IsTuple(tup), Is.True);
             Assert.That((object)Tupler.ToList(tup), Is.EqualTo(exp));
         }
 
-
-
         [Test]
         public void DynamicTupleIndex()
         {
             var tup = Tupler.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20);
-            Assert.That((object)Tupler.Index(tup,5), Is.EqualTo(6));
+            Assert.That((object)Tupler.Index(tup, 5), Is.EqualTo(6));
         }
 
         [Test]

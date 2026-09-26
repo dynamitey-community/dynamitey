@@ -9,6 +9,5 @@ namespace Dynamitey.Tests
     /// </summary>
     public class Helper
     {
-
     }
 }

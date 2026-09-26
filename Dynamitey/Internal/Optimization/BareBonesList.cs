@@ -1,12 +1,12 @@
-﻿// 
+﻿//
 //  Copyright 2011 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,13 +19,12 @@ using System.Collections.Generic;
 
 namespace Dynamitey.Internal.Optimization
 {
-    internal sealed class BareBonesList<T>: ICollection<T>
+    internal sealed class BareBonesList<T> : ICollection<T>
     {
         private readonly T[] _list;
         private int _addIndex;
 
         private readonly int _length;
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BareBonesList&lt;T&gt;"/> class.
@@ -54,7 +53,7 @@ namespace Dynamitey.Internal.Optimization
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            Array.Copy(_list,arrayIndex,array,0,_length);
+            Array.Copy(_list, arrayIndex, array, 0, _length);
         }
 
         public bool Remove(T item)
@@ -72,14 +71,13 @@ namespace Dynamitey.Internal.Optimization
         /// <returns></returns>
         public IEnumerator<T> GetEnumerator()
         {
-            return new BareBonesEnumerator(_list,_addIndex);
+            return new BareBonesEnumerator(_list, _addIndex);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
-
 
         // Sealed because Dispose here is not virtual, so a derived type could not
         // participate in disposal correctly (IDISP025). Free to do: the type is
@@ -100,7 +98,6 @@ namespace Dynamitey.Internal.Optimization
 
             public void Dispose()
             {
-
             }
 
             public bool MoveNext()
@@ -121,8 +118,5 @@ namespace Dynamitey.Internal.Optimization
             // annotation mismatch; it doesn't affect what value is actually returned.
             object IEnumerator.Current => Current!;
         }
-    
     }
-
- 
 }

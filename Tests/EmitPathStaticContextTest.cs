@@ -7,10 +7,8 @@
 // context on both sides so the cache keys differ only by the static flag.
 // ClearCaches at the start of each test so ordering is explicit, not leftover
 // from another test.
-using System;
-using System.Linq;
-using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
+using System.Linq;
 
 namespace Dynamitey.Tests
 {

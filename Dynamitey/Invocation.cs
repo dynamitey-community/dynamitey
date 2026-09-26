@@ -1,24 +1,23 @@
-﻿// 
+﻿//
 //  Copyright 2011  Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-
+using Dynamitey.Internal.Optimization;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Dynamitey.Internal.Optimization;
 
 namespace Dynamitey
 {
@@ -31,77 +30,89 @@ namespace Dynamitey
         /// <summary>
         /// NotSet
         /// </summary>
-        NotSet=0,
+        NotSet = 0,
+
         /// <summary>
         /// Convert Implicit or Explicitly
         /// </summary>
         Convert,
+
         /// <summary>
         /// Get Property
         /// </summary>
         Get,
+
         /// <summary>
         /// Set Property
         /// </summary>
         Set,
+
         /// <summary>
         /// Get Indexer
         /// </summary>
         GetIndex,
+
         /// <summary>
         /// Set Indexer
         /// </summary>
         SetIndex,
+
         /// <summary>
         /// Invoke Method the has return value
         /// </summary>
         InvokeMember,
+
         /// <summary>
         /// Invoke Method that returns void
         /// </summary>
         InvokeMemberAction,
+
         /// <summary>
         /// Invoke Method that could return a value or void
         /// </summary>
         InvokeMemberUnknown,
+
         /// <summary>
         /// Invoke Constructor
         /// </summary>
         Constructor,
+
         /// <summary>
         /// Invoke +=
         /// </summary>
         AddAssign,
+
         /// <summary>
         /// Invoke -=
         /// </summary>
         SubtractAssign,
+
         /// <summary>
         /// Invoke Event Property Test
         /// </summary>
         IsEvent,
+
         /// <summary>
         /// Invoke Directly
         /// </summary>
         Invoke,
+
         /// <summary>
         /// Invoke Directly DiscardResult
         /// </summary>
         InvokeAction,
+
         /// <summary>
         /// Invoke Directly Return Value
         /// </summary>
         InvokeUnknown,
-
     }
-
 
     /// <summary>
     /// Storable representation of an invocation without the target
     /// </summary>
     public class Invocation
     {
-
         /// <summary>
         /// De facto Binder Name for Explicit Convert Op
         /// </summary>
@@ -117,7 +128,6 @@ namespace Dynamitey
         /// </summary>
         public static readonly string IndexBinderName = "Item";
 
-
         /// <summary>
         /// De facto Binder Name for Constructor
         /// </summary>
@@ -128,6 +138,7 @@ namespace Dynamitey
         /// </summary>
         /// <value>The kind.</value>
         public InvocationKind Kind { get; protected set; }
+
         /// <summary>
         /// Gets or sets the name. <see langword="null"/> for a Kind - such as
         /// <see cref="InvocationKind.Convert"/> or <see cref="InvocationKind.Invoke"/> - that
@@ -135,6 +146,7 @@ namespace Dynamitey
         /// </summary>
         /// <value>The name.</value>
         public String_OR_InvokeMemberName? Name { get; protected set; }
+
         /// <summary>
         /// Gets or sets the args. <see langword="null"/> when constructed with no stored args
         /// (e.g. <see cref="CacheableInvocation.CreateConvert"/>'s default); individual elements
@@ -160,7 +172,7 @@ namespace Dynamitey
         /// <returns></returns>
         public static Invocation Create(InvocationKind kind, String_OR_InvokeMemberName? name, params object?[]? storedArgs)
         {
-            return new Invocation(kind,name,storedArgs);
+            return new Invocation(kind, name, storedArgs);
         }
 
         /// <summary>
@@ -226,15 +238,15 @@ namespace Dynamitey
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (Invocation)) return false;
-            return Equals((Invocation) obj);
+            if (obj.GetType() != typeof(Invocation)) return false;
+            return Equals((Invocation)obj);
         }
 
         /// <summary>
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {
@@ -292,26 +304,34 @@ namespace Dynamitey
             {
                 case InvocationKind.Constructor:
                     return Dynamic.InvokeConstructor((Type)target, args!);
+
                 case InvocationKind.Convert:
                     bool tExplicit = false;
                     if (Args!.Length == 2)
                         tExplicit = (bool)args![1]!;
                     return Dynamic.InvokeConvert(target, (Type)args![0]!, tExplicit);
+
                 case InvocationKind.Get:
                     return Dynamic.InvokeGet(target, Name!.Name);
+
                 case InvocationKind.Set:
                     Dynamic.InvokeSet(target, Name!.Name, args!.FirstOrDefault());
                     return null;
+
                 case InvocationKind.GetIndex:
                     return Dynamic.InvokeGetIndex(target, args!);
+
                 case InvocationKind.SetIndex:
                     Dynamic.InvokeSetIndex(target, args!);
                     return null;
+
                 case InvocationKind.InvokeMember:
                     return Dynamic.InvokeMember(target, Name!, args!);
+
                 case InvocationKind.InvokeMemberAction:
                     Dynamic.InvokeMemberAction(target, Name!, args!);
                     return null;
+
                 case InvocationKind.InvokeMemberUnknown:
                     {
                         var tTarget = target.GetTargetContext(out var tContext, out var tStaticContext);
@@ -323,9 +343,11 @@ namespace Dynamitey
                     }
                 case InvocationKind.Invoke:
                     return Dynamic.Invoke(target, args!);
+
                 case InvocationKind.InvokeAction:
                     Dynamic.InvokeAction(target, args!);
                     return null;
+
                 case InvocationKind.InvokeUnknown:
                     {
                         var tTarget = target.GetTargetContext(out var tContext, out var tStaticContext);
@@ -337,15 +359,17 @@ namespace Dynamitey
                 case InvocationKind.AddAssign:
                     Dynamic.InvokeAddAssignMember(target, Name!.Name, args!.FirstOrDefault());
                     return null;
+
                 case InvocationKind.SubtractAssign:
                     Dynamic.InvokeSubtractAssignMember(target, Name!.Name, args!.FirstOrDefault());
                     return null;
+
                 case InvocationKind.IsEvent:
                     return Dynamic.InvokeIsEvent(target, Name!.Name);
+
                 default:
                     throw new InvalidOperationException("Unknown Invocation Kind: " + Kind);
             }
-
         }
 
         /// <summary>

@@ -1,22 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 
-using System.Text;
-
-using System.Reflection;
 namespace Dynamitey.DynamicObjects
 {
-
-
     /// <summary>
     /// Building block to use Method calls as dynamic lookups
     /// </summary>
-    public class FluentStringLookup:DynamicObject
+    public class FluentStringLookup : DynamicObject
     {
-       
         private readonly Func<string, dynamic> _lookup;
 
         /// <summary>
@@ -24,7 +17,7 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         /// <param name="lookup">The lookup.</param>
         [RequiresDynamicCode("Constructing a FluentStringLookup instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        public FluentStringLookup(Func<string,dynamic> lookup)
+        public FluentStringLookup(Func<string, dynamic> lookup)
         {
             _lookup = lookup;
         }
@@ -63,7 +56,5 @@ namespace Dynamitey.DynamicObjects
             }
             return false;
         }
-
-
     }
 }

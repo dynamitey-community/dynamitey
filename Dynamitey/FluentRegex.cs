@@ -1,8 +1,8 @@
+using Dynamitey.Internal;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Dynamitey.Internal;
 
 namespace Dynamitey
 {
@@ -11,7 +11,6 @@ namespace Dynamitey
     /// </summary>
     public static class FluentRegex
     {
-
         /// <summary>
         /// Fluents the filter.
         /// </summary>
@@ -81,6 +80,5 @@ namespace Dynamitey
         {
             return Matches(inputString, regex);
         }
-
     }
 }

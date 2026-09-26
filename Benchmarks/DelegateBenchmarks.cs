@@ -1,5 +1,5 @@
-using System;
 using BenchmarkDotNet.Attributes;
+using System;
 
 namespace Dynamitey.Benchmarks
 {

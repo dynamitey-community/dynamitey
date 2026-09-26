@@ -5,13 +5,13 @@
 // genuinely fails), the null-CallTarget short-circuits, TryInvoke's
 // Invoke-then-InvokeAction fallback, the event add/remove branches in
 // TrySetMember, and Equals/GetHashCode.
+using Dynamitey.SupportLibrary;
+using Microsoft.CSharp.RuntimeBinder;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using Dynamitey.SupportLibrary;
-using Microsoft.CSharp.RuntimeBinder;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {

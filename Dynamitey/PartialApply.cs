@@ -1,27 +1,19 @@
-﻿using System;
-using System.Collections;
+﻿using Dynamitey.Internal.Optimization;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using System.Text;
-using System.Reflection;
-using Dynamitey.Internal.Optimization;
-
 namespace Dynamitey
 {
-
-
-
     /// <summary>
     /// Internal method for subsequent invocations of <see cref="Dynamic.Curry(object,System.Nullable{int})"/>
     /// </summary>
-   
+
     public class PartialApply : DynamicObject, IPartialApply
     {
-
         /// <summary>
         /// Pipes the argument into the function
         /// </summary>
@@ -37,7 +29,7 @@ namespace Dynamitey
             "this repository exercises the `|` syntax.")]
         public static dynamic operator |(dynamic argument, PartialApply function)
         {
-           return ((dynamic)function)(argument);
+            return ((dynamic)function)(argument);
         }
 
         /// <summary>
@@ -93,7 +85,6 @@ namespace Dynamitey
             return result != null;
         }
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="PartialApply" /> class.
         /// </summary>
@@ -114,15 +105,14 @@ namespace Dynamitey
             _args = args;
         }
 
-       
         private readonly int? _totalArgCount;
-       
+
         private readonly object _target;
-       
+
         private readonly string? _memberName;
-       
+
         private readonly object?[] _args;
-       
+
         private readonly InvocationKind _invocationKind;
 
         /// <summary>
@@ -169,6 +159,7 @@ namespace Dynamitey
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.
         /// </returns>
 #pragma warning restore 1734
+
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
             "Calls the annotated Delegate.FastDynamicInvoke and Invocation.Invoke. This is a " +
             "DynamicObject.TryInvoke override: it can't carry [RequiresUnreferencedCode] itself " +
@@ -204,7 +195,6 @@ namespace Dynamitey
                 return true;
             }
 
-
             Invocation tInvocation;
             if (!tHasNames) //If no argument names we can cache the callsite
             {
@@ -212,7 +202,6 @@ namespace Dynamitey
                 {
                     tCacheableInvocation = new CacheableInvocation(InvocationKind, _memberName, argCount: tNewArgs.Length, context: _target);
                     _cacheableInvocation[tNewArgs.Length] = tCacheableInvocation;
-
                 }
                 tInvocation = tCacheableInvocation;
             }
@@ -222,7 +211,6 @@ namespace Dynamitey
             }
 
             result = tInvocation.Invoke(_target, tNewArgs);
-
 
             return true;
         }

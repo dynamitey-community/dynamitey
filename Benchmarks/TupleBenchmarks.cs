@@ -1,7 +1,6 @@
-using System;
-using System.Linq;
 using BenchmarkDotNet.Attributes;
 using Microsoft.FSharp.Reflection;
+using System.Linq;
 
 namespace Dynamitey.Benchmarks
 {

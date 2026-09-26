@@ -1,41 +1,36 @@
-﻿ // 
+﻿//
 //  Copyright 2010  Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
-using System.Reflection;
-
 
 namespace Dynamitey.DynamicObjects
 {
     /// <summary>
     /// Similar to Expando Objects but handles null values when the property is defined with an impromptu interface
     /// </summary>
-    public class Dictionary:BaseDictionary,IDictionary<string,object>
+    public class Dictionary : BaseDictionary, IDictionary<string, object>
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Dictionary"/> class.
         /// </summary>
         [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        public Dictionary() 
+        public Dictionary()
         {
         }
 
@@ -48,13 +43,11 @@ namespace Dynamitey.DynamicObjects
         {
         }
 
-
         /// <summary>
         /// Gets the count.
         /// </summary>
         /// <value>The count.</value>
         public int Count => _dictionary.Count;
-
 
         /// <summary>
         /// Gets the enumerator.
@@ -62,7 +55,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
         {
-           return _dictionary.GetEnumerator();
+            return _dictionary.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -100,18 +93,16 @@ namespace Dynamitey.DynamicObjects
         }
     }
 
-
     /// <summary>
     /// Adds extra syntax to initialize properties to match up with clay
     /// </summary>
-	public class ChainableDictionary:Dictionary{
-
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="ChainableDictionary"/> class.
-            /// </summary>
+	public class ChainableDictionary : Dictionary
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChainableDictionary"/> class.
+        /// </summary>
         [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        public ChainableDictionary() 
+        public ChainableDictionary()
         {
         }
 
@@ -123,7 +114,6 @@ namespace Dynamitey.DynamicObjects
         public ChainableDictionary(IEnumerable<KeyValuePair<string, object>> dict) : base(dict)
         {
         }
-
 
         /// <summary>
         /// Provides the implementation for operations that invoke a member. Classes derived from the <see cref="System.Dynamic.DynamicObject" /> class can override this method to specify dynamic behavior for operations such as calling a method.
@@ -143,24 +133,26 @@ namespace Dynamitey.DynamicObjects
             "Same List construction as above; see the IL2026 suppression on this member.")]
         [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
-		public override bool TryInvokeMember (InvokeMemberBinder binder, object?[]? args, out object? result)
-		{
-			if(base.TryInvokeMember (binder, args, out result)){
-				return true;
-			}
-			if(binder.CallInfo.ArgumentCount ==1){
-					SetProperty(binder.Name, args!.FirstOrDefault());
-				result = this;
-				return true;
-			}
-            if (binder.CallInfo.ArgumentCount > 1)
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
+        {
+            if (base.TryInvokeMember(binder, args, out result))
             {
-                SetProperty(binder.Name,new List(args!));
+                return true;
+            }
+            if (binder.CallInfo.ArgumentCount ==1)
+            {
+                SetProperty(binder.Name, args!.FirstOrDefault());
                 result = this;
                 return true;
             }
-				
-			return false;
-		}
-	}
+            if (binder.CallInfo.ArgumentCount > 1)
+            {
+                SetProperty(binder.Name, new List(args!));
+                result = this;
+                return true;
+            }
+
+            return false;
+        }
+    }
 }

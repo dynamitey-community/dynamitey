@@ -1,7 +1,6 @@
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Dynamitey;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {

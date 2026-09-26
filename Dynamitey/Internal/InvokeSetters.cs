@@ -1,12 +1,11 @@
-﻿using System;
+﻿using Dynamitey.Internal.Optimization;
+using Microsoft.CSharp.RuntimeBinder;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
-using Dynamitey.Internal.Optimization;
-using Microsoft.CSharp.RuntimeBinder;
-using Dynamitey.Internal.Compat;
 using System.Reflection;
 
 namespace Dynamitey.Internal
@@ -19,7 +18,6 @@ namespace Dynamitey.Internal
         [RequiresDynamicCode("Constructing an InvokeSetters instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         internal InvokeSetters()
         {
-
         }
 
         /// <summary>
@@ -60,7 +58,6 @@ namespace Dynamitey.Internal
             //Setup Properties as dictionary
             if (binder.CallInfo.ArgumentNames.Count != 0)
             {
-
                 if (binder.CallInfo.ArgumentNames.Count + 1 == binder.CallInfo.ArgumentCount)
                 {
                     target = nonNullArgs.First();
@@ -70,8 +67,8 @@ namespace Dynamitey.Internal
                     tDict = binder.CallInfo.ArgumentNames
                         .Zip(nonNullArgs.Skip(1), (key, value) => new { key, value })
                         .ToDictionary(k => k.key, v => v.value!);
-
-                }else
+                }
+                else
                 {
                     throw new RuntimeBinderException("InvokeSetAll requires the first argument to be the target, unnamed, and every other argument to be named.");
                 }
@@ -89,14 +86,14 @@ namespace Dynamitey.Internal
                 {
                     var tEnumerableArg = (IEnumerable)nonNullArgs[1]!;
 
-                    var tInterface = tEnumerableArg.GetType().GetTypeInfo().GetInterfaces().FirstOrDefault(it=>it.Name =="IEnumerable`1");
-                    if(tInterface !=null)
+                    var tInterface = tEnumerableArg.GetType().GetTypeInfo().GetInterfaces().FirstOrDefault(it => it.Name =="IEnumerable`1");
+                    if (tInterface !=null)
                     {
                         var tParamTypes = tInterface.GetTypeInfo().GetGenericArguments();
-                        if(tParamTypes.Length ==1
+                        if (tParamTypes.Length ==1
                             && tParamTypes[0].GetGenericTypeDefinition() == typeof(Tuple<,>))
                         {
-                           tDict= tEnumerableArg.Cast<dynamic>().ToDictionary(k => (string) k.Item1, v => (object) v.Item2);
+                            tDict= tEnumerableArg.Cast<dynamic>().ToDictionary(k => (string)k.Item1, v => (object)v.Item2);
                         }
                     }
                 }

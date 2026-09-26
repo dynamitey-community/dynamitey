@@ -1,34 +1,30 @@
-// 
+//
 //  Copyright 2011 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using Dynamitey.Internal;
+using Dynamitey.Internal.Optimization;
+using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using Dynamitey.Internal.Optimization;
-using Microsoft.CSharp;
-using Microsoft.CSharp.RuntimeBinder;
-using Dynamitey.Internal;
 
 namespace Dynamitey.DynamicObjects
 {
-
     /// <summary>
     /// An proxy object
     /// </summary>
@@ -51,7 +47,6 @@ namespace Dynamitey.DynamicObjects
 
     public abstract class BaseForwarder : BaseObject, IForwarder
     {
-
         /// <summary>
         /// Marks whether we are adding or removing the delegate
         /// </summary>
@@ -106,17 +101,17 @@ namespace Dynamitey.DynamicObjects
             /// Gets or sets the delegate.
             /// </summary>
             /// <value>The delegate.</value>
-           
+
             public object? Delegate { get; protected set; }
 
             /// <summary>
             /// Gets or sets a value indicating whether this instance is adding.
             /// </summary>
             /// <value><c>true</c> if this instance is adding; otherwise, <c>false</c>.</value>
-           
-            public bool IsAdding { get; protected set; }
 
+            public bool IsAdding { get; protected set; }
         }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseForwarder"/> class.
         /// </summary>
@@ -142,7 +137,6 @@ namespace Dynamitey.DynamicObjects
             "Same Dynamic.GetMemberNames calls as above; see the IL2026 suppression on this member.")]
         public override IEnumerable<string> GetDynamicMemberNames()
         {
-           
             // The branches used to be inverted: when the target DID report dynamic members
             // this returned base.GetDynamicMemberNames() - DynamicObject's own, always empty -
             // discarding the list it had just computed, so a forwarder over an ExpandoObject
@@ -159,14 +153,12 @@ namespace Dynamitey.DynamicObjects
                 : Dynamic.GetMemberNames(CallTarget!);
         }
 
-
         /// <summary>
         /// Gets or sets the target.
         /// </summary>
         /// <value>The target.</value>
-         
-       
-        protected object? Target {  get;  set; }
+
+        protected object? Target { get; set; }
 
         object? IForwarder.Target => Target;
 
@@ -218,8 +210,8 @@ namespace Dynamitey.DynamicObjects
             }
 
             return true;
-
         }
+
 #pragma warning disable 1734
         /// <summary>
         /// Provides the implementation for operations that invoke an object. Classes derived from the <see cref="System.Dynamic.DynamicObject" /> class can override this method to specify dynamic behavior for operations such as invoking an object or a delegate.
@@ -231,6 +223,7 @@ namespace Dynamitey.DynamicObjects
         /// true if the operation is successful; otherwise, false. If this method returns false, the run-time binder of the language determines the behavior. (In most cases, a language-specific run-time exception is thrown.
         /// </returns>
 #pragma warning restore 1734
+
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
             "Calls the annotated Dynamic.Invoke/InvokeAction. This is a DynamicObject.TryInvoke " +
             "override: it can't carry [RequiresUnreferencedCode] itself without mismatching the " +
@@ -292,11 +285,10 @@ namespace Dynamitey.DynamicObjects
 
             object?[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, args!);
 
-
             Type[]? types = null;
 
             try
-            { 
+            {
                 //.net core
                 // Try and pull generic arguments from binder
                 IList<Type>? typeList = Dynamic.InvokeGet(binder,
@@ -305,7 +297,6 @@ namespace Dynamitey.DynamicObjects
                 {
                     types = typeList.ToArray();
                 }
-
             }
             catch (RuntimeBinderException)
             {
@@ -315,18 +306,15 @@ namespace Dynamitey.DynamicObjects
             if (types == null)
             {
                 try
-                { 
+                {
                     //.net 4.0
                     // Try and pull generic arguments from binder
                     IList<Type>? typeList = Dynamic.InvokeGet(binder,
                         "Microsoft.CSharp.RuntimeBinder.ICSharpInvokeOrInvokeMemberBinder.TypeArguments");
                     if (typeList != null)
                     {
-
                         types = typeList.ToArray();
-
                     }
-
                 }
                 catch (RuntimeBinderException)
                 {
@@ -351,8 +339,6 @@ namespace Dynamitey.DynamicObjects
             }
             return true;
         }
-
-
 
         /// <summary>
         /// Tries the set member.
@@ -379,8 +365,6 @@ namespace Dynamitey.DynamicObjects
 
             if (Dynamic.InvokeIsEvent(CallTarget, binder.Name) && value is AddRemoveMarker arm)
             {
-      
-
                 if (arm.IsAdding)
                 {
                     Dynamic.InvokeAddAssignMember(CallTarget, binder.Name, arm.Delegate);
@@ -473,8 +457,6 @@ namespace Dynamitey.DynamicObjects
             object?[] tArgs = Util.NameArgsIfNecessary(binder.CallInfo, indexes!).Concat(new[] { value }).ToArray();
             try
             {
-
-
                 Dynamic.InvokeSetIndex(CallTarget, tArgs);
                 return true;
             }
@@ -483,7 +465,6 @@ namespace Dynamitey.DynamicObjects
                 return false;
             }
         }
-
 
         /// <summary>
         /// Equals the specified other.
@@ -527,13 +508,11 @@ namespace Dynamitey.DynamicObjects
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {
             return (CallTarget != null ? CallTarget.GetHashCode() : 0);
         }
-
-    
     }
 }

@@ -1,28 +1,26 @@
-// 
+//
 //  Copyright 2011 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using Dynamitey.Internal.Optimization;
+using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
-using System.Reflection;
-using System.Threading;
-using Dynamitey.Internal.Optimization;
-using Microsoft.CSharp.RuntimeBinder;
 
 namespace Dynamitey.DynamicObjects
 {
@@ -61,15 +59,14 @@ namespace Dynamitey.DynamicObjects
             "change for an external subclass that reads or assigns the field directly - the very thing " +
             "they're declared protected to allow - for no behavioral gain, so this is a suppression " +
             "rather than a fix. Full reasoning here; every other site points back to it.")]
-        protected IDictionary<string,object> _dictionary;
-
+        protected IDictionary<string, object> _dictionary;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Dictionary"/> class.
         /// </summary>
         /// <param name="dict">The dict.</param>
         [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        protected BaseDictionary(IEnumerable<KeyValuePair<string, object>>? dict =null)
+        protected BaseDictionary(IEnumerable<KeyValuePair<string, object>>? dict = null)
         {
             if (dict == null)
             {
@@ -113,7 +110,6 @@ namespace Dynamitey.DynamicObjects
         {
             return base.GetDynamicMemberNames().Concat(_dictionary.Keys).Distinct();
         }
-   
 
         /// <summary>
         /// Provides the implementation for operations that get member values. Classes derived from the <see cref="System.Dynamic.DynamicObject"/> class can override this method to specify dynamic behavior for operations such as getting a value for a property.
@@ -141,7 +137,6 @@ namespace Dynamitey.DynamicObjects
             "codebase points back to this comment rather than repeating it.")]
         public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
-
             if (_dictionary.TryGetValue(binder.Name, out result))
             {
                 return this.MassageResultBasedOnInterface(binder.Name, true, ref result);
@@ -184,11 +179,10 @@ namespace Dynamitey.DynamicObjects
                         result = this.InvokeMethodDelegate(tFunc, args!);
                     }
                     catch (RuntimeBinderException)//If it has out parmaters etc it can't be invoked dynamically like this.
-                    //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation 
+                    //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation
                     {
                         return false;
                     }
-                   
                 }
                 else
                 {
@@ -197,18 +191,16 @@ namespace Dynamitey.DynamicObjects
                         result = Dynamic.Invoke(result, Util.NameArgsIfNecessary(binder.CallInfo, args!));
                     }
                     catch (RuntimeBinderException)
-                        //If it has out parmaters etc it can't be invoked dynamically like this.
-                        //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation 
+                    //If it has out parmaters etc it can't be invoked dynamically like this.
+                    //if we return false it will be handle by the GetProperty and then handled by the original dynamic invocation
                     {
                         return false;
                     }
-                } 
+                }
                 return this.MassageResultBasedOnInterface(binder.Name, true, ref result);
             }
             return this.MassageResultBasedOnInterface(binder.Name, false, ref result);
         }
-
-      
 
         /// <summary>
         /// Provides the implementation for operations that set member values. Classes derived from the <see cref="System.Dynamic.DynamicObject"/> class can override this method to specify dynamic behavior for operations such as setting a value for a property.
@@ -222,8 +214,7 @@ namespace Dynamitey.DynamicObjects
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
-
-            SetProperty(binder.Name,value);
+            SetProperty(binder.Name, value);
             return true;
         }
 
@@ -255,7 +246,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="arrayIndex">Index of the array.</param>
         public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
         {
-            _dictionary.CopyTo(array,arrayIndex);
+            _dictionary.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -300,7 +291,7 @@ namespace Dynamitey.DynamicObjects
         /// <param name="value">The value.</param>
         public void Add(string key, object value)
         {
-            SetProperty(key,value);
+            SetProperty(key, value);
         }
 
         /// <summary>
@@ -328,8 +319,6 @@ namespace Dynamitey.DynamicObjects
             return found;
         }
 
-
-
         /// <summary>
         /// Sets the property.
         /// </summary>
@@ -343,9 +332,9 @@ namespace Dynamitey.DynamicObjects
             // (cs/reference-equality-with-object).
             if (!_dictionary.TryGetValue(key, out var tOldValue) || !Equals(value, tOldValue))
             {
-                // _dictionary's value type is non-null to match Dictionary's public
-                // IDictionary<string, object>, but the DLR can hand TrySetMember a null value;
-                // this stores it anyway, exactly as the untyped original code did.
+                // The stored value is declared non-null so Dictionary's public map
+                // stays non-null, but the DLR can pass null into a set. Store it
+                // anyway, which is what the original untyped code did.
                 _dictionary[key] = value!;
                 OnPropertyChanged(key);
             }
@@ -361,7 +350,6 @@ namespace Dynamitey.DynamicObjects
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(key));
                 PropertyChanged(this, new PropertyChangedEventArgs("Item[]"));  // Indexers are updated on dictionaries too; WPF does not support Item[key] syntax
-
             }
         }
 
@@ -410,15 +398,15 @@ namespace Dynamitey.DynamicObjects
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (Dictionary)) return _dictionary.Equals(obj);
-            return Equals((Dictionary) obj);
+            if (obj.GetType() != typeof(Dictionary)) return _dictionary.Equals(obj);
+            return Equals((Dictionary)obj);
         }
 
         /// <summary>
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {

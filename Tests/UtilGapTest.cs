@@ -1,7 +1,7 @@
-using System;
 using Dynamitey.DynamicObjects;
 using Dynamitey.Internal.Optimization;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {

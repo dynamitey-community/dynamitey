@@ -1,12 +1,12 @@
-﻿// 
+﻿//
 //  Copyright 2010  Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,17 +17,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-
 namespace Dynamitey.DynamicObjects
 {
     /// <summary>
     /// Base Class for making a fluent factory using an Impromptu Interface return type.
     /// </summary>
-   
-   
-    public class BaseFactory:BaseObject
-    {
 
+    public class BaseFactory : BaseObject
+    {
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseFactory"/> class.
         /// </summary>
@@ -81,7 +78,6 @@ namespace Dynamitey.DynamicObjects
             return result != null;
         }
 
-
         /// <summary>
         /// Constructs the type. Override for changing type initialization property changes.
         /// </summary>
@@ -109,15 +105,12 @@ namespace Dynamitey.DynamicObjects
         }
     }
 
-
     /// <summary>
     /// Base Class for making a singleton fluent factory using an Impromptu Interface return type.
     /// </summary>
-     
-   
+
     public class BaseSingleInstancesFactory : BaseFactory
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseSingleInstancesFactory"/> class.
         /// </summary>
@@ -132,7 +125,7 @@ namespace Dynamitey.DynamicObjects
 
         [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
             "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
-        protected readonly Dictionary<string, dynamic> _hashFactoryTypes= new Dictionary<string, dynamic>();
+        protected readonly Dictionary<string, dynamic> _hashFactoryTypes = new Dictionary<string, dynamic>();
 
         /// <summary>
         /// Lock for accessing singletons
@@ -140,7 +133,6 @@ namespace Dynamitey.DynamicObjects
         [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
             "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
         protected readonly object _lockTable = new object();
-
 
         /// <summary>
         /// Gets the instance for a dynamic member. Override for type construction behavior changes based on property name.
@@ -164,7 +156,6 @@ namespace Dynamitey.DynamicObjects
                     {
                         return null;
                     }
-
                 }
 
                 return _hashFactoryTypes[memberName];

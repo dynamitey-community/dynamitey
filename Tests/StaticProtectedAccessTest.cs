@@ -2,10 +2,10 @@
 // context == targetType. That rejects a derived-class context, which in C#
 // has protected access to the base static member. Private must stay rejected
 // from derived and unrelated contexts. Types here exist only for this fixture.
-using System;
 using Dynamitey.SupportLibrary;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {

@@ -3,10 +3,10 @@
 // Awaiting that object from another assembly threw RuntimeBinderException
 // (void-to-object) when T is internal. Types live in SupportLibrary so the
 // result type stays inaccessible to this assembly.
-using System;
-using System.Threading.Tasks;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
+using System;
+using System.Threading.Tasks;
 
 namespace Dynamitey.Tests
 {

@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
 using Dynamitey.DynamicObjects;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace Dynamitey.Tests
 {
@@ -17,11 +17,10 @@ namespace Dynamitey.Tests
         [Test]
         public void FauxTypeTest()
         {
-            var testProp = new Dictionary<String,Type>(){
+            var testProp = new Dictionary<String, Type>(){
                 {"test", typeof(bool)}
             };
 
-            
             var propType = new PropretySpecType(testProp);
 
             var propMembers = propType.GetMemberNames();
@@ -32,15 +31,12 @@ namespace Dynamitey.Tests
 
             Assert.That(realMembers, Does.Contain("Prop2"));
 
-            
-
             var aggrType = new AggreType(propType, realType);
-            
+
             var aggrMembers = aggrType.GetMemberNames();
 
             Assert.That(aggrMembers, Does.Contain("Prop2"));
             Assert.That(aggrMembers, Does.Contain("test"));
-
         }
     }
 }

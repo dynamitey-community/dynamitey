@@ -1,8 +1,8 @@
 # EditorConfig for Dynamitey.
 #
 # Deliberately minimal: this exists to configure analyzers, not to impose a
-# formatting standard on a fifteen-year-old codebase. A formatting pass would
-# touch nearly every file and bury real changes in whitespace diffs.
+# formatting ruleset. The CodeMaid pass (#143) is the formatting of the tree.
+# Further formatting belongs in its own change so it does not bury a real diff.
 
 root = true
 

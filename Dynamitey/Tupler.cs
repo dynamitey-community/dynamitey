@@ -1,28 +1,25 @@
-﻿// 
+﻿//
 //  Copyright 2013 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using Dynamitey.Internal.Optimization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using Dynamitey.DynamicObjects;
-using Dynamitey.Internal.Optimization;
-using Dynamitey.Internal.Compat;
 
 namespace Dynamitey
 {
@@ -49,9 +46,9 @@ namespace Dynamitey
                 return new Tuple<T1, T2, T3, T4, T5, T6, T7, T8>(item1, item2, item3, item4, item5, item6, item7, item8);
             }
         }
-       
+
         private static readonly TuplerFix TuplerHelper = new TuplerFix();
-        private static readonly InvokeContext StaticTuple = InvokeContext.CreateStatic(typeof (Tuple));
+        private static readonly InvokeContext StaticTuple = InvokeContext.CreateStatic(typeof(Tuple));
 
         /// <summary>
         /// Creates a Tuple with arg runtime types.
@@ -137,21 +134,19 @@ namespace Dynamitey
             Dynamitey.Internal.Guard.NotNull(tuple);
 
             var list = new List<dynamic>();
-            HelperToList(list, tuple, safe:false);
+            HelperToList(list, tuple, safe: false);
             return list;
-
         }
-
 
         [RequiresUnreferencedCode("Reads tuple.ItemN via InvokeHelper.TupleItem and tuple.Rest via 'dynamic' member access; trimming can remove those properties.")]
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         private static void HelperToList(List<dynamic> list, object tuple, bool safe)
         {
-            if(HelperIsTuple(tuple, out var type, out var generic, out var size, safe))
+            if (HelperIsTuple(tuple, out _, out _, out var size, safe))
             {
                 for (int i = 0; i < 7 && i < size; i++)
                 {
-                    list.Add(HelperIndex(tuple,i,safe:true));
+                    list.Add(HelperIndex(tuple, i, safe: true));
                 }
 
                 if (size == 8)
@@ -196,12 +191,11 @@ namespace Dynamitey
                 return tuple;
             }
 
-            if( item < 8)
+            if (item < 8)
                 return InvokeHelper.TupleItem(tuple, item);
 
-            object newtarget = ((dynamic) tuple).Rest;
+            object newtarget = ((dynamic)tuple).Rest;
             return HelperIndex(newtarget, item - 8, true);
-          
         }
 
         /// <summary>
@@ -213,7 +207,7 @@ namespace Dynamitey
         /// </returns>
         public static bool IsTuple(object? target)
         {
-            return HelperIsTuple(target, out var type, out var genericType, out var size, false);
+            return HelperIsTuple(target, out _, out _, out _, false);
         }
 
         private static bool HelperIsTuple(object? target, [NotNullWhen(true)] out Type? type, out Type genericeType, out int size, bool safe)
@@ -225,14 +219,12 @@ namespace Dynamitey
                 return false;
             type = target as Type ?? target.GetType();
 
-
             if (safe || type.GetTypeInfo().IsGenericType)
             {
                 genericeType = type.GetGenericTypeDefinition();
             }
 
             return InvokeHelper.TupleArgs.TryGetValue(genericeType, out size);
-
         }
 
         /// <summary>
@@ -248,7 +240,7 @@ namespace Dynamitey
 
         private static int HelperSize(object tuple, bool safe)
         {
-            if (HelperIsTuple(tuple, out var type, out var genericType, out var size, safe) && size == 8)
+            if (HelperIsTuple(tuple, out var type, out _, out var size, safe) && size == 8)
             {
                 var lasttype = type.GetTypeInfo().GetGenericArguments()[7];
                 size = size + HelperSize(lasttype, true) - 1;
