@@ -2,7 +2,7 @@
 
 The original `Dynamitey` package on nuget.org is upstream's, at 3.0.3. This project publishes as `Dynamitey.Community`. Moving between them is a one-line change. Installing the original package does not get you this code.
 
-4.0.0 is the last `Dynamitey.Community` release a .NET Framework 4.6.1 through 4.8.1 project can use. It still targets `netstandard2.0`. Later releases target .NET LTS and STS only, which is what lets them use newer BCL APIs. Framework applications stay on 4.x. Details are in [About 4.0.0](v4.md).
+4.0.0 is the last `Dynamitey.Community` release a .NET Framework 4.6.1 through 4.8.1 project can use. It still targets `netstandard2.0`. Later releases target .NET LTS and STS only, so the library can call BCL APIs that .NET Standard 2.0 does not have. Framework applications stay on 4.x. Details are in [About 4.0.0](v4.md).
 
 ## The change
 

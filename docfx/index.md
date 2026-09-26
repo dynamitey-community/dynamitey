@@ -10,7 +10,7 @@ Dynamitey is a .NET library that wraps the Dynamic Language Runtime to do runtim
 Jay Tuley ([@jbtule](https://github.com/jbtule)) wrote Dynamitey. This documentation covers **Dynamitey.Community**, the community continuation of `ekonbenefits/dynamitey`, which has been dormant since its 3.0.3 release in November 2023.
 
 > [!IMPORTANT]
-> Install **`Dynamitey.Community`** 4.0.0. The original `Dynamitey` package on NuGet remains upstream's 3.0.3 and does not contain this code.
+> The package is **`Dynamitey.Community`** 4.0.0. The original `Dynamitey` package on NuGet remains upstream's 3.0.3 and does not contain this code.
 
 ## Where to start
 
