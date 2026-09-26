@@ -1192,7 +1192,7 @@ namespace Dynamitey.Internal.Optimization
             {
                 dynamic tGet = InvokeGetCallSite(target, name, context, staticContext, ref callSiteGet)!;
                 tGet += (dynamic)(args[0]!);
-                InvokeSetCallSite(target, name, (object)tGet, context, staticContext, ref callSiteSet);
+                InvokeSetCallSite(target, name,  (object)tGet, context, staticContext, ref callSiteSet);
             }
         }
 
@@ -1247,6 +1247,7 @@ namespace Dynamitey.Internal.Optimization
             }
             dynamic tDynCallSite = callSite;
             return tDynCallSite.Target(callSite, target);
+
         }
 
         // static, not merely sealed (CA1812): same reasoning as IsEventBinderDummy above - only

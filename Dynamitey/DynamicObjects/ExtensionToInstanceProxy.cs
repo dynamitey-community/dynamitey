@@ -39,7 +39,7 @@ namespace Dynamitey.DynamicObjects
         /// <exception cref="System.ArgumentException">Don't Nest ExtensionToInstance Objects</exception>
         [RequiresUnreferencedCode("Calls IsExtendedType, which reflects over target's interfaces (GetInterfaces) to check it against extendedType; trimming can remove an interface this depends on. target is also statically 'dynamic', which forces DLR binding on the IsExtendedType calls below even though that method takes a plain object.")]
         [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        public ExtensionToInstanceProxy(dynamic target, Type extendedType, Type[] staticTypes, Type[]? instanceHints = null) : base((object)target)
+        public ExtensionToInstanceProxy(dynamic target,  Type extendedType, Type[] staticTypes, Type[]? instanceHints = null):base((object)target)
         {
             _staticTypes = staticTypes;
             _extendedType = extendedType;
