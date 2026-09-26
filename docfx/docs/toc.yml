@@ -1,5 +1,7 @@
 - name: Getting started
   href: getting-started.md
+- name: About 4.0.0
+  href: v4.md
 - name: Migrating from Dynamitey
   href: migrating.md
 - name: Late binding

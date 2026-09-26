@@ -108,14 +108,25 @@ repository's own test project does exactly that.
 | Benchmarks | The old wall-clock `SpeedTest` fixture is now a BenchmarkDotNet project |
 | Dependencies | All current; no known vulnerable or deprecated packages |
 
-`netstandard2.0` is kept deliberately. It is the only target framework that
-reaches both .NET Framework 4.6.1–4.8.1 and modern .NET from a single assembly.
+`netstandard2.0` is what a .NET Framework 4.6.1–4.8.1 project references.
+**4.0.0 is the last release that includes it.** Later releases target .NET LTS
+and STS only. On 6 May 2019 Microsoft said .NET Framework 4.8 was the last major
+version and that new base-class-library work would go to modern .NET. Framework
+is still serviced with Windows. Dropping `netstandard2.0` after this release is
+what lets the library use BCL APIs that .NET Standard 2.0 does not have.
+An application that stays on .NET Framework stays on 4.x. The write-up is
+[About 4.0.0](https://dynamitey-community.github.io/dynamitey/docs/v4.html).
 
 The [roadmap](https://github.com/dynamitey-community/dynamitey/issues/10) tracks
 what is planned and in what order. Six issues carried over from upstream,
 labelled [`ported-from-upstream`](https://github.com/dynamitey-community/dynamitey/labels/ported-from-upstream),
 are closed: four were fixed (#11, #12, #13, #16) and two were closed as
-unreproducible (#14, #15).
+unreproducible (#14, #15). The two oldest were filed in 2014.
+
+[About 4.0.0](https://dynamitey-community.github.io/dynamitey/docs/v4.html)
+records the release: 852 tests, up from 219 in the upstream tree, 54 issues
+closed, the unused `using` directives removed in the cleanup, and the decision
+that this is the last .NET Framework release.
 
 ---
 
@@ -126,6 +137,7 @@ unreproducible (#14, #15).
 Written for this fork and generated from its own source, so it describes 4.0.0
 rather than 3.0.3. Nothing is carried over from upstream's wiki.
 
+- What 4.0.0 contains, and why it is the last .NET Framework release — [About 4.0.0](https://dynamitey-community.github.io/dynamitey/docs/v4.html)
 - Easy fast DLR-based reflection — [Late binding](https://dynamitey-community.github.io/dynamitey/docs/late-binding.html)
 - Clean syntax for using types from late-bound libraries — [Late types](https://dynamitey-community.github.io/dynamitey/docs/late-types.html)
 - Dynamic currying — [Currying and partial application](https://dynamitey-community.github.io/dynamitey/docs/currying.html)

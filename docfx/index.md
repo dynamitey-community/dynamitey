@@ -16,6 +16,7 @@ Jay Tuley ([@jbtule](https://github.com/jbtule)) wrote Dynamitey. This documenta
 
 | If you want to | Read |
 | --- | --- |
+| See what 4.0.0 contains, and which runtimes it still supports | [About 4.0.0](docs/v4.md) |
 | Call a member you cannot see at compile time | [Late binding](docs/late-binding.md) |
 | Use a type from an assembly you have no reference to | [Late types](docs/late-types.md) |
 | Move from the original `Dynamitey` package | [Migrating](docs/migrating.md) |
