@@ -1,8 +1,9 @@
-# Notification drafts for the ported upstream issues
+# Notifications sent for the ported upstream issues
 
 Six issues were carried over from `ekonbenefits/dynamitey` when this fork was
-created. Each carries the **`notify-on-close`** label, which means the original
-reporter is owed a message when their issue is resolved.
+created. Each carries the **`notify-on-close`** label. The original reporter
+was owed one message when there was a package to install. Those messages have
+been sent. The text below is the record of what went out.
 
 **Sent on 2026-09-26**, after `Dynamitey.Community` 4.0.0 was on nuget.org.
 The comments are on #11, #12, #13, #14, #15, and #16. Do not send them again.
@@ -18,20 +19,13 @@ worth interrupting exactly once. A message saying "fixed on `main`, but there
 is nothing you can install" spends that one interruption on news nobody can act
 on. A message pointing at a package they can actually use does not.
 
-Two exceptions are worth considering separately, because their value is
-different: the two "could not reproduce" messages ask the reporter *for*
-something rather than offering them something, and could reasonably go earlier
-if a reproduction would change the outcome.
+The two "could not reproduce" messages ask the reporter for a failing case.
+They went out with the others, on the same day.
 
-## Before sending
-
-- **Add the `@` to the names below.** They are written plain deliberately, so
-  storing this file cannot notify anyone. The same discipline was used when the
-  issues were ported.
-- **Package identity is `Dynamitey.Community`.** The drafts name that package,
-  not the original `Dynamitey` id.
-- **`jbtule` is on #11.** The #8 fallback sends that message to both people on
-  the issue. The package it points at is `Dynamitey.Community`.
+The names below are written without `@`. That is deliberate. This file must
+not notify anyone. The posted comments added the `@`. #11 went to both
+`jdh28` and `jbtule`. Every message names `Dynamitey.Community`, not the
+original `Dynamitey` package.
 
 ---
 
@@ -123,8 +117,7 @@ if a reproduction would change the outcome.
 
 ## Could not reproduce — two messages
 
-These ask for something rather than offering something. Both should say plainly
-that the issue can be reopened.
+These ask for a failing case. Both say the issue can be reopened.
 
 ### #14 → `jjxtra`
 
