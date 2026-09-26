@@ -1,6 +1,6 @@
-using System;
 using Dynamitey.DynamicObjects;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {

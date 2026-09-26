@@ -3,10 +3,9 @@
 // test either invokes a real method (base.TryInvokeMember succeeds directly) or
 // only ever does plain member gets. These target the fallback itself: a member
 // that resolves as a property holding a delegate, called with invoke syntax.
-using System;
-using Dynamitey.SupportLibrary;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {

@@ -4,9 +4,9 @@
 // InvokeWithStoredArgs, and GetIndex/SetIndex validated the parameter rather
 // than the stored length. Named stored InvokeArgs still worked because they
 // populated _argNames. Types here exist only for this fixture.
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {

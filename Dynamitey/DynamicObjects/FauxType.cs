@@ -1,15 +1,12 @@
+using Dynamitey.Internal;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Dynamitey.Internal.Compat;
-using Dynamitey.Internal;
 
 namespace Dynamitey.DynamicObjects
 {
-
-
     /// <summary>
     /// A Fake Type
     /// </summary>
@@ -35,7 +32,6 @@ namespace Dynamitey.DynamicObjects
         {
             return new RealType(type);
         }
-
 
         /// <summary>
         /// Gets the members.
@@ -75,10 +71,7 @@ namespace Dynamitey.DynamicObjects
         {
             return GetContainedTypes().Contains(type);
         }
-
     }
-
-
 
     /// <summary>
     /// A <see cref="FauxType"/> described by an explicit name-to-type map rather than by a
@@ -122,8 +115,7 @@ namespace Dynamitey.DynamicObjects
         {
             if (PropertySpec.TryGetValue(binderName, out var val))
             {
-                return new[] {val.GetTypeInfo()};
-
+                return new[] { val.GetTypeInfo() };
             }
             return Enumerable.Empty<MemberInfo>();
         }
@@ -151,7 +143,6 @@ namespace Dynamitey.DynamicObjects
         }
     }
 
-
     /// <summary>
     /// A Fake Type that represents a real type
     /// </summary>
@@ -169,47 +160,46 @@ namespace Dynamitey.DynamicObjects
             "system, not surprise the caller with an exception. Rather than open a second backlog " +
             "entry to re-suppress S3877, this stays as the pre-existing NullReferenceException-on-" +
             "null behavior; CA1062 is suppressed instead of guarded.")]
-         public static implicit operator Type(RealType type)
-         {
-             return type.TargetType;
-         }
+        public static implicit operator Type(RealType type)
+        {
+            return type.TargetType;
+        }
 
-         /// <summary>
-         /// Named alternate for the implicit conversion to <see cref="Type"/> above, for callers
-         /// in a language that cannot consume operator overloads. TargetType is protected, so this
-         /// is the only way an external caller reads the wrapped <see cref="Type"/> back out.
-         /// </summary>
-         /// <returns>The wrapped <see cref="Type"/>.</returns>
-         public Type ToType()
-         {
-             return TargetType;
-         }
+        /// <summary>
+        /// Named alternate for the implicit conversion to <see cref="Type"/> above, for callers
+        /// in a language that cannot consume operator overloads. TargetType is protected, so this
+        /// is the only way an external caller reads the wrapped <see cref="Type"/> back out.
+        /// </summary>
+        /// <returns>The wrapped <see cref="Type"/>.</returns>
+        public Type ToType()
+        {
+            return TargetType;
+        }
 
-         /// <summary>
-         /// An actual Type implicitly converts to a RealType
-         /// </summary>
-         /// <param name="type">The type.</param>
-         /// <returns></returns>
-         public static implicit operator RealType(Type type)
-         {
-             return new RealType(type);
-         }
+        /// <summary>
+        /// An actual Type implicitly converts to a RealType
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        public static implicit operator RealType(Type type)
+        {
+            return new RealType(type);
+        }
 
-         /// <summary>
-         /// Named alternate for the implicit conversion from <see cref="Type"/> above, for callers
-         /// in a language that cannot consume operator overloads.
-         /// </summary>
-         /// <param name="type">The type.</param>
-         /// <returns>A <see cref="RealType"/> wrapping <paramref name="type"/>.</returns>
-         public static new RealType FromType(Type type)
-         {
-             return new RealType(type);
-         }
+        /// <summary>
+        /// Named alternate for the implicit conversion from <see cref="Type"/> above, for callers
+        /// in a language that cannot consume operator overloads.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>A <see cref="RealType"/> wrapping <paramref name="type"/>.</returns>
+        public new static RealType FromType(Type type)
+        {
+            return new RealType(type);
+        }
 
-
-         /// <summary>
-         /// The target type
-         /// </summary>
+        /// <summary>
+        /// The target type
+        /// </summary>
         [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
             "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
         protected readonly Type TargetType;
@@ -241,10 +231,9 @@ namespace Dynamitey.DynamicObjects
         [RequiresUnreferencedCode("Reflects over TargetType's members; trimming can remove members it would otherwise report.")]
         public override IEnumerable<string> GetMemberNames()
         {
-      
             var members = TargetType.GetTypeInfo()
                 .GetMembers(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance)
-                .Where(it=> !((it as MethodInfo)?.IsHideBySig ?? false))
+                .Where(it => !((it as MethodInfo)?.IsHideBySig ?? false))
                 .Select(it => it.Name)
                 .Distinct();
             return members.ToList();
@@ -258,17 +247,13 @@ namespace Dynamitey.DynamicObjects
         {
             return new[] { TargetType };
         }
-
-   
     }
-
 
     /// <summary>
     /// A Fake Type that is an aggregate of other types
     /// </summary>
     public class AggreType : FauxType
     {
-
         /// <summary>
         /// Makes the type appendable.
         /// </summary>
@@ -286,11 +271,9 @@ namespace Dynamitey.DynamicObjects
             {
                 type.EquivalentType = new AggreType(type.EquivalentType);
             }
-            return (AggreType) type.EquivalentType;
+            return (AggreType)type.EquivalentType;
         }
 
-
-       
         private readonly List<FauxType> Types = new List<FauxType>();
 
         /// <summary>
@@ -348,7 +331,8 @@ namespace Dynamitey.DynamicObjects
                 {
                     AddType(realType);
                 }
-            }else if (type is AggreType)
+            }
+            else if (type is AggreType)
             {
                 foreach (var fauxType in ((AggreType)type).Types)
                 {
@@ -359,7 +343,6 @@ namespace Dynamitey.DynamicObjects
             {
                 Types.Add(type);
             }
-
         }
 
         /// <summary>

@@ -1,12 +1,12 @@
-﻿// 
+﻿//
 //  Copyright 2011 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,13 +16,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Dynamic;
 using System.Linq;
-using System.Linq.Expressions;
-
-using Microsoft.CSharp.RuntimeBinder;
 
 namespace Dynamitey.DynamicObjects
 {
@@ -42,7 +37,6 @@ namespace Dynamitey.DynamicObjects
     public class List : BaseDictionary, IList<object>, IDictionary<string, object>, INotifyCollectionChanged, IList
 
     {
-
         /// <summary>
         /// Wrapped list
         /// </summary>
@@ -50,7 +44,6 @@ namespace Dynamitey.DynamicObjects
         [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
             "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
         protected IList<object> _list;
-
 
         private static readonly object ListLock = new object();
 
@@ -61,8 +54,8 @@ namespace Dynamitey.DynamicObjects
         /// <param name="members">The members.</param>
         [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public List(
-            IEnumerable<object>? contents =null,
-            IEnumerable<KeyValuePair<string, object>>? members =null):base(members)
+            IEnumerable<object>? contents = null,
+            IEnumerable<KeyValuePair<string, object>>? members = null) : base(members)
         {
             if (contents == null)
             {
@@ -88,8 +81,6 @@ namespace Dynamitey.DynamicObjects
             return _list.GetEnumerator();
         }
 
-
-
         /// <summary>
         /// Adds the specified item.
         /// </summary>
@@ -114,8 +105,7 @@ namespace Dynamitey.DynamicObjects
             lock (ListLock)
             {
                 _list.Clear();
-
-            } 
+            }
             OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 
@@ -151,8 +141,6 @@ namespace Dynamitey.DynamicObjects
         {
             _list.CopyTo(array, arrayIndex);
         }
-
-
 
         /// <summary>
         /// Gets the count.
@@ -193,7 +181,6 @@ namespace Dynamitey.DynamicObjects
             }
         }
 
-
         /// <summary>
         /// Indexes the of.
         /// </summary>
@@ -230,7 +217,7 @@ namespace Dynamitey.DynamicObjects
         // See Contains above for why this is dynamic? rather than plain dynamic.
         public void Insert(int index, dynamic? item)
         {
-            InsertHelper(item,index);
+            InsertHelper(item, index);
         }
 
         private void InsertHelper(object? item, int? index = null)
@@ -243,7 +230,6 @@ namespace Dynamitey.DynamicObjects
                 {
                     index = _list.Count;
                     _list.Add(item!);
-
                 }
                 else
                 {
@@ -351,7 +337,6 @@ namespace Dynamitey.DynamicObjects
             return GetEnumerator();
         }
 
-
         /// <summary>
         /// Called when [collection changed].
         /// </summary>
@@ -370,9 +355,11 @@ namespace Dynamitey.DynamicObjects
                     case NotifyCollectionChangedAction.Add:
                         CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, newItem, newIndex.GetValueOrDefault()));
                         break;
+
                     case NotifyCollectionChangedAction.Remove:
                         CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, oldItem, oldIndex.GetValueOrDefault()));
                         break;
+
                     case NotifyCollectionChangedAction.Replace:
                         // newItem before oldItem: the BCL constructor is
                         // (action, newItem, oldItem, index), the opposite order to this method's
@@ -381,8 +368,9 @@ namespace Dynamitey.DynamicObjects
                         // how it went unnoticed. See issue #59.
                         CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, newItem, oldItem, oldIndex.GetValueOrDefault()));
                         break;
+
                     case NotifyCollectionChangedAction.Reset:
-                        CollectionChanged(this,new NotifyCollectionChangedEventArgs(action));
+                        CollectionChanged(this, new NotifyCollectionChangedEventArgs(action));
                         break;
                 }
             }
@@ -392,11 +380,14 @@ namespace Dynamitey.DynamicObjects
                 case NotifyCollectionChangedAction.Add:
                     OnPropertyChanged("Count");
                     break;
+
                 case NotifyCollectionChangedAction.Remove:
                     OnPropertyChanged("Count");
                     break;
+
                 case NotifyCollectionChangedAction.Replace:
                     break;
+
                 case NotifyCollectionChangedAction.Reset:
                     OnPropertyChanged("Count");
                     break;
@@ -410,7 +401,6 @@ namespace Dynamitey.DynamicObjects
 
         dynamic IDictionary<string, object>.this[string key]
         {
-
             get => _dictionary[key];
 
             [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
@@ -479,7 +469,7 @@ namespace Dynamitey.DynamicObjects
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {
@@ -489,14 +479,11 @@ namespace Dynamitey.DynamicObjects
             }
         }
 
-
         /// <summary>
         /// Gets or sets the override getting item method names. USED for GetItemProperties
         /// </summary>
         /// <value>The override getting item method names.</value>
         public Func<IEnumerable<object>, IEnumerable<string>>? OverrideGettingItemMethodNames { get; set; }
-
-
 
         /// <summary>
         /// Gets the represented item. USED fOR GetItemProperties
@@ -507,7 +494,6 @@ namespace Dynamitey.DynamicObjects
             var tItem = ((IEnumerable<object>)this).FirstOrDefault();
             return tItem;
         }
-
 
         #region Implementation of ICollection
 
@@ -520,8 +506,8 @@ namespace Dynamitey.DynamicObjects
         {
             ((IList)_list).CopyTo(array, index);
         }
-        private readonly object _syncRoot = new object();
 
+        private readonly object _syncRoot = new object();
 
         /// <summary>
         /// Gets the sync root.
@@ -531,7 +517,6 @@ namespace Dynamitey.DynamicObjects
         /// </value>
         public object SyncRoot => _syncRoot;
 
-
         /// <summary>
         /// Gets a value indicating whether this instance is synchronized.
         /// </summary>
@@ -540,10 +525,9 @@ namespace Dynamitey.DynamicObjects
         /// </value>
         public bool IsSynchronized => false;
 
-        #endregion
+        #endregion Implementation of ICollection
 
         #region Implementation of IList
-
 
         int IList.Add(object? value)
         {
@@ -567,6 +551,6 @@ namespace Dynamitey.DynamicObjects
         /// </value>
         public bool IsFixedSize => false;
 
-        #endregion
+        #endregion Implementation of IList
     }
 }

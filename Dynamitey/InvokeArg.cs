@@ -1,12 +1,12 @@
-﻿// 
+﻿//
 //  Copyright 2011 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,17 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-
-
 
 namespace Dynamitey
 {
     /// <summary>
     /// Use for Named arguments passed to InvokeMethods
     /// </summary>
-    
+
     public class InvokeArg
     {
         /// <summary>
@@ -36,7 +32,7 @@ namespace Dynamitey
         /// <returns>The result of the conversion.</returns>
         public static explicit operator InvokeArg(KeyValuePair<string, object> pair)
         {
-            return new InvokeArg(pair.Key,pair.Value);
+            return new InvokeArg(pair.Key, pair.Value);
         }
 
         /// <summary>
@@ -55,7 +51,6 @@ namespace Dynamitey
         /// </summary>
         public static readonly Func<string, object, InvokeArg> Create =
             Return<InvokeArg>.Arguments<string, object>((n, v) => new InvokeArg(n, v));
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InvokeArg"/> class.
@@ -93,7 +88,7 @@ namespace Dynamitey
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="value">The value.</param>
-        public InvokeArg(string name, object? value):base(name,value){}
+        public InvokeArg(string name, object? value) : base(name, value) { }
 
         /// <summary>
         /// Performs an explicit conversion from <see cref="KeyValuePair{String,Object}"/> to <see cref="InvokeArg{T}"/>.
@@ -120,6 +115,5 @@ namespace Dynamitey
         {
             return new InvokeArg<T>(pair.Key, pair.Value);
         }
-
     }
 }

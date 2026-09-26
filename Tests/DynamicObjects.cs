@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Dynamitey.SupportLibrary;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using NUnit.Framework;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -8,27 +12,16 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-
-using Dynamitey.SupportLibrary;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {
     [TestFixture]
     public class DynamicObjs : Helper
     {
-
-
-
-
         [Test]
         public void GetterAnonTest()
         {
-            var tAnon = new {Prop1 = "Test", Prop2 = 42L, Prop3 = Guid.NewGuid()};
+            var tAnon = new { Prop1 = "Test", Prop2 = 42L, Prop3 = Guid.NewGuid() };
 
             dynamic tTest = new DynamicObjects.Get(tAnon);
 
@@ -50,12 +43,10 @@ namespace Dynamitey.Tests
         [Test]
         public void GetterArrayTest()
         {
-
-
-            var tArray = new int[] {1, 2, 3};
+            var tArray = new int[] { 1, 2, 3 };
 
             dynamic tTest = new DynamicObjects.Get(tArray);
-            Dynamic.ApplyEquivalentType(tTest, typeof (IStringIntIndexer));
+            Dynamic.ApplyEquivalentType(tTest, typeof(IStringIntIndexer));
 
             Assert.That(tTest[2], Is.EqualTo(tArray[2].ToString()));
         }
@@ -64,31 +55,27 @@ namespace Dynamitey.Tests
         public void GetterEventTest()
         {
             dynamic dynEvent = new DynamicObjects.Get(new PocoEvent());
-            Dynamic.ApplyEquivalentType(dynEvent, typeof (IEvent));
+            Dynamic.ApplyEquivalentType(dynEvent, typeof(IEvent));
             var tSet = false;
             EventHandler<EventArgs> tActsLikeOnEvent = (obj, args) => tSet = true;
             dynEvent.Event += tActsLikeOnEvent;
 
             dynEvent.OnEvent(null, null);
             Assert.That(tSet, Is.EqualTo(true));
-
         }
-
 
         [Test]
         public void GetterEventTest2()
         {
             dynamic dynEvent = new DynamicObjects.Get(new PocoEvent());
-            Dynamic.ApplyEquivalentType(dynEvent, typeof (IEvent));
+            Dynamic.ApplyEquivalentType(dynEvent, typeof(IEvent));
             var tSet = false;
             EventHandler<EventArgs> tActsLikeOnEvent = (obj, args) => tSet = true;
             dynEvent.Event += tActsLikeOnEvent;
             dynEvent.Event -= tActsLikeOnEvent;
             dynEvent.OnEvent(null, null);
             Assert.That(tSet, Is.EqualTo(false));
-
         }
-
 
         [Test]
         public void GetterDynamicTest()
@@ -99,7 +86,6 @@ namespace Dynamitey.Tests
             tNew.Prop3 = Guid.NewGuid();
 
             dynamic tTest = new DynamicObjects.Get(tNew);
-
 
             Assert.That(tTest.Prop1, Is.EqualTo(tNew.Prop1));
             Assert.That(tTest.Prop2, Is.EqualTo(tNew.Prop2));
@@ -117,7 +103,7 @@ namespace Dynamitey.Tests
         [Test]
         public void ForwardAnonTest()
         {
-            var tAnon = new {Prop1 = "Test", Prop2 = 42L, Prop3 = Guid.NewGuid()};
+            var tAnon = new { Prop1 = "Test", Prop2 = 42L, Prop3 = Guid.NewGuid() };
 
             dynamic tTest = new TestForwarder(tAnon);
 
@@ -136,7 +122,6 @@ namespace Dynamitey.Tests
             tTest.Action();
         }
 
-
         [Test]
         public void ForwardGenericMethodsTest()
         {
@@ -146,7 +131,6 @@ namespace Dynamitey.Tests
 
             Assert.That(tFwd.Create<ForwardGenericMethodsTestClass>(99).Value, Is.EqualTo("test99"));
         }
-
 
         [Test]
         public void ForwardDynamicTest()
@@ -158,7 +142,6 @@ namespace Dynamitey.Tests
 
             dynamic tTest = new TestForwarder(tNew);
 
-
             Assert.That(tTest.Prop1, Is.EqualTo(tNew.Prop1));
             Assert.That(tTest.Prop2, Is.EqualTo(tNew.Prop2));
             Assert.That(tTest.Prop3, Is.EqualTo(tNew.Prop3));
@@ -167,16 +150,11 @@ namespace Dynamitey.Tests
         [Test]
         public void DictionaryMethodsTest()
         {
-
             dynamic tNew = new DynamicObjects.Dictionary();
             tNew.Action1 = new Action(Assert.Fail);
             tNew.Action2 = new Action<bool>(actual => Assert.That(actual, Is.False));
             tNew.Action3 = new Func<string>(() => "test");
             tNew.Action4 = new Func<int, string>(arg => "test" + arg);
-
-
-
-
 
             Assert.That(() => tNew.Action1(), Throws.InstanceOf<AssertionException>());
             Assert.That(() => tNew.Action2(true), Throws.InstanceOf<AssertionException>());
@@ -252,17 +230,13 @@ namespace Dynamitey.Tests
         [Test]
         public void ForwardMethodsTest()
         {
-
             dynamic tNew = new DynamicObjects.Dictionary();
             tNew.Action1 = new Action(Assert.Fail);
             tNew.Action2 = new Action<bool>(actual => Assert.That(actual, Is.False));
             tNew.Action3 = new Func<string>(() => "test");
             tNew.Action4 = new Func<int, string>(arg => "test" + arg);
 
-
             dynamic tFwd = new TestForwarder(tNew);
-
-
 
             Assert.That(() => tFwd.Action1(), Throws.InstanceOf<AssertionException>());
             Assert.That(() => tFwd.Action2(true), Throws.InstanceOf<AssertionException>());
@@ -275,7 +249,6 @@ namespace Dynamitey.Tests
         [Test]
         public void DictionaryMethodsOutTest()
         {
-
             dynamic tNew = new DynamicObjects.Dictionary();
             tNew.Func = new DynamicTryString(TestOut);
 
@@ -293,45 +266,33 @@ namespace Dynamitey.Tests
             return @out != null;
         }
 
-
         [Test]
         public void DictionaryMethodsTestWithPropertyAccess()
         {
-
             dynamic tNew = new DynamicObjects.Dictionary();
             tNew.PropCat = "Cat-";
             tNew.Action1 = new Action(Assert.Fail);
             tNew.Action2 = new Action<bool>(actual => Assert.That(actual, Is.False));
             tNew.Action3 = new ThisFunc<string>(@this => @this.PropCat + "test");
 
-
-
             Assert.That(() => tNew.Action1(), Throws.InstanceOf<AssertionException>());
             Assert.That(() => tNew.Action2(true), Throws.InstanceOf<AssertionException>());
 
             Assert.That(tNew.Action3(), Is.EqualTo("Cat-test"));
-
-
         }
 
         [Test]
         public void DictionaryNullMethodsTest()
         {
-
             dynamic tNew = new DynamicObjects.Dictionary();
-            Dynamic.ApplyEquivalentType(tNew, typeof (ISimpleStringMethod));
+            Dynamic.ApplyEquivalentType(tNew, typeof(ISimpleStringMethod));
 
             Assert.That((object)tNew.StartsWith("Te"), Is.False);
-
-
-
         }
-
 
         [Test]
         public void DynamicDictionaryWrappedTest()
         {
-
             var tDictionary = new Dictionary<string, object>
                                   {
                                       {"Test1", 1},
@@ -356,7 +317,6 @@ namespace Dynamitey.Tests
         [Test]
         public void InterfaceDictionaryWrappedTest()
         {
-
             var tDictionary = new Dictionary<string, object>
                                   {
                                       {"Test1", 1},
@@ -375,10 +335,8 @@ namespace Dynamitey.Tests
             dynamic tDynamic = new DynamicObjects.Dictionary(tDictionary);
             dynamic tNotDynamic = new DynamicObjects.Dictionary(tDictionary);
 
-
-            Dynamic.ApplyEquivalentType(tDynamic, typeof (IDynamicDict));
-            Dynamic.ApplyEquivalentType(tNotDynamic, typeof (INonDynamicDict));
-
+            Dynamic.ApplyEquivalentType(tDynamic, typeof(IDynamicDict));
+            Dynamic.ApplyEquivalentType(tNotDynamic, typeof(INonDynamicDict));
 
             Assert.That(tNotDynamic, Is.EqualTo(tDynamic));
 
@@ -395,8 +353,8 @@ namespace Dynamitey.Tests
             Assert.That(tNotDynamic.Test3, Is.EqualTo(TestEnum.One));
             Assert.That(tNotDynamic.Test4, Is.EqualTo(TestEnum.Two));
 
-            Assert.That(tNotDynamic.TestD.GetType(), Is.EqualTo(typeof (Dictionary<string, object>)));
-            Assert.That(tDynamic.TestD.GetType(), Is.EqualTo(typeof (DynamicObjects.Dictionary)));
+            Assert.That(tNotDynamic.TestD.GetType(), Is.EqualTo(typeof(Dictionary<string, object>)));
+            Assert.That(tDynamic.TestD.GetType(), Is.EqualTo(typeof(DynamicObjects.Dictionary)));
         }
 
         [Test]
@@ -418,9 +376,8 @@ namespace Dynamitey.Tests
             dynamic tDynamic = new DynamicObjects.Dictionary(tDictionary);
             dynamic tNotDynamic = new DynamicObjects.Dictionary(tDictionary);
 
-
-            Dynamic.ApplyEquivalentType(tDynamic, typeof (IDynamicDict));
-            Dynamic.ApplyEquivalentType(tNotDynamic, typeof (INonDynamicDict));
+            Dynamic.ApplyEquivalentType(tDynamic, typeof(IDynamicDict));
+            Dynamic.ApplyEquivalentType(tNotDynamic, typeof(INonDynamicDict));
 
             Assert.That(tNotDynamic, Is.EqualTo(tDynamic));
 
@@ -647,14 +604,14 @@ namespace Dynamitey.Tests
         [Test]
         public void DynamicAnnonymousWrapper()
         {
-            var tData = new Dictionary<int, string> {{1, "test"}};
+            var tData = new Dictionary<int, string> { { 1, "test" } };
             var tDyn = DynamicObjects.Get.Create(new
-                                                     {
-                                                         Test1 = 1,
-                                                         Test2 = "2",
-                                                         IsGreaterThan5 = Return<bool>.Arguments<int>(it => it > 5),
-                                                         ClearData = ReturnVoid.Arguments(() => tData.Clear())
-                                                     });
+            {
+                Test1 = 1,
+                Test2 = "2",
+                IsGreaterThan5 = Return<bool>.Arguments<int>(it => it > 5),
+                ClearData = ReturnVoid.Arguments(() => tData.Clear())
+            });
 
             Assert.That(tDyn.Test1, Is.EqualTo(1));
             Assert.That(tDyn.Test2, Is.EqualTo("2"));
@@ -664,26 +621,25 @@ namespace Dynamitey.Tests
             Assert.That(tData.Count, Is.EqualTo(1));
             tDyn.ClearData();
             Assert.That(tData.Count, Is.EqualTo(0));
-
         }
 
         [Test]
         public void TestAnonInterface()
         {
             dynamic tInterface = new DynamicObjects.Get(new
-                                                            {
-                                                                CopyArray =
+            {
+                CopyArray =
                                                             ReturnVoid.Arguments<Array, int>(
                                                                 (ar, i) => Enumerable.Range(1, 10)),
-                                                                Count = 10,
-                                                                IsSynchronized = false,
-                                                                SyncRoot = this,
-                                                                GetEnumerator =
+                Count = 10,
+                IsSynchronized = false,
+                SyncRoot = this,
+                GetEnumerator =
                                                             Return<IEnumerator>.Arguments(
                                                                 () => Enumerable.Range(1, 10).GetEnumerator())
-                                                            });
+            });
 
-            Dynamic.ApplyEquivalentType(tInterface, typeof (ICollection), typeof (IEnumerable));
+            Dynamic.ApplyEquivalentType(tInterface, typeof(ICollection), typeof(IEnumerable));
 
             Assert.That(tInterface.Count, Is.EqualTo(10));
             Assert.That(tInterface.IsSynchronized, Is.EqualTo(false));
@@ -704,7 +660,6 @@ namespace Dynamitey.Tests
             Assert.That(tExpando.Test2, Is.EqualTo("Test 2nd"));
 
             dynamic NewD = new DynamicObjects.Builder<ExpandoObject>();
-
 
             var tExpandoNamedTest = NewD.Robot(
                 LeftArm: "Rise",
@@ -794,8 +749,8 @@ namespace Dynamitey.Tests
         public void TestSetupOtherTypes()
         {
             var New = Builder.New().Setup(
-                Expando: typeof (ExpandoObject),
-                Dict: typeof (DynamicObjects.Dictionary)
+                Expando: typeof(ExpandoObject),
+                Dict: typeof(DynamicObjects.Dictionary)
                 );
 
             var tExpando = New.Expando(
@@ -810,16 +765,14 @@ namespace Dynamitey.Tests
 
             Assert.That(tExpando.LeftArm, Is.EqualTo("Rise"));
             Assert.That(tExpando.RightArm, Is.EqualTo("Clamp"));
-            Assert.That(tExpando.GetType(), Is.EqualTo(typeof (ExpandoObject)));
+            Assert.That(tExpando.GetType(), Is.EqualTo(typeof(ExpandoObject)));
 
             Assert.That(tDict.LeftArm, Is.EqualTo("RiseD"));
             Assert.That(tDict.RightArm, Is.EqualTo("ClampD"));
-            Assert.That(tDict.GetType(), Is.EqualTo(typeof (DynamicObjects.Dictionary)));
-
+            Assert.That(tDict.GetType(), Is.EqualTo(typeof(DynamicObjects.Dictionary)));
         }
 
         [Test]
-
         //This test data is modified from MS-PL Clay project http://clay.codeplex.com
         public void TestClayFactorySyntax()
         {
@@ -854,7 +807,7 @@ namespace Dynamitey.Tests
                 var person = New.Person()
                                 .FirstName("Louis")
                                 .LastName("Dejardin")
-                                .Aliases(new[] {"Lou"});
+                                .Aliases(new[] { "Lou" });
 
                 Assert.That(person.FirstName, Is.EqualTo("Louis"));
                 Assert.That(person.Aliases[0], Is.EqualTo("Lou"));
@@ -862,19 +815,14 @@ namespace Dynamitey.Tests
 
             {
                 var person = New.Person(new
-                                            {
-                                                FirstName = "Louis",
-                                                LastName = "Dejardin"
-                                            });
+                {
+                    FirstName = "Louis",
+                    LastName = "Dejardin"
+                });
                 Assert.That(person.FirstName, Is.EqualTo("Louis"));
                 Assert.That(person.LastName, Is.EqualTo("Dejardin"));
             }
-
         }
-
-
-
-
 
         [Test]
         //This test data is modified from MS-PL Clay project http://clay.codeplex.com
@@ -897,10 +845,8 @@ namespace Dynamitey.Tests
                                   New.Robot(Name: "RobotDevil")
                               };
 
-
             Assert.That(people2[0].Name, Is.EqualTo("Bender"));
             Assert.That(people2[1].Name, Is.EqualTo("RobotDevil"));
-
         }
 
         [Test]
@@ -913,14 +859,12 @@ namespace Dynamitey.Tests
             Assert.That(tList2[3], Is.EqualTo("three"));
         }
 
-
         [Test]
         public void TestRecorder()
         {
             dynamic New = Builder.New<DynamicObjects.Recorder>();
 
             DynamicObjects.Recorder tRecording = New.Watson(Test: "One", Test2: 2, NameLast: "Watson");
-
 
             dynamic tVar = tRecording.ReplayOn(new ExpandoObject());
 
@@ -940,7 +884,6 @@ namespace Dynamitey.Tests
 
             Assert.That(target[1], Is.EqualTo("written"));
         }
-
 
         [Test]
         public void TestRoslynLateTypeBind()
@@ -982,21 +925,18 @@ namespace Dynamitey.Tests
 
             dynamic DynConcatenateString = new DynamicObjects.LateType(compiledAssembly, "CodeInjection.DynConcatenateString");
 
-            Assert.That(DynConcatenateString.Concatenate("1","2"), Is.EqualTo("1 ! 2"));
+            Assert.That(DynConcatenateString.Concatenate("1", "2"), Is.EqualTo("1 ! 2"));
         }
 
-
-    [Test]
+        [Test]
         public void TestLateLibrarybind()
         {
-
             dynamic tBigIntType =
                 new DynamicObjects.LateType(
                     "System.Numerics.BigInteger, System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
 
             if (tBigIntType.IsAvailable)
             {
-
                 var one = tBigIntType.@new(1);
                 var two = tBigIntType.@new(2);
 
@@ -1006,16 +946,10 @@ namespace Dynamitey.Tests
                 var tParsed = tBigIntType.Parse("4");
 
                 Assert.That(tParsed.IsEven, Is.EqualTo(true));
-
-
-
             }
             else
             {
-
                 Assert.Fail("Big Int Didn't Load");
-
-
             }
         }
     }

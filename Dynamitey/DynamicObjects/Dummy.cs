@@ -1,31 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Dynamitey.Internal.Optimization;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using Dynamitey.Internal.Optimization;
-
 
 namespace Dynamitey.DynamicObjects
 {
     /// <summary>
     /// Dummy that just returns null or default for everything.
     /// </summary>
-   
-    public class Dummy:BaseObject
-    {
 
+    public class Dummy : BaseObject
+    {
         /// <summary>
         /// Initializes a new instance of the <see cref="Dummy"/> class.
         /// </summary>
         [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public Dummy()
         {
-
         }
-
-
-
 
         /// <summary>
         /// Provides the implementation for operations that get member values. Classes derived from the <see cref="System.Dynamic.DynamicObject"/> class can override this method to specify dynamic behavior for operations such as getting a value for a property.
@@ -48,7 +38,6 @@ namespace Dynamitey.DynamicObjects
         {
             result = null;
             return this.MassageResultBasedOnInterface(binder.Name, true, ref result);
-          
         }
 
         /// <summary>
@@ -63,7 +52,6 @@ namespace Dynamitey.DynamicObjects
         {
             return true;
         }
-
 
         /// <summary>
         /// Provides the implementation for operations that invoke a member. Classes derived from the <see cref="System.Dynamic.DynamicObject"/> class can override this method to specify dynamic behavior for operations such as calling a method.
@@ -85,12 +73,9 @@ namespace Dynamitey.DynamicObjects
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, object?[]? args, out object? result)
         {
-
             result = null;
             return this.MassageResultBasedOnInterface(binder.Name, true, ref result);
         }
-
-      
 
         /// <summary>
         /// Tries the index of the get.

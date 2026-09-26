@@ -1,37 +1,33 @@
-﻿// 
+﻿//
 //  Copyright 2011 Ekon Benefits
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+using Dynamitey.Internal.Optimization;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
-using System.Text;
 using System.Reflection;
-using Dynamitey.Internal.Optimization;
-using Dynamitey.Internal.Compat;
 
 namespace Dynamitey.DynamicObjects
 {
-
     /// <summary>
     /// Interface for simplistic builder options
     /// </summary>
     public interface IBuilder
-    {  
-        
+    {
         /// <summary>
         /// Creates a prototype list
         /// </summary>
@@ -76,14 +72,12 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         dynamic ArraySetup(params dynamic[] constructorArgs);
 
-
         /// <summary>
         /// Alternative name for <see cref="ListSetup{TList}"/>
         /// </summary>
         /// <param name="constructorArgsFactory">The constructor args factory.</param>
         /// <returns></returns>
         dynamic ArraySetup(Func<object[]> constructorArgsFactory);
-
 
         /// <summary>
         /// Alternative name for <see cref="List"/>
@@ -134,7 +128,7 @@ namespace Dynamitey.DynamicObjects
         dynamic ObjectSetup(Func<object[]> constructorArgsFactory);
 
         /// <summary>
-        /// Setups up named builders 
+        /// Setups up named builders
         /// </summary>
         /// <value>The setup.</value>
         dynamic Setup { get; }
@@ -144,8 +138,8 @@ namespace Dynamitey.DynamicObjects
     /// Builds Expando-Like Objects with an inline Syntax
     /// </summary>
     /// <typeparam name="TObjectProtoType">The type of the object proto type.</typeparam>
-   
-    public class Builder<TObjectProtoType>: BaseObject, IBuilder
+
+    public class Builder<TObjectProtoType> : BaseObject, IBuilder
     {
         /// <summary>
         /// Build factory storage
@@ -153,18 +147,19 @@ namespace Dynamitey.DynamicObjects
 
         [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
             "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
-		protected IDictionary<string,Activate?> _buildType;
+        protected IDictionary<string, Activate?> _buildType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Builder{TObjectProtoType}"/> class.
         /// </summary>
         [RequiresDynamicCode("Constructing any BaseObject-derived type (and the BuilderTrampoline/SetupTrampoline it wires up) instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-		public Builder(){
+        public Builder()
+        {
             _buildType = new Dictionary<string, Activate?>();
-			Setup = new SetupTrampoline<TObjectProtoType>(this);
-			Object = new BuilderTrampoline<TObjectProtoType>(this);
-		}
-		
+            Setup = new SetupTrampoline<TObjectProtoType>(this);
+            Object = new BuilderTrampoline<TObjectProtoType>(this);
+        }
+
         /// <summary>
         /// Creates a prototype list
         /// </summary>
@@ -194,8 +189,6 @@ namespace Dynamitey.DynamicObjects
             return new List(contents);
         }
 
-
-
         /// <summary>
         /// Setup List or Array, takes either one <see cref="Activate" /> or a list of constructor args that will use objects Type
         /// </summary>
@@ -203,19 +196,17 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public dynamic ListSetup(params dynamic[] constructorArgs)
         {
-            var tActivate =constructorArgs.OfType<Activate>().SingleOrDefault();
+            var tActivate = constructorArgs.OfType<Activate>().SingleOrDefault();
 
-            
             if (tActivate == null)
             {
-
                 if (!_buildType.TryGetValue("Object", out tActivate))
                     tActivate = null;
                 if (tActivate != null)
                 {
-                    tActivate = new Activate(tActivate.Type,constructorArgs);
+                    tActivate = new Activate(tActivate.Type, constructorArgs);
                 }
-                if(tActivate == null)
+                if (tActivate == null)
                     tActivate = new Activate<List>(constructorArgs);
             }
 
@@ -324,7 +315,6 @@ namespace Dynamitey.DynamicObjects
         /// </summary>
         public dynamic Setup { get; private set; }
 
-
         ///<summary>
         /// Trampoline for builder
         ///</summary>
@@ -333,7 +323,7 @@ namespace Dynamitey.DynamicObjects
             "overrides DynamicObject.TryInvoke, a public member.")]
         public class BuilderTrampoline<TInnerObjectProtoType> : DynamicObject
         {
-            readonly Builder<TInnerObjectProtoType> _buider;
+            private readonly Builder<TInnerObjectProtoType> _buider;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="BuilderTrampoline{TInnerObjectProtoType}"/> class.
@@ -342,8 +332,8 @@ namespace Dynamitey.DynamicObjects
             [RequiresDynamicCode("Constructing any DynamicObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
             public BuilderTrampoline(Builder<TInnerObjectProtoType> builder)
             {
-				_buider = builder;
-			}
+                _buider = builder;
+            }
 
             /// <summary>
             /// Tries the invoke.
@@ -378,16 +368,17 @@ namespace Dynamitey.DynamicObjects
             "overrides DynamicObject.TryInvoke, a public member.")]
         public class SetupTrampoline<TInnerObjectProtoType> : DynamicObject
         {
-			readonly Builder<TInnerObjectProtoType> _buider;
+            private readonly Builder<TInnerObjectProtoType> _buider;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="SetupTrampoline{TInnerObjectProtoType}"/> class.
             /// </summary>
             /// <param name="builder">The builder.</param>
             [RequiresDynamicCode("Constructing any DynamicObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-			public SetupTrampoline(Builder<TInnerObjectProtoType> builder){
-				_buider = builder;
-			}
+            public SetupTrampoline(Builder<TInnerObjectProtoType> builder)
+            {
+                _buider = builder;
+            }
 
             /// <summary>
             /// Tries the invoke.
@@ -408,17 +399,16 @@ namespace Dynamitey.DynamicObjects
                 "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
             public override bool TryInvoke(InvokeBinder binder, dynamic?[]? args, out object? result)
             {
-				if (binder.CallInfo.ArgumentNames.Count != binder.CallInfo.ArgumentCount)
-               		 throw new ArgumentException("Requires argument names for every argument");
-                var tArgs = args!.Select(it => it is Type ? new Activate(it) : (Activate?) it);
+                if (binder.CallInfo.ArgumentNames.Count != binder.CallInfo.ArgumentCount)
+                    throw new ArgumentException("Requires argument names for every argument");
+                var tArgs = args!.Select(it => it is Type ? new Activate(it) : (Activate?)it);
                 foreach (var tKeyPair in binder.CallInfo.ArgumentNames.Zip(tArgs, (n, a) => new KeyValuePair<string, Activate?>(n, a)))
                 {
-					_buider._buildType[tKeyPair.Key]=tKeyPair.Value;
-				}
-				result = _buider;
-				return true;
+                    _buider._buildType[tKeyPair.Key]=tKeyPair.Value;
+                }
+                result = _buider;
+                return true;
             }
-
         }
 
         /// <summary>
@@ -436,7 +426,8 @@ namespace Dynamitey.DynamicObjects
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same 'dynamic'-forced construction as above; see the IL2026 suppression on this member.")]
         [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
-		public override bool TrySetMember(SetMemberBinder binder, dynamic? value){
+        public override bool TrySetMember(SetMemberBinder binder, dynamic? value)
+        {
             if (value != null)
             {
                 if (value is Type)
@@ -456,8 +447,8 @@ namespace Dynamitey.DynamicObjects
                 _buildType[binder.Name] = null;
                 return true;
             }
-			return false;
-		}
+            return false;
+        }
 
         /// <summary>
         /// Tries the invoke member.
@@ -477,36 +468,34 @@ namespace Dynamitey.DynamicObjects
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
         {
-            if(!_buildType.TryGetValue(binder.Name, out var tBuildType))
+            if (!_buildType.TryGetValue(binder.Name, out var tBuildType))
                 tBuildType = null;
 
             if (tBuildType == null && !_buildType.TryGetValue("Object", out tBuildType))
                 tBuildType = null;
 
-            result = InvokeHelper(binder.CallInfo, args!,tBuildType);
+            result = InvokeHelper(binder.CallInfo, args!, tBuildType);
             if (TryTypeForName(binder.Name, out var tType))
             {
                 var typeInfo = tType.GetTypeInfo();
                 if (Dynamic.Impromptu.IsAvailable && typeInfo.IsInterface && result != null && !typeInfo.IsAssignableFrom(result!.GetType()))
                 {
-                   result = Dynamic.Impromptu.DynamicActLike(result, tType);
+                    result = Dynamic.Impromptu.DynamicActLike(result, tType);
                 }
             }
             return true;
-
         }
 
         [RequiresUnreferencedCode("Calls the annotated Activate.Create/Dynamic.InvokeConstructor/Dynamic.InvokeSetAll, and Activator.CreateInstance<TObjectProtoType>(), which requires TObjectProtoType to have a public parameterless constructor for trim analysis.")]
         [RequiresDynamicCode("Dynamic.InvokeConstructor/InvokeSetAll require the DLR's runtime code generation; not supported when AOT-compiled.")]
-        private static object InvokeHelper(CallInfo callinfo, object?[] args, Activate? buildType =null)
+        private static object InvokeHelper(CallInfo callinfo, object?[] args, Activate? buildType = null)
         {
-           
             bool tSetWithName = true;
             object? tArg = null;
             if (callinfo.ArgumentNames.Count == 0 && callinfo.ArgumentCount == 1)
             {
                 tArg =args[0];
-                
+
                 if (Util.IsAnonymousType(tArg!) || tArg is IEnumerable<KeyValuePair<string, object>>)
                 {
                     tSetWithName = false;
@@ -520,7 +509,8 @@ namespace Dynamitey.DynamicObjects
             {
                 result = buildType.Create();
             }
-            else{
+            else
+            {
                 try
                 {
                     result = Activator.CreateInstance<TObjectProtoType>()!;//Try first because faster but doens't work with optional parameters
@@ -534,11 +524,10 @@ namespace Dynamitey.DynamicObjects
                     // Catching Exception here would also swallow a genuine failure from inside a
                     // real parameterless constructor and silently invoke it a second time via the
                     // DLR path (cs/catch-of-all-exceptions).
-                    result = Dynamic.InvokeConstructor(typeof (TObjectProtoType))!;
+                    result = Dynamic.InvokeConstructor(typeof(TObjectProtoType))!;
                 }
-
             }
-            if(tSetWithName)
+            if (tSetWithName)
             {
                 tArg = callinfo.ArgumentNames.Zip(args, (n, a) => new KeyValuePair<string, object?>(n, a));
             }

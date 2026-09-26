@@ -1,28 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Dynamic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using Dynamitey.SupportLibrary;
+﻿using Dynamitey.SupportLibrary;
 using Microsoft.CSharp.RuntimeBinder;
 using Moq;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Dynamic;
 using System.Globalization;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Dynamitey.Tests
 {
-    public class Invoke:Helper
+    public class Invoke : Helper
     {
         [OneTimeTearDown]
         public void DestroyCaches()
         {
             Dynamic.ClearCaches();
         }
-
 
         [Test]
         public void TestDynamicSet()
@@ -34,10 +32,7 @@ namespace Dynamitey.Tests
             Dynamic.InvokeSet(tExpando, "Test", tSetValue);
 
             Assert.That(tExpando.Test, Is.EqualTo(tSetValue));
-
         }
-
-
 
         [Test]
         public void TestPocoSet()
@@ -49,9 +44,7 @@ namespace Dynamitey.Tests
             Dynamic.InvokeSet(tPoco, "Prop1", tSetValue);
 
             Assert.That(tPoco.Prop1, Is.EqualTo(tSetValue));
-
         }
-
 
         [Test]
         public void TestStructSet()
@@ -63,7 +56,6 @@ namespace Dynamitey.Tests
             Dynamic.InvokeSet(tPoco, "Prop1", tSetValue);
 
             Assert.That(((PropStruct)tPoco).Prop1, Is.EqualTo(tSetValue));
-
         }
 
         [Test]
@@ -72,11 +64,9 @@ namespace Dynamitey.Tests
             dynamic tExpando = new ExpandoObject();
             var tSetValueD = "4";
 
-
             var tCachedInvoke = new CacheableInvocation(InvocationKind.Set, "Prop1");
 
             tCachedInvoke.Invoke((object)tExpando, tSetValueD);
-
 
             Assert.That(tExpando.Prop1, Is.EqualTo(tSetValueD));
 
@@ -93,8 +83,6 @@ namespace Dynamitey.Tests
 
             Assert.That(tPoco.Prop1, Is.EqualTo(tSetValue2));
         }
-
-
 
         [Test]
         public void TestConvert()
@@ -383,13 +371,10 @@ namespace Dynamitey.Tests
             Assert.That(tCast[1], Is.EqualTo("two"));
         }
 
-        
-
         [Test]
         public void TestConstructOptional()
         {
             var argname = InvokeArg.Create;
-
 
             PocoOptConstructor tCast = Dynamic.InvokeConstructor(typeof(PocoOptConstructor), argname("three", "3"));
 
@@ -413,11 +398,9 @@ namespace Dynamitey.Tests
         [Test]
         public void TestOptionalArgumentActivationNoneAndCacheable()
         {
-
             Assert.Throws<MissingMethodException>(() => Activator.CreateInstance<DynamicObjects.List>());
 
             var tList = Dynamic.InvokeConstructor(typeof(DynamicObjects.List));
-
 
             Assert.That(tList.GetType(), Is.EqualTo(typeof(DynamicObjects.List)));
 
@@ -425,11 +408,8 @@ namespace Dynamitey.Tests
 
             var tList1 = tCachedInvoke.Invoke(typeof(DynamicObjects.List));
 
-
             Assert.That(tList1.GetType(), Is.EqualTo(typeof(DynamicObjects.List)));
         }
-
-
 
         [Test]
         public void TestConstructValueType()
@@ -437,7 +417,6 @@ namespace Dynamitey.Tests
             var tCast = Dynamic.InvokeConstructor(typeof(DateTime), 2009, 1, 20);
 
             Assert.That(tCast.Day, Is.EqualTo(20));
-
         }
 
         [Test]
@@ -447,7 +426,6 @@ namespace Dynamitey.Tests
             dynamic tCast = tCachedInvoke.Invoke(typeof(DateTime), 2009, 1, 20);
 
             Assert.That(tCast.Day, Is.EqualTo(20));
-
         }
 
         [Test]
@@ -468,7 +446,6 @@ namespace Dynamitey.Tests
 
             Assert.That(tCast, Is.EqualTo(default(Int32)));
         }
-
 
         [Test]
         public void TestConstructDateTimeNoParams()
@@ -532,7 +509,6 @@ namespace Dynamitey.Tests
             Assert.That(tCast, Is.EqualTo(default(Guid)));
         }
 
-
         [Test]
         public void TestStaticCall()
         {
@@ -540,7 +516,7 @@ namespace Dynamitey.Tests
             var generic = InvokeMemberName.Create;
 
             var tOut = Dynamic.InvokeMember(@static(typeof(StaticType)),
-                                              generic("Create",new[]{typeof(bool)}), 1);
+                                              generic("Create", new[] { typeof(bool) }), 1);
             Assert.That(tOut, Is.EqualTo(false));
         }
 
@@ -550,13 +526,13 @@ namespace Dynamitey.Tests
             var @static = InvokeContext.CreateStatic;
             var generic = InvokeMemberName.Create;
 
-            var tCached = new CacheableInvocation(InvocationKind.InvokeMember, generic("Create",new[]{typeof(bool)}) , argCount: 1,
+            var tCached = new CacheableInvocation(InvocationKind.InvokeMember, generic("Create", new[] { typeof(bool) }), argCount: 1,
                                     context: @static(typeof(StaticType)));
 
             var tOut = tCached.Invoke(typeof(StaticType), 1);
             Assert.That(tOut, Is.EqualTo(false));
         }
-        
+
         private class TestClass
         {
             public static int StaticProperty { get; set; }
@@ -570,8 +546,7 @@ namespace Dynamitey.Tests
             var tOut = Dynamic.InvokeGet(staticContext(typeof(TestClass)), "StaticProperty");
             Assert.That(tOut, Is.EqualTo(42));
         }
-        
-     
+
         [Test]
         public void TestImplicitConvert()
         {
@@ -587,11 +562,10 @@ namespace Dynamitey.Tests
         {
             var colorString = "PaleVioletRed";
 
-            var color =Dynamic.CoerceConvert(colorString, typeof (Color));
+            var color = Dynamic.CoerceConvert(colorString, typeof(Color));
 
-            Assert.That((object)color,Is.TypeOf<Color>());
+            Assert.That((object)color, Is.TypeOf<Color>());
             Assert.That((object)color, Is.EqualTo(Color.PaleVioletRed));
-
         }
 
         [Test]
@@ -609,8 +583,6 @@ namespace Dynamitey.Tests
             Assert.That(tEl, Is.Not.EqualTo(null));
         }
 
-
-
         [Test]
         public void TestCacheableImplicitConvert()
         {
@@ -622,7 +594,6 @@ namespace Dynamitey.Tests
 
             Assert.That(tCast.GetType(), Is.EqualTo(typeof(long)));
         }
-
 
         [Test]
         public void TestCacheableGet()
@@ -638,12 +609,9 @@ namespace Dynamitey.Tests
             var tSetValue2 = "2";
             tAnon = new PropPoco { Prop1 = tSetValue2 };
 
-
             var tOut2 = tCached.Invoke(tAnon);
 
-
             Assert.That(tOut2, Is.EqualTo(tSetValue2));
-
         }
 
         // Pins the CA2208 fix in CacheableInvocation.Invoke's "wrong argument count" branch: the
@@ -676,43 +644,32 @@ namespace Dynamitey.Tests
         [Test]
         public void TestGetIndexer()
         {
-
             dynamic tSetValue = "1";
             var tAnon = new[] { tSetValue, "2" };
-
 
             string tOut = Dynamic.InvokeGetIndex(tAnon, 0);
 
             Assert.That(tOut, Is.EqualTo(tSetValue));
-
         }
-
 
         [Test]
         public void TestGetIndexerValue()
         {
-
-
             var tAnon = new int[] { 1, 2 };
-
 
             int tOut = Dynamic.InvokeGetIndex(tAnon, 1);
 
             Assert.That(tOut, Is.EqualTo(tAnon[1]));
-
         }
-
 
         [Test]
         public void TestGetLengthArray()
         {
             var tAnon = new[] { "1", "2" };
 
-
             int tOut = Dynamic.InvokeGet(tAnon, "Length");
 
             Assert.That(tOut, Is.EqualTo(2));
-
         }
 
         [Test]
@@ -721,18 +678,14 @@ namespace Dynamitey.Tests
             dynamic tSetValue = "1";
             var tAnon = new List<string> { tSetValue, "2" };
 
-
             string tOut = Dynamic.InvokeGetIndex(tAnon, 0);
 
             Assert.That(tOut, Is.EqualTo(tSetValue));
-
         }
-
 
         [Test]
         public void TestCacheableIndexer()
         {
-
             var tStrings = new[] { "1", "2" };
 
             var tCachedInvoke = new CacheableInvocation(InvocationKind.GetIndex, argCount: 1);
@@ -769,33 +722,26 @@ namespace Dynamitey.Tests
         [Test]
         public void TestSetIndexer()
         {
-
             dynamic tSetValue = "3";
             var tAnon = new List<string> { "1", "2" };
 
             Dynamic.InvokeSetIndex(tAnon, 0, tSetValue);
 
             Assert.That(tAnon[0], Is.EqualTo(tSetValue));
-
         }
 
         [Test]
         public void TestCacheableSetIndexer()
         {
-
             dynamic tSetValue = "3";
             var tList = new List<string> { "1", "2" };
-
 
             var tCachedInvoke = new CacheableInvocation(InvocationKind.SetIndex, argCount: 2);
 
             tCachedInvoke.Invoke(tList, 0, tSetValue);
 
             Assert.That(tList[0], Is.EqualTo(tSetValue));
-
         }
-
-
 
         [Test]
         public void TestMethodDynamicPassAndGetValue()
@@ -809,7 +755,6 @@ namespace Dynamitey.Tests
 
             Assert.That(tOut, Is.EqualTo(tValue.ToString()));
         }
-
 
         [Test]
         public void TestCacheableMethodDynamicPassAndGetValue()
@@ -864,7 +809,6 @@ namespace Dynamitey.Tests
 
             Assert.That((object)tOut, Is.EqualTo("int")); //should still be int because this uses runtime type
 
-
             var tOut2 = Dynamic.InvokeMember(tPoco, "Func", 1m);
 
             Assert.That(tOut2, Is.EqualTo("object"));
@@ -883,13 +827,11 @@ namespace Dynamitey.Tests
 
             var tCachedInvoke = new CacheableInvocation(InvocationKind.InvokeMember, "Func", argCount: 1);
 
-
             var tOut = tCachedInvoke.Invoke(tPoco, tValue);
 
             Assert.That(tOut, Is.EqualTo("int"));
 
             Assert.That((object)tOut, Is.EqualTo("int")); //should still be int because this uses runtime type
-
 
             var tOut2 = tCachedInvoke.Invoke(tPoco, 1m);
 
@@ -912,7 +854,6 @@ namespace Dynamitey.Tests
             Assert.That(tOut, Is.EqualTo("int"));
 
             Assert.That((object)tOut, Is.EqualTo("int")); //should still be int because this uses runtime type
-
 
             var tOut2 = Dynamic.InvokeMember(tPoco, "Func", 1m);
 
@@ -1003,7 +944,6 @@ namespace Dynamitey.Tests
 
             Assert.That((object)tOut, Is.EqualTo("int")); //should still be int because this uses runtime type
 
-
             var tOut2 = Dynamic.InvokeMember(tPoco, "Func", 1m);
 
             Assert.That(tOut2, Is.EqualTo("object"));
@@ -1027,13 +967,9 @@ namespace Dynamitey.Tests
         [Test]
         public void TestOutMethod()
         {
-
-
-
             string tResult = String.Empty;
 
             var tPoco = new MethOutPoco();
-
 
             var tName = "Func";
             var tContext = GetType();
@@ -1048,16 +984,12 @@ namespace Dynamitey.Tests
                                                         CSharpArgumentInfoFlags.UseCompileTimeType, null)
                                                 });
 
-
             var tSite = Dynamic.CreateCallSite<DynamicTryString>(tBinder, tName, tContext);
-
 
             tSite.Target.Invoke(tSite, tPoco, out tResult);
 
             Assert.That(tResult, Is.EqualTo("success"));
-
         }
-
 
         [Test]
         public void TestMethodDynamicPassVoid()
@@ -1068,8 +1000,6 @@ namespace Dynamitey.Tests
 
             dynamic tExpando = new ExpandoObject();
             tExpando.Action = new Action<string>(it => tTest = it);
-
-
 
             Dynamic.InvokeMemberAction(tExpando, "Action", tValue);
 
@@ -1117,13 +1047,9 @@ namespace Dynamitey.Tests
             Assert.That(Test2, Is.EqualTo(tValue));
         }
 
-
-
         [Test]
         public void TestMethodPocoGetValue()
         {
-
-
             var tValue = 1;
 
             var tOut = Dynamic.InvokeMember(tValue, "ToString");
@@ -1131,15 +1057,10 @@ namespace Dynamitey.Tests
             Assert.That(tOut, Is.EqualTo(tValue.ToString()));
         }
 
-
-
         [Test]
         public void TestMethodPocoPassAndGetValue()
         {
-
-
             HelpTestPocoPassAndGetValue("Test", "Te");
-
 
             HelpTestPocoPassAndGetValue("Test", "st");
         }
@@ -1153,16 +1074,12 @@ namespace Dynamitey.Tests
             Assert.That(tOut, Is.EqualTo(tExpected));
         }
 
-
         [Test]
         public void TestGetDynamic()
         {
-
             var tSetValue = "1";
             dynamic tExpando = new ExpandoObject();
             tExpando.Test = tSetValue;
-
-
 
             var tOut = Dynamic.InvokeGet(tExpando, "Test");
 
@@ -1172,13 +1089,11 @@ namespace Dynamitey.Tests
         [Test]
         public void TestGetDynamicChained()
         {
-
             var tSetValue = "1";
             dynamic tExpando = new ExpandoObject();
             tExpando.Test = new ExpandoObject();
             tExpando.Test.Test2 = new ExpandoObject();
             tExpando.Test.Test2.Test3 = tSetValue;
-
 
             var tOut = Dynamic.InvokeGetChain(tExpando, "Test.Test2.Test3");
 
@@ -1188,7 +1103,6 @@ namespace Dynamitey.Tests
         [Test]
         public void TestGetDynamicChainedWithIndexes()
         {
-
             var tSetValue = "1";
             dynamic tExpando = Build.NewObject(
                 Test: Build.NewObject(
@@ -1198,23 +1112,18 @@ namespace Dynamitey.Tests
                     )
                 );
 
-
-
             var tOut = Dynamic.InvokeGetChain(tExpando, "Test.Test2[0].Test3['Test4']");
 
             Assert.That(tOut, Is.EqualTo(tSetValue));
         }
 
-
         [Test]
         public void TestSetDynamicChained()
         {
-
             var tSetValue = "1";
             dynamic tExpando = new ExpandoObject();
             tExpando.Test = new ExpandoObject();
             tExpando.Test.Test2 = new ExpandoObject();
-
 
             Dynamic.InvokeSetChain(tExpando, "Test.Test2.Test3", tSetValue);
 
@@ -1233,7 +1142,6 @@ namespace Dynamitey.Tests
                     )
                 );
 
-
             var tOut = Dynamic.InvokeSetChain(tExpando, "Test.Test2[0].Test3['Test4']", tSetValue);
 
             Assert.That(tExpando.Test.Test2[0].Test3["Test4"], Is.EqualTo(tSetValue));
@@ -1244,12 +1152,10 @@ namespace Dynamitey.Tests
         [Test]
         public void TestSetDynamicAllDict()
         {
-
             var tSetValue = "1";
             dynamic tExpando = new ExpandoObject();
             tExpando.Test = new ExpandoObject();
             tExpando.Test.Test2 = new ExpandoObject();
-
 
             Dynamic.InvokeSetAll(tExpando, new Dictionary<string, object> { { "Test.Test2.Test3", tSetValue }, { "One", 1 }, { "Two", 2 } });
 
@@ -1267,7 +1173,6 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSetAll(tExpando, new { One = 1, Two = 2, Three = 3 });
 
-
             Assert.That(tExpando.One, Is.EqualTo(1));
             Assert.That(tExpando.Two, Is.EqualTo(2));
             Assert.That(tExpando.Three, Is.EqualTo(3));
@@ -1280,7 +1185,6 @@ namespace Dynamitey.Tests
 
             Dynamic.InvokeSetAll(tExpando, One: 1, Two: 2, Three: 3);
 
-
             Assert.That(tExpando.One, Is.EqualTo(1));
             Assert.That(tExpando.Two, Is.EqualTo(2));
             Assert.That(tExpando.Three, Is.EqualTo(3));
@@ -1289,10 +1193,8 @@ namespace Dynamitey.Tests
         [Test]
         public void TestSetDynamicChainedOne()
         {
-
             var tSetValue = "1";
             dynamic tExpando = new ExpandoObject();
-
 
             Dynamic.InvokeSetChain(tExpando, "Test", tSetValue);
 
@@ -1302,12 +1204,9 @@ namespace Dynamitey.Tests
         [Test]
         public void TestGetDynamicChainedOne()
         {
-
             var tSetValue = "1";
             dynamic tExpando = new ExpandoObject();
             tExpando.Test = tSetValue;
-
-
 
             var tOut = Dynamic.InvokeGetChain(tExpando, "Test");
 
@@ -1317,7 +1216,6 @@ namespace Dynamitey.Tests
         [Test]
         public void TestCacheableGetDynamic()
         {
-
             var tSetValue = "1";
             dynamic tExpando = new ExpandoObject();
             tExpando.Test = tSetValue;
@@ -1347,7 +1245,6 @@ namespace Dynamitey.Tests
             Assert.That(tDate, Is.EqualTo(DateTime.Today));
         }
 
-
         [Test]
         public void TestStaticGet2()
         {
@@ -1362,6 +1259,7 @@ namespace Dynamitey.Tests
             var tVal = Dynamic.InvokeGet((StaticContext)typeof(StaticType), "Test");
             Assert.That(tVal, Is.EqualTo(true));
         }
+
         [Test]
         public void TestStaticSet()
         {
@@ -1398,11 +1296,9 @@ namespace Dynamitey.Tests
             object tDateDyn = "01/20/2009";
             var tCachedInvoke = new CacheableInvocation(InvocationKind.InvokeMember, "Parse", 2,
                                                         context: @static(typeof(DateTime)));
-            var tDate = tCachedInvoke.Invoke(typeof(DateTime), tDateDyn,CultureInfo.GetCultureInfo("en-US"));
+            var tDate = tCachedInvoke.Invoke(typeof(DateTime), tDateDyn, CultureInfo.GetCultureInfo("en-US"));
             Assert.That(tDate, Is.EqualTo(new DateTime(2009, 1, 20)));
         }
-
-
 
         [Test]
         public void TestIsEvent()
@@ -1448,7 +1344,6 @@ namespace Dynamitey.Tests
             bool tTest = false;
             bool tTest2 = false;
 
-
             tDynamic.Event += new EventHandler<EventArgs>((@object, args) => { tTest = true; });
 
             tDynamic.Event += new EventHandler<EventArgs>((@object, args) => { tTest2 = true; });
@@ -1462,7 +1357,6 @@ namespace Dynamitey.Tests
             Assert.That(tTest, Is.EqualTo(true));
 
             Assert.That(tTest2, Is.EqualTo(true));
-
         }
 
         [Test]
@@ -1607,12 +1501,10 @@ namespace Dynamitey.Tests
 
             Assert.That(tTest, Is.EqualTo(false));
 
-
             Dynamic.InvokeSubtractAssignMember(tDyanmic, "Prop2", 4);
 
             Assert.That(tDyanmic.Prop2, Is.EqualTo(-1L));
         }
-
 
         [Test]
         public void TestCacheableDynamicSubtractAssign()
@@ -1632,7 +1524,6 @@ namespace Dynamitey.Tests
             tDyanmic.OnEvent(null, null);
 
             Assert.That(tTest, Is.EqualTo(false));
-
 
             tCachedInvoke.Invoke((object)tDynamic2, 4);
 
@@ -1668,7 +1559,6 @@ namespace Dynamitey.Tests
             Assert.That(tCachedIvnocation2, Is.EqualTo(tCachedIvnocation1));
         }
 
-
         private DynamicObject CreateMock(ExpressionType op)
         {
             var tMock = new Mock<DynamicObject>() { CallBase = true };
@@ -1679,35 +1569,42 @@ namespace Dynamitey.Tests
             return tMock.Object;
         }
 
-        public class OperatorTestDynObject:DynamicObject{
-            ExpressionType _type;
-            public OperatorTestDynObject(ExpressionType type){
+        public class OperatorTestDynObject : DynamicObject
+        {
+            private ExpressionType _type;
+
+            public OperatorTestDynObject(ExpressionType type)
+            {
                 _type = type;
             }
 
-            public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object result){
+            public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object result)
+            {
                 Assert.That(binder.Operation, Is.EqualTo(_type));
                 result = _type;
                 return true;
             }
 
-            public override bool TryUnaryOperation(UnaryOperationBinder binder, out object result){
+            public override bool TryUnaryOperation(UnaryOperationBinder binder, out object result)
+            {
                 Assert.That(binder.Operation, Is.EqualTo(_type));
                 result = _type;
                 return true;
             }
-
         }
-         private void RunBinaryMockTests(ExpressionType type){
+
+        private void RunBinaryMockTests(ExpressionType type)
+        {
             var mock = new OperatorTestDynObject(type);
             var dummy = new Object();
             Dynamic.InvokeBinaryOperator(mock, type, dummy);
         }
 
-        private void RunUnaryMockTests(ExpressionType type){
+        private void RunUnaryMockTests(ExpressionType type)
+        {
             var mock = new OperatorTestDynObject(type);
 #pragma warning disable CS0618 // Type or member is obsolete
-            Dynamic.InvokeUnaryOpartor(type,mock);
+            Dynamic.InvokeUnaryOpartor(type, mock);
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
@@ -1733,9 +1630,6 @@ namespace Dynamitey.Tests
             RunUnaryMockTests(ExpressionType.Increment);
             RunUnaryMockTests(ExpressionType.Decrement);
             RunUnaryMockTests(ExpressionType.Decrement);
-
-
-
         }
 
         // See the comment on TestInvokeBasicUnaryOperatorsDynamic above - same reasoning, for
@@ -1788,13 +1682,11 @@ namespace Dynamitey.Tests
             RunBinaryMockTests(ExpressionType.RightShiftAssign);
         }
 
-
         [Test]
         public void TestInvokeSubtract()
         {
             Assert.That(Dynamic.InvokeBinaryOperator(1, ExpressionType.Subtract, 2), Is.EqualTo(-1));
         }
-
     }
 
     // For issue #15's investigation. No assembly boundary is involved, so this

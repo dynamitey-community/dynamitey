@@ -1,6 +1,6 @@
-using System;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {

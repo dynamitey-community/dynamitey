@@ -1,18 +1,21 @@
-using System.Collections.Generic;
-using System;
 using Dynamitey.DynamicObjects;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace Dynamitey.Tests
 {
-    public interface IExtProxyTestFoo { }
+    public interface IExtProxyTestFoo
+    { }
 
-    public class ExtProxyTestFooImpl : IExtProxyTestFoo { }
+    public class ExtProxyTestFooImpl : IExtProxyTestFoo
+    { }
 
     public static class ExtProxyTestFooExtensions
     {
         public static string Bar(this IExtProxyTestFoo f) => "bar";
+
         public static string BarNull(this IExtProxyTestFoo f) => null;
     }
 

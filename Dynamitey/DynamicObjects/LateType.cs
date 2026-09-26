@@ -1,23 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Dynamitey.Internal.Optimization;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
-using System.Linq;
 using System.Reflection;
-
-using System.Text;
-using Dynamitey.Internal.Optimization;
-
 
 namespace Dynamitey.DynamicObjects
 {
     /// <summary>
     /// Late bind types from libraries not not at compile type
     /// </summary>
-    public class LateType:BaseForwarder
+    public class LateType : BaseForwarder
     {
-
-
         /// <summary>
         /// Exception When The Late Type can not be found to bind.
         /// </summary>
@@ -33,26 +26,24 @@ namespace Dynamitey.DynamicObjects
         [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
             "See AwaitableResult.Awaiter; identical reasoning. MissingTypeException's identity only makes " +
             "sense next to LateType, the class whose lookups throw it.")]
-        public class MissingTypeException:Exception
+        public class MissingTypeException : Exception
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="MissingTypeException" /> class.
             /// </summary>
             /// <param name="typename">The typename.</param>
-             public MissingTypeException(string typename)
-                 : base(String.Format(System.Globalization.CultureInfo.InvariantCulture, "Could Not Find Type. {0}", typename))
-             {
+            public MissingTypeException(string typename)
+                : base(String.Format(System.Globalization.CultureInfo.InvariantCulture, "Could Not Find Type. {0}", typename))
+            {
+            }
 
-             }
-
-             /// <summary>
-             /// Initializes a new instance of the <see cref="MissingTypeException" /> class.
-             /// </summary>
-             /// <param name="message">The message.</param>
-             /// <param name="innerException">The inner exception.</param>
+            /// <summary>
+            /// Initializes a new instance of the <see cref="MissingTypeException" /> class.
+            /// </summary>
+            /// <param name="message">The message.</param>
+            /// <param name="innerException">The inner exception.</param>
             public MissingTypeException(string message, Exception innerException) : base(message, innerException)
             {
-                
             }
         }
 
@@ -64,11 +55,9 @@ namespace Dynamitey.DynamicObjects
         public LateType(Type type)
             : base(type)
         {
-
         }
 
         private readonly string? TypeName;
-
 
         /// <summary>
         /// Resolves a type by name, returning <c>null</c> rather than throwing when it cannot be
@@ -106,7 +95,6 @@ namespace Dynamitey.DynamicObjects
             }
         }
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="LateType"/> class.
         /// </summary>
@@ -117,7 +105,6 @@ namespace Dynamitey.DynamicObjects
             : base(FindType(typeName))
         {
             TypeName = typeName;
-          
         }
 
         /// <summary>
@@ -131,7 +118,6 @@ namespace Dynamitey.DynamicObjects
             : base(FindType(typeName, assembly))
         {
             TypeName = typeName;
-
         }
 
         /// <summary>
@@ -150,14 +136,16 @@ namespace Dynamitey.DynamicObjects
         [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
             "See AwaitableResult.Awaiter; identical reasoning. ConstructorForward must be public because it " +
             "overrides DynamicObject.TryInvoke, a public member.")]
-        public class ConstructorForward:DynamicObject
+        public class ConstructorForward : DynamicObject
         {
             private readonly Type _type;
+
             [RequiresDynamicCode("Constructing any DynamicObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
             internal ConstructorForward(Type type)
             {
                 _type = type;
             }
+
             /// <summary>
             /// Tries the invoke.
             /// </summary>
@@ -179,7 +167,6 @@ namespace Dynamitey.DynamicObjects
                 result = Dynamic.InvokeConstructor(_type, Util.NameArgsIfNecessary(binder.CallInfo, args!));
                 return true;
             }
-
         }
 
         /// <summary>
@@ -189,7 +176,6 @@ namespace Dynamitey.DynamicObjects
         /// 	<c>true</c> if this instance is available; otherwise, <c>false</c>.
         /// </value>
         public bool IsAvailable => Target != null;
-
 
         /// <summary>
         /// Gets the call target.
@@ -211,7 +197,7 @@ namespace Dynamitey.DynamicObjects
         {
             get
             {
-                if(Target ==null)
+                if (Target ==null)
                     // TypeName is set whenever Target can be null: the (Type type) constructor
                     // wraps an already-resolved Type and never leaves Target null.
                     throw new MissingTypeException(TypeName!);
@@ -219,8 +205,5 @@ namespace Dynamitey.DynamicObjects
                 return InvokeContext.CreateStatic((Type)Target);
             }
         }
-    
-
-
     }
 }

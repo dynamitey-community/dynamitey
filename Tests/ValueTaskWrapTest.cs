@@ -1,9 +1,9 @@
 // Issue #100. WrapIfResultTypeInaccessible covered Task<T> only. A
 // ValueTask<InternalResult> from another assembly failed dynamic await
 // with ValueType.GetAwaiter. Public ValueTask<T> from #15 must stay unwrapped.
-using System.Threading.Tasks;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
+using System.Threading.Tasks;
 
 namespace Dynamitey.Tests
 {

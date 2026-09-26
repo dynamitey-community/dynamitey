@@ -1,6 +1,6 @@
+using BenchmarkDotNet.Attributes;
 using System;
 using System.Reflection;
-using BenchmarkDotNet.Attributes;
 
 namespace Dynamitey.Benchmarks
 {

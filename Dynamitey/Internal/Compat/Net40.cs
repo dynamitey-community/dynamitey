@@ -1,10 +1,5 @@
-﻿
-
-
-
-namespace Dynamitey.Internal.Compat
+﻿namespace Dynamitey.Internal.Compat
 {
-
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
 
@@ -27,15 +22,9 @@ namespace Dynamitey.Internal.Compat
             "living under the Internal namespace: turning it into a property is a breaking signature " +
             "change, out of scope for an analyzer-driven cleanup - same public-API-freeze reasoning as " +
             "the CA1819 sites (see Invocation.Args, Invocation.cs).")]
-        public static CultureInfo? GetDefaultThreadCurrentCulture() {
-
+        public static CultureInfo? GetDefaultThreadCurrentCulture()
+        {
             return CultureInfo.DefaultThreadCurrentCulture;
-
         }
-
-
-
     }
-
 }
-

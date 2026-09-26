@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Dynamitey.SupportLibrary;
+﻿using Dynamitey.SupportLibrary;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Dynamitey.Tests
 {
     [TestFixture]
     public class PrivateTest : Helper
     {
-  
         [Test]
         public void TestInvokePrivateMethod()
         {
@@ -293,7 +289,7 @@ namespace Dynamitey.Tests
         {
             var tTest = new TestWithPrivateMethod();
             var context = InvokeContext.CreateContext;
-            Assert.That(() => Dynamic.InvokeMember(context(tTest,this), "Test"), Throws.InstanceOf<RuntimeBinderException>());
+            Assert.That(() => Dynamic.InvokeMember(context(tTest, this), "Test"), Throws.InstanceOf<RuntimeBinderException>());
         }
 
         // Issue #42 gap 1: InvokeContext(target, context) with a null context used to leave
@@ -334,7 +330,7 @@ namespace Dynamitey.Tests
         {
             var tTest = new TestWithPrivateMethod();
             var tCachedInvoke = new CacheableInvocation(InvocationKind.InvokeMember, "Test", context: typeof(TestWithPrivateMethod));
-            Assert.That( tCachedInvoke.Invoke(tTest), Is.EqualTo(3));
+            Assert.That(tCachedInvoke.Invoke(tTest), Is.EqualTo(3));
         }
 
         // Issue #12: InvokeGet works on an instance field but throws
@@ -585,11 +581,13 @@ namespace Dynamitey.Tests
     // instance field alongside a private static field on an internal
     // (default-access) top-level type.
 #pragma warning disable CS0414 // fields are only ever read dynamically, never by name
-    class ClassWithPrivateFields
+
+    internal class ClassWithPrivateFields
     {
         private int field = 16;
         private static int other = 17;
     }
+
 #pragma warning restore CS0414
 
     // For issue #12, generalized case found during investigation (see
@@ -600,7 +598,7 @@ namespace Dynamitey.Tests
     }
 
     // For issue #13, shape from upstream PR #27: internal top-level class.
-    class InternalClassWithPrivateStaticProperty
+    internal class InternalClassWithPrivateStaticProperty
     {
         private static string Hello => "World";
     }
@@ -616,13 +614,15 @@ namespace Dynamitey.Tests
     // the reflection fallback, even though reflection itself has no such
     // restriction.
 #pragma warning disable CS0414 // field is only ever read dynamically, never by name
-    class ClassWithPrivateStaticFieldForContextTest
+
+    internal class ClassWithPrivateStaticFieldForContextTest
     {
         private static int Secret = 99;
     }
+
 #pragma warning restore CS0414
 
-    class ClassWithPrivateStaticPropertyForContextTest
+    internal class ClassWithPrivateStaticPropertyForContextTest
     {
         private static string Secret => "Hidden";
     }
@@ -659,19 +659,21 @@ namespace Dynamitey.Tests
     // matching the #13 shape (see InternalClassWithPrivateStaticProperty
     // above), but with a settable property so both directions can be
     // exercised.
-    class Issue31InternalTopLevelType
+    internal class Issue31InternalTopLevelType
     {
         private static string Prop { get; set; } = "initial";
     }
 
 #pragma warning disable CS0414 // field is only ever read dynamically, never by name
-    class Issue31PrivateFieldForSetContextTest
+
+    internal class Issue31PrivateFieldForSetContextTest
     {
         private static int Secret = 99;
     }
+
 #pragma warning restore CS0414
 
-    class Issue31PrivatePropertyForSetContextTest
+    internal class Issue31PrivatePropertyForSetContextTest
     {
         private static string Secret { get; set; } = "Hidden";
     }

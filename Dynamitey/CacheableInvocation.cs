@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Dynamitey.Internal.Optimization;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Dynamitey.Internal.Optimization;
 using System.Reflection;
-using Dynamitey.Internal.Compat;
-using System.Collections;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Dynamitey
 {
@@ -20,7 +19,7 @@ namespace Dynamitey
     /// <see cref="InvokeContext.Target"/> only.
     /// </summary>
 
-    public class CacheableInvocation:Invocation
+    public class CacheableInvocation : Invocation
     {
         /// <summary>
         /// Creates the cacheable convert call.
@@ -28,7 +27,7 @@ namespace Dynamitey
         /// <param name="convertType">Type of the convert.</param>
         /// <param name="convertExplicit">if set to <c>true</c> [convert explicit].</param>
         /// <returns></returns>
-        public static CacheableInvocation CreateConvert(Type convertType, bool convertExplicit=false)
+        public static CacheableInvocation CreateConvert(Type convertType, bool convertExplicit = false)
         {
             return new CacheableInvocation(InvocationKind.Convert, convertType: convertType, convertExplicit: convertExplicit);
         }
@@ -56,17 +55,18 @@ namespace Dynamitey
 
         //[NonSerialized]
         private CallSite? _callSite;
+
         //[NonSerialized]
         private CallSite? _callSite2;
+
         //[NonSerialized]
         private CallSite? _callSite3;
+
         //[NonSerialized]
         private CallSite? _callSite4;
 
         private readonly bool _convertExplicit;
         private readonly Type? _convertType;
-
-     
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CacheableInvocation"/> class.
@@ -87,16 +87,15 @@ namespace Dynamitey
         /// Their length is the argument count when <paramref name="argCount"/> is omitted.
         /// </param>
         public CacheableInvocation(InvocationKind kind,
-                                   String_OR_InvokeMemberName? name=null,
-                                   int argCount =0,
-                                   string?[]? argNames =null,
+                                   String_OR_InvokeMemberName? name = null,
+                                   int argCount = 0,
+                                   string?[]? argNames = null,
                                    object? context = null,
                                    Type? convertType = null,
                                    bool convertExplicit = false,
                                    object?[]? storedArgs = null)
             : base(kind, name, storedArgs)
         {
-
             _convertType = convertType;
             _convertExplicit = convertExplicit;
 
@@ -132,6 +131,7 @@ namespace Dynamitey
                     }
                     _argCount = tEffectiveCount;
                     break;
+
                 case InvocationKind.SetIndex:
                     if (tEffectiveCount < 2)
                     {
@@ -139,20 +139,24 @@ namespace Dynamitey
                     }
                     _argCount = tEffectiveCount;
                     break;
+
                 case InvocationKind.Convert:
                     _argCount = 0;
-                    if(convertType==null)
-                        throw new ArgumentNullException(nameof(convertType)," Convert Requires Convert Type ");
+                    if (convertType==null)
+                        throw new ArgumentNullException(nameof(convertType), " Convert Requires Convert Type ");
                     break;
+
                 case InvocationKind.SubtractAssign:
                 case InvocationKind.AddAssign:
                 case InvocationKind.Set:
                     _argCount = 1;
                     break;
+
                 case InvocationKind.Get:
                 case InvocationKind.IsEvent:
                     _argCount = 0;
                     break;
+
                 default:
                     _argCount = tEffectiveCount;
                     break;
@@ -168,17 +172,14 @@ namespace Dynamitey
                 _argNames = tBlank;
             }
 
-
             if (context != null)
             {
                 context.GetTargetContext(out _context, out _staticContext);
             }
             else
             {
-                _context = typeof (object);
+                _context = typeof(object);
             }
-
-
         }
 
         /// <summary>
@@ -194,7 +195,7 @@ namespace Dynamitey
                 && other._argCount == _argCount
                 && (_argNames ?? Array.Empty<string?>()).SequenceEqual(other._argNames ?? Array.Empty<string?>())
                 && other._staticContext.Equals(_staticContext)
-                && Equals(other._context, _context) 
+                && Equals(other._context, _context)
                 && other._convertExplicit.Equals(_convertExplicit)
                 && Equals(other._convertType, _convertType);
         }
@@ -217,7 +218,7 @@ namespace Dynamitey
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {
@@ -233,7 +234,6 @@ namespace Dynamitey
                 return result;
             }
         }
-
 
         /// <summary>
         /// Invokes the invocation on specified target with specific args.
@@ -254,9 +254,8 @@ namespace Dynamitey
 
             if (args == null)
             {
-                args = new object?[]{null};
+                args = new object?[] { null };
             }
-           
 
             if (args.Length != _argCount)
             {
@@ -268,9 +267,10 @@ namespace Dynamitey
                         if (args.Length > 1 && !Equals(args[1], _convertExplicit))
                             throw new ArgumentException("CacheableInvocation can't change explicit/implicit conversion on invoke.", nameof(args));
 
-                        if(args.Length > 2)
+                        if (args.Length > 2)
                             goto default;
                         break;
+
                     default:
                         // CA2208: the two ArgumentException(string message, string paramName)
                         // arguments were transposed, so the exception described itself backwards.
@@ -292,51 +292,64 @@ namespace Dynamitey
             switch (Kind)
             {
                 case InvocationKind.Constructor:
-                    var tTarget = (Type) target;
+                    var tTarget = (Type)target;
                     return InvokeHelper.InvokeConstructorCallSite(tTarget, tTarget.GetTypeInfo().IsValueType, args, _argNames,
                                                                   ref _callSite);
+
                 case InvocationKind.Convert:
                     return InvokeHelper.InvokeConvertCallSite(target, _convertExplicit, _convertType!, _context,
                                                               ref _callSite);
+
                 case InvocationKind.Get:
                     return InvokeHelper.InvokeGetCallSite(target, Name!.Name, _context, _staticContext, ref _callSite);
+
                 case InvocationKind.Set:
                     InvokeHelper.InvokeSetCallSite(target, Name!.Name, args[0], _context, _staticContext, ref _callSite);
                     return null;
+
                 case InvocationKind.GetIndex:
                     return InvokeHelper.InvokeGetIndexCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
+
                 case InvocationKind.SetIndex:
                     InvokeHelper.InvokeSetIndexCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
                     return null;
+
                 case InvocationKind.InvokeMember:
                     return Dynamic.WrapIfResultTypeInaccessible(
-                        InvokeHelper.InvokeMemberCallSite(target, (InvokeMemberName) Name!, args, _argNames, _context, _staticContext, ref _callSite));
+                        InvokeHelper.InvokeMemberCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite));
+
                 case InvocationKind.InvokeMemberAction:
                     InvokeHelper.InvokeMemberActionCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite);
                     return null;
+
                 case InvocationKind.InvokeMemberUnknown:
                     return Dynamic.WrapIfResultTypeInaccessible(
                         InvokeHelper.InvokeMemberUnknownCallSite(target, (InvokeMemberName)Name!, args, _argNames, _context, _staticContext, ref _callSite, ref _callSite2));
+
                 case InvocationKind.Invoke:
                     return InvokeHelper.InvokeDirectCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
+
                 case InvocationKind.InvokeAction:
                     InvokeHelper.InvokeDirectActionCallSite(target, args, _argNames, _context, _staticContext, ref _callSite);
                     return null;
+
                 case InvocationKind.InvokeUnknown:
                     return InvokeHelper.InvokeDirectUnknownCallSite(target, args, _argNames, _context, _staticContext, ref _callSite, ref _callSite2);
+
                 case InvocationKind.AddAssign:
-                    InvokeHelper.InvokeAddAssignCallSite(target, Name!.Name, args, _argNames, _context, _staticContext,ref _callSite,ref  _callSite2,ref _callSite3, ref _callSite4);
+                    InvokeHelper.InvokeAddAssignCallSite(target, Name!.Name, args, _argNames, _context, _staticContext, ref _callSite, ref _callSite2, ref _callSite3, ref _callSite4);
                     return null;
+
                 case InvocationKind.SubtractAssign:
                     InvokeHelper.InvokeSubtractAssignCallSite(target, Name!.Name, args, _argNames, _context, _staticContext, ref _callSite, ref _callSite2, ref _callSite3, ref _callSite4);
                     return null;
+
                 case InvocationKind.IsEvent:
                     return InvokeHelper.InvokeIsEventCallSite(target, Name!.Name, _context, _staticContext, ref _callSite);
+
                 default:
                     throw new InvalidOperationException("Unknown Invocation Kind: " + Kind);
             }
         }
-
-       
     }
 }

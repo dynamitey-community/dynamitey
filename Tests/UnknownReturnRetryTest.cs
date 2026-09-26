@@ -4,9 +4,9 @@
 // with an exception thrown after the target has already started running.
 // Retrying then duplicates side effects. Existing fallback tests only cover
 // genuine void members, which never increment a call counter.
-using System;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {

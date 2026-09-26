@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Dynamitey.SupportLibrary;
+using NUnit.Framework;
+using System;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Dynamitey.SupportLibrary;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {
@@ -18,12 +16,8 @@ namespace Dynamitey.Tests
             var tCurriedAdd4 = Dynamic.Curry(tAdd)(4);
             var tResult = tCurriedAdd4(6);
 
-
             Assert.That(tResult, Is.EqualTo(10));
-
         }
-
-
 
         [Test]
         public void TestBasicNamedCurry()
@@ -32,9 +26,7 @@ namespace Dynamitey.Tests
             var tCurriedSub7 = Dynamic.Curry(tSub)(arg2: 7);
             var tResult = tCurriedSub7(arg1: 10);
 
-
             Assert.That(tResult, Is.EqualTo(3));
-
         }
 
         [Test]
@@ -47,6 +39,7 @@ namespace Dynamitey.Tests
 
             Assert.That(tResult2, Is.EqualTo("410"));
         }
+
         [Test]
         public void TestBasicConvertDelegateCurryReturnValueType()
         {
@@ -59,6 +52,7 @@ namespace Dynamitey.Tests
         }
 
         public delegate bool TestDeclaredDelagate(string value);
+
         [Test]
         public void TestBasicConvertNonGenericDelegate()
         {
@@ -68,7 +62,9 @@ namespace Dynamitey.Tests
             var tResult = tCastToDel("bait");
             Assert.That(tResult, Is.EqualTo(true));
         }
+
         public delegate void TestRunDelagate(string value);
+
         [Test]
         public void TestBasicConvertNonGenericDelegateAction()
         {
@@ -115,8 +111,6 @@ namespace Dynamitey.Tests
             Assert.That(tResult, Is.EqualTo(35));
         }
 
-
-
         [Test]
         public void TestPococMethodCurry()
         {
@@ -133,7 +127,6 @@ namespace Dynamitey.Tests
         [Test]
         public void TestStaticMethodCurry()
         {
-
             var curry = Dynamic.Curry((StaticContext)typeof(string), 5).Format(); // curry method target include argument count
             curry = curry("Test {0}, {1}, {2}, {3}");
             curry = curry("A");
@@ -146,12 +139,9 @@ namespace Dynamitey.Tests
         [Test]
         public void TestStaticMethodLongCurry()
         {
-
             object curriedJoin = Dynamic.Curry((StaticContext)typeof(string), 51).Join(",");
 
             Func<dynamic, int, dynamic> applyFunc = (result, each) => result(each.ToString());
-
-
 
             string final = Enumerable.Range(1, 100)
                 .Where(i => i % 2 == 0)
@@ -160,22 +150,17 @@ namespace Dynamitey.Tests
             Console.WriteLine(final);
         }
 
-
-
         [Test]
         public void TestStaticMethodLongCurry2()
         {
             var tFormat = Enumerable.Range(0, 100).Aggregate(new StringBuilder(), (result, each) => result.Append("{" + each + "}")).ToString();
-
 
             dynamic curriedWrite = Dynamic.Curry(Console.Out, 101).WriteLine(tFormat);
 
             Func<dynamic, int, dynamic> applyArgs = (result, each) => result(each.ToString());
 
             Enumerable.Range(0, 100).Aggregate((object)curriedWrite, applyArgs);
-
         }
-
 
         [Test]
         public void TestDynamicMethodCurry()
@@ -198,8 +183,8 @@ namespace Dynamitey.Tests
             var tResult = tCurriedNewObject(Two: 2);
             Assert.That(tResult.One, Is.EqualTo(1));
             Assert.That(tResult.Two, Is.EqualTo(2));
-
         }
+
         [Test]
         public void UnboundedCurryCont()
         {
@@ -241,7 +226,6 @@ namespace Dynamitey.Tests
             }
         }
 
-
         [Test]
         public void TestPococMethodPartialApply()
         {
@@ -261,7 +245,6 @@ namespace Dynamitey.Tests
             Assert.That(tResult.Two, Is.EqualTo(2));
             Assert.That(tResult.Three, Is.EqualTo(3));
             Assert.That(tResult.Four, Is.EqualTo(4));
-
         }
 
         [Test]
@@ -287,10 +270,8 @@ namespace Dynamitey.Tests
 
             var curried = Dynamic.Curry(adder);
 
-          
             Assert.That((object)(curried << "1" << "2" << "3"), Is.EqualTo("123"));
         }
-
 
         [Test]
         public void CurryRightPipeTest()
@@ -299,8 +280,7 @@ namespace Dynamitey.Tests
 
             var curried = Dynamic.Curry(adder);
 
-
-            Assert.That((object) ("1" | ( "2" | ("3" | curried))), Is.EqualTo("321"));
+            Assert.That((object)("1" | ("2" | ("3" | curried))), Is.EqualTo("321"));
         }
     }
 }

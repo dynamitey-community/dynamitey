@@ -6,12 +6,12 @@
 // ArraySetup<T>, Activate<T>.Create's MissingMemberException fallback, and a
 // couple of the DynamicObject trampolines' error branches) were never
 // exercised. These tests fill those in.
-using System;
-using System.Collections.Generic;
-using System.Dynamic;
 using Dynamitey.DynamicObjects;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
 
 namespace Dynamitey.Tests
 {

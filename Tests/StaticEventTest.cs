@@ -3,9 +3,9 @@
 // event on a Type target reported false and add/remove took the Get/+=/Set
 // path. Custom add/remove static events threw. Types here exist only for this
 // fixture.
-using System;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {
@@ -115,11 +115,13 @@ namespace Dynamitey.Tests
         // Named only for Dynamic.InvokeIsEvent via reflection. Nothing in this
         // fixture subscribes in C#, which is CS0067; the test is the reference.
 #pragma warning disable CS0067
+
         private static event EventHandler<EventArgs> Hidden
         {
             add { }
             remove { }
         }
+
 #pragma warning restore CS0067
     }
 }

@@ -2,8 +2,8 @@
 // member when the target type hides it with a different member of the same
 // name. Get tries field first, so a derived property hiding a base field
 // was invisible. Types here exist only for this fixture.
-using System;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {
@@ -92,12 +92,12 @@ namespace Dynamitey.Tests
 
     public class Issue133Derived : Issue133Base
     {
-        public static new int Value { get; set; } = 2;
+        public new static int Value { get; set; } = 2;
     }
 
     public class Issue133FieldHides : Issue133Base
     {
-        public static new int Value = 3;
+        public new static int Value = 3;
     }
 
     public class Issue133Inherited : Issue133Base
@@ -126,6 +126,6 @@ namespace Dynamitey.Tests
 
     public class Issue133EventHides : Issue133EventBase
     {
-        public static new int Changed { get; set; }
+        public new static int Changed { get; set; }
     }
 }

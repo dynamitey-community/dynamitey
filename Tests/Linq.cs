@@ -1,30 +1,26 @@
-﻿using System;
+﻿using IronPython.Hosting;
+using Microsoft.Scripting;
+using NUnit.Framework;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using IronPython.Hosting;
-using Microsoft.Scripting;
 
 namespace Dynamitey.Tests
 {
     [TestFixture]
     public class Linq : Helper
     {
-  
-
         [Test]
         public void SimpleLinqDynamicLinq()
         {
-
             var expected = Enumerable.Range(1, 10).Where(i => i > 5).Skip(1).Take(2).Max();
             var actual = Dynamic.Linq(Enumerable.Range(1, 10)).Where(new Func<int, bool>(i => i > 5)).Skip(1).Take(2).Max();
 
             Assert.That(actual, Is.EqualTo(expected));
         }
+
         [Test]
         public void MoreGenericsDynamicLinq()
         {
@@ -34,13 +30,10 @@ namespace Dynamitey.Tests
                 .Aggregate(0, new Func<int, Tuple<int, int>, int>((accum, each) => each.Item2));
 
             Assert.That(actual, Is.EqualTo(expected));
-
         }
 
         private dynamic RunPythonHelper(object linq, string code)
         {
-            
-
             var tEngine = Python.CreateEngine();
             var tScope = tEngine.CreateScope();
 
@@ -52,9 +45,6 @@ namespace Dynamitey.Tests
             tCompiled.Execute(tScope);
             return tScope.GetVariable("result");
         }
-
-
-  
 
         [Test]
         public void PythonDynamicLinqGenericArgs()
@@ -69,12 +59,10 @@ result = linq.OfType[System.Int32]().Skip(1).First()
             Assert.That(actual, Is.EqualTo(expected));
         }
 
-
         [Test]
         public void PythonDynamicLinq()
         {
             var expected = Enumerable.Range(1, 10).Where(x => x < 5).OrderBy(x => 10 - x).First();
-
 
             // System.Int32 and System.Boolean rather than Python's int and bool.
             // IronPython 3 maps Python int to System.Numerics.BigInteger, because
@@ -90,7 +78,6 @@ result = linq.Where.Overloads[System.Func[System.Int32, System.Boolean]](lambda 
 
             Assert.That(actual, Is.EqualTo(expected));
         }
-
 
         [Test]
         public void PrintOutInterface()
@@ -136,8 +123,6 @@ result = linq.Where.Overloads[System.Func[System.Int32, System.Boolean]](lambda 
             {
                 Console.WriteLine("//" + line);
             }
-
-
         }
 
         private bool HelperIsGenericExtension(MethodInfo it, Type genericType)
@@ -147,7 +132,7 @@ result = linq.Where.Overloads[System.Func[System.Int32, System.Boolean]](lambda 
                    && HelperSignleGenericArgMatch(it.GetParameters().First().ParameterType.GetGenericArguments().Single());
         }
 
-        bool HelperSignleGenericArgMatch(Type info)
+        private bool HelperSignleGenericArgMatch(Type info)
         {
             foreach (var name in new[] { "TSource", "TFirst", "TOuter" })
             {
@@ -160,9 +145,8 @@ result = linq.Where.Overloads[System.Func[System.Int32, System.Boolean]](lambda 
             return false;
         }
 
-
         // Define other methods and classes here
-        string HelperFormatType(Type it)
+        private string HelperFormatType(Type it)
         {
             if (HelperSignleGenericArgMatch(it))
             {
@@ -179,7 +163,7 @@ result = linq.Where.Overloads[System.Func[System.Int32, System.Boolean]](lambda 
             }
         }
 
-        string HelperGenericParams(Type[] it)
+        private string HelperGenericParams(Type[] it)
         {
             var tArgs = it.Where(t => !HelperSignleGenericArgMatch(t)).Select(t => HelperFormatType(t));
             if (!tArgs.Any())
@@ -188,7 +172,8 @@ result = linq.Where.Overloads[System.Func[System.Int32, System.Boolean]](lambda 
             }
             return "<" + String.Join(",", tArgs) + ">";
         }
-        string HelperReturnTypeSub(Type it)
+
+        private string HelperReturnTypeSub(Type it)
         {
             if (it.IsGenericType && (it.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
             {
@@ -199,28 +184,26 @@ result = linq.Where.Overloads[System.Func[System.Int32, System.Boolean]](lambda 
                 return String.Format("IOrderedLinq<{0}>", HelperFormatType(it.GetGenericArguments().Single()));
             }
             return HelperFormatType(it);
-
         }
 
-        string HelperGetParams(ParameterInfo[] it)
+        private string HelperGetParams(ParameterInfo[] it)
         {
             var parms = it.Skip(1);
             return String.Join(",", parms.Select(p => HelperFormatType(p.ParameterType) + " " + p.Name));
-
         }
 
-        string HelperGetParamsDebug(ParameterInfo[] it)
+        private string HelperGetParamsDebug(ParameterInfo[] it)
         {
             var parms = it;
             return String.Join(",", parms.Select(p => HelperFormatType(p.ParameterType) + " " + p.Name));
-
         }
 
-        string HelperMakeName(MethodInfo it)
+        private string HelperMakeName(MethodInfo it)
         {
             return String.Format("{0} {1}{2}({3});", HelperReturnTypeSub(it.ReturnType), it.Name, HelperGenericParams(it.GetGenericArguments()), HelperGetParams(it.GetParameters()));
         }
-        string HelperMakeNameDebug(MethodInfo it)
+
+        private string HelperMakeNameDebug(MethodInfo it)
         {
             return String.Format("{0} {1}{2}({3});", HelperReturnTypeSub(it.ReturnType), it.Name, HelperGenericParams(it.GetGenericArguments()), HelperGetParamsDebug(it.GetParameters()));
         }

@@ -1,8 +1,8 @@
+using BenchmarkDotNet.Attributes;
+using Dynamitey.SupportLibrary;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using BenchmarkDotNet.Attributes;
-using Dynamitey.SupportLibrary;
 
 namespace Dynamitey.Benchmarks
 {

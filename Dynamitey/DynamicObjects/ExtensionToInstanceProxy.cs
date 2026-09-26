@@ -1,31 +1,24 @@
+using Dynamitey.Internal;
+using Dynamitey.Internal.Optimization;
+using Microsoft.CSharp.RuntimeBinder;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-using Dynamitey.Internal;
-
-using System.Text;
-using Microsoft.CSharp.RuntimeBinder;
-using Dynamitey.Internal.Compat;
-using Dynamitey.Internal.Optimization;
 
 namespace Dynamitey.DynamicObjects
 {
-
-
     /// <summary>
-    /// Proxy that can turn extension methods into instance methods 
+    /// Proxy that can turn extension methods into instance methods
     /// </summary>
-    public class ExtensionToInstanceProxy: BaseForwarder
+    public class ExtensionToInstanceProxy : BaseForwarder
     {
-       
         private readonly Type _extendedType;
-       
+
         private readonly Type[] _staticTypes;
-       
+
         private readonly Type[]? _instanceHints;
 
         /// <summary>
@@ -35,7 +28,6 @@ namespace Dynamitey.DynamicObjects
         /// The instance hints.
         /// </value>
         public IEnumerable<Type>? InstanceHints => _instanceHints;
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExtensionToInstanceProxy" /> class.
@@ -47,25 +39,25 @@ namespace Dynamitey.DynamicObjects
         /// <exception cref="System.ArgumentException">Don't Nest ExtensionToInstance Objects</exception>
         [RequiresUnreferencedCode("Calls IsExtendedType, which reflects over target's interfaces (GetInterfaces) to check it against extendedType; trimming can remove an interface this depends on. target is also statically 'dynamic', which forces DLR binding on the IsExtendedType calls below even though that method takes a plain object.")]
         [RequiresDynamicCode("Constructing any BaseForwarder-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
-        public ExtensionToInstanceProxy(dynamic target,  Type extendedType, Type[] staticTypes, Type[]? instanceHints = null):base((object)target)
+        public ExtensionToInstanceProxy(dynamic target, Type extendedType, Type[] staticTypes, Type[]? instanceHints = null) : base((object)target)
         {
             _staticTypes = staticTypes;
             _extendedType = extendedType;
             _instanceHints = instanceHints;
 
-            if(target is ExtensionToInstanceProxy)
+            if (target is ExtensionToInstanceProxy)
                 throw new ArgumentException("Don't Nest ExtensionToInstance Objects");
 
-            if (IsExtendedType(target) || IsExtendedType(Util.GetTargetContext(target,out Type _, out bool _)))
+            if (IsExtendedType(target) || IsExtendedType(Util.GetTargetContext(target, out Type _, out bool _)))
             {
                 return;
             }
 
             throw new ArgumentException($"Non a valid {_extendedType} to be wrapped.");
-            
         }
 
-        private object UnwrappedTarget(){
+        private object UnwrappedTarget()
+        {
             return Util.GetTargetContext(CallTarget!, out Type _, out bool _);
         }
 
@@ -91,14 +83,12 @@ namespace Dynamitey.DynamicObjects
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
-
             if (!base.TryGetMember(binder, out result))
             {
-
                 var tInterface = UnwrappedTarget().GetType().GetTypeInfo().GetInterfaces().Single(it => it.Name == _extendedType.Name);
                 var typeInfo = tInterface.GetTypeInfo();
                 result = new Invoker(binder.Name,
-                                     typeInfo.IsGenericType ? typeInfo.GetGenericArguments() : Array.Empty<Type>(),null, this);
+                                     typeInfo.IsGenericType ? typeInfo.GetGenericArguments() : Array.Empty<Type>(), null, this);
             }
             return true;
         }
@@ -109,7 +99,7 @@ namespace Dynamitey.DynamicObjects
         [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
             "See AwaitableResult.Awaiter; identical reasoning. Invoker must be public because it overrides " +
             "public DynamicObject members (TryGetIndex, TryGetMember, TryInvoke).")]
-        public class Invoker:BaseObject
+        public class Invoker : BaseObject
         {
             /// <summary>
             /// The name
@@ -117,24 +107,28 @@ namespace Dynamitey.DynamicObjects
             [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
                 "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
             protected string Name;
+
             /// <summary>
             /// The parent
             /// </summary>
             [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
                 "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
             protected ExtensionToInstanceProxy Parent;
+
             /// <summary>
             /// The overload types
             /// </summary>
             [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
                 "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
             protected IDictionary<int, Type[]> OverloadTypes;
+
             /// <summary>
             /// The generic params
             /// </summary>
             [SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification =
                 "Protected extension-point field - see BaseDictionary._dictionary (DynamicObjects/BaseDictionary.cs) for the full reasoning.")]
             protected Type[] GenericParams;
+
             /// <summary>
             /// The generic method parameters
             /// </summary>
@@ -150,11 +144,10 @@ namespace Dynamitey.DynamicObjects
                 Parent = parent;
                 GenericParams = genericParameters;
                 GenericMethodParameters = genericMethodParameters;
-                OverloadTypes = new Dictionary<int,Type[]>();
+                OverloadTypes = new Dictionary<int, Type[]>();
 
                 if (overloadTypes == null)
                 {
-
                     // Resolving an overload by generic type here requires reflecting over the
                     // instance-hint interfaces to find candidate signatures; a proxy built without
                     // instanceHints (the constructor's default) has nothing to reflect over, so
@@ -192,13 +185,12 @@ namespace Dynamitey.DynamicObjects
                         {
                             OverloadTypes.Remove(tOverloadType);
                         }
-
                     }
                 }
                 else
-                    {
-                        OverloadTypes[overloadTypes.Length] = overloadTypes;
-                    }
+                {
+                    OverloadTypes[overloadTypes.Length] = overloadTypes;
+                }
             }
 
             [RequiresUnreferencedCode("Calls Type.MakeGenericType, which the trimmer cannot statically analyze; a required generic instantiation can be removed.")]
@@ -217,9 +209,9 @@ namespace Dynamitey.DynamicObjects
 
                 if (typeInfo.ContainsGenericParameters)
                 {
-                    return typeof (object);
+                    return typeof(object);
                 }
-               
+
                 return type;
             }
 
@@ -241,13 +233,11 @@ namespace Dynamitey.DynamicObjects
             {
                 if (binder.Name == "Overloads")
                 {
-                    result = new OverloadInvoker(Name, GenericParams,GenericMethodParameters, Parent);
+                    result = new OverloadInvoker(Name, GenericParams, GenericMethodParameters, Parent);
                     return true;
                 }
                 return base.TryGetMember(binder, out result);
             }
-
-
 
             /// <summary>
             /// Tries the invoke.
@@ -271,7 +261,6 @@ namespace Dynamitey.DynamicObjects
                 {
                     tArgs = OverloadTypes[args.Length].Zip(args, Tuple.Create)
                         .Select(it => it.Item2 != null ? Dynamic.InvokeConvert(it.Item2, it.Item1, @explicit: true) : null).ToArray();
-
                 }
 
                 var name = InvokeMemberName.Create(Name, GenericMethodParameters);
@@ -306,15 +295,14 @@ namespace Dynamitey.DynamicObjects
         [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification =
             "See AwaitableResult.Awaiter; identical reasoning. OverloadInvoker must be public because it " +
             "overrides public DynamicObject members and derives from the equally-public Invoker above.")]
-        public class OverloadInvoker:Invoker
+        public class OverloadInvoker : Invoker
         {
             [RequiresUnreferencedCode("Calls the annotated Invoker constructor, which reflects over parent.InstanceHints' methods by name.")]
             [RequiresDynamicCode("Constructing any BaseObject-derived type instantiates System.Dynamic.DynamicObject, whose default constructor requires the DLR's runtime code generation; not supported when AOT-compiled.")]
             internal OverloadInvoker(string name, Type[] genericParameters, Type[]? genericMethodParameters, ExtensionToInstanceProxy parent)
-                : base(name, genericParameters,genericMethodParameters, parent)
+                : base(name, genericParameters, genericMethodParameters, parent)
             {
             }
-
 
             /// <summary>
             /// Tries the index of the get.
@@ -336,7 +324,6 @@ namespace Dynamitey.DynamicObjects
             }
         }
 
-
         /// <summary>
         /// Tries the invoke member.
         /// </summary>
@@ -357,20 +344,17 @@ namespace Dynamitey.DynamicObjects
         {
             if (!base.TryInvokeMember(binder, args, out result))
             {
-
                 Type[]? types = null;
                 try
                 {
-                    IList<Type>? typeList =Dynamic.InvokeGet(binder,
+                    IList<Type>? typeList = Dynamic.InvokeGet(binder,
                                            "Microsoft.CSharp.RuntimeBinder.ICSharpInvokeOrInvokeMemberBinder.TypeArguments");
-                    if(typeList != null)
+                    if (typeList != null)
                     {
-
                         types = typeList.ToArray();
-
                     }
-
-                }catch(RuntimeBinderException)
+                }
+                catch (RuntimeBinderException)
                 {
                     try
                     {
@@ -378,11 +362,8 @@ namespace Dynamitey.DynamicObjects
                             "TypeArguments");
                         if (typeList != null)
                         {
-
                             types = typeList.ToArray();
-
                         }
-
                     }
                     catch (RuntimeBinderException)
                     {
@@ -390,7 +371,7 @@ namespace Dynamitey.DynamicObjects
                     }
                 }
 
-                var name=InvokeMemberName.Create;
+                var name = InvokeMemberName.Create;
                 result = InvokeStaticMethod(name(binder.Name, types), args!);
             }
             return true;
@@ -414,7 +395,7 @@ namespace Dynamitey.DynamicObjects
             var tList = new List<object?> { UnwrappedTarget() };
             tList.AddRange(args);
 
-            object? result =null;
+            object? result = null;
             var sucess = false;
             var exceptionList = new List<Exception>();
 
@@ -432,8 +413,6 @@ namespace Dynamitey.DynamicObjects
             {
                 tGenericPossibles.Add(null);
             }
-                      
-
 
             foreach (var sType in _staticTypes)
             {
@@ -450,7 +429,8 @@ namespace Dynamitey.DynamicObjects
                         exceptionList.Add(ex);
                     }
                 }
-                if(sucess){
+                if (sucess)
+                {
                     break;
                 }
             }
@@ -459,7 +439,6 @@ namespace Dynamitey.DynamicObjects
             {
                 throw exceptionList.First();
             }
-
 
             if (TryTypeForName(name.Name, out var tOutType))
             {
@@ -477,7 +456,7 @@ namespace Dynamitey.DynamicObjects
                     if (result != null
                         && InstanceHints != null
                         && InstanceHints.Select(it => tIsGeneric && it.GetTypeInfo().IsGenericType ? it.GetGenericTypeDefinition() : it)
-                            .Any(it=> it.Name == tOutType.Name))
+                            .Any(it => it.Name == tOutType.Name))
                     {
                         result = CreateSelf(result, _extendedType, _staticTypes, _instanceHints);
                     }
@@ -507,7 +486,7 @@ namespace Dynamitey.DynamicObjects
         [RequiresDynamicCode("Constructs the annotated ExtensionToInstanceProxy, which requires the DLR's runtime code generation.")]
         protected virtual ExtensionToInstanceProxy CreateSelf(object target, Type extendedType, Type[] staticTypes, Type[]? instanceHints)
         {
-            return  new ExtensionToInstanceProxy(target,extendedType,staticTypes, instanceHints);
+            return new ExtensionToInstanceProxy(target, extendedType, staticTypes, instanceHints);
         }
 
         // Both call sites (InvokeStaticMethod, above) guard against a null result before calling
@@ -515,7 +494,6 @@ namespace Dynamitey.DynamicObjects
         [RequiresUnreferencedCode("Reflects over target's interfaces (GetInterfaces) to compare against _extendedType; trimming can remove an interface this depends on.")]
         private bool IsExtendedType(object target)
         {
-
             if (target is ExtensionToInstanceProxy)
             {
                 return false;
@@ -525,9 +503,6 @@ namespace Dynamitey.DynamicObjects
 
             return target.GetType().GetTypeInfo().GetInterfaces().Any(
                 it => ((genericDef && it.GetTypeInfo().IsGenericType) ? it.GetGenericTypeDefinition() : it).Name == _extendedType.Name);
-
         }
-
-        
     }
 }

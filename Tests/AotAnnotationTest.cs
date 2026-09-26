@@ -1,10 +1,8 @@
-using System;
+using NUnit.Framework;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Dynamitey;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {

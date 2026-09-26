@@ -1,8 +1,8 @@
+using Dynamitey.DynamicObjects;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dynamitey.DynamicObjects;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {

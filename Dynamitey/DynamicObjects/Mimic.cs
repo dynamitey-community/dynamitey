@@ -1,16 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
-using System;
-using System.Reflection;
-
-
 
 namespace Dynamitey.DynamicObjects
 {
     /// <summary>
     /// Class for TDD, used for mocking any dynamic object
     /// </summary>
-   
+
     public class Mimic : DynamicObject
     {
         /// <summary>
@@ -56,7 +52,6 @@ namespace Dynamitey.DynamicObjects
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
         public override bool TryConvert(ConvertBinder binder, out object? result)
         {
-
             result = Dynamic.InvokeConstructor(binder.ReturnType);
             return true;
         }
@@ -210,6 +205,5 @@ namespace Dynamitey.DynamicObjects
             result = new Mimic();
             return true;
         }
-
     }
 }

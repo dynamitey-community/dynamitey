@@ -4,10 +4,10 @@
 // unwrapping, Enum.Parse, IConvertible/Convert.ChangeType, and the
 // TypeDescriptor "hail mary"), and the null/DBNull short-circuits at the end
 // of the method. These tests walk each branch directly.
-using System;
-using System.Collections.Generic;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace Dynamitey.Tests
 {
@@ -66,8 +66,11 @@ namespace Dynamitey.Tests
             Assert.That(tResult, Is.EqualTo("5"));
         }
 
-        private class UnconvertibleSource { }
-        private class UnrelatedDestination { }
+        private class UnconvertibleSource
+        { }
+
+        private class UnrelatedDestination
+        { }
 
         [Test]
         public void TestCoerceConvertTypeDescriptorHailMaryLeavesTargetUnchangedWhenNoConverterApplies()

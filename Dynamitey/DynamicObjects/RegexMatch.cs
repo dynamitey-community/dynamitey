@@ -1,16 +1,12 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
-
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
 using System.Reflection;
-using Dynamitey.Internal.Compat;
+using System.Text.RegularExpressions;
 
 namespace Dynamitey.DynamicObjects
 {
-
     /// <summary>
     /// A Regex Match Interface
     /// </summary>
@@ -22,10 +18,8 @@ namespace Dynamitey.DynamicObjects
         /// <value>
         /// The value.
         /// </value>
-        string Value { get;}
+        string Value { get; }
     }
-
-
 
     /// <summary>
     /// A Dynamic Regex Match
@@ -37,9 +31,8 @@ namespace Dynamitey.DynamicObjects
     // subclass that could ever need to reach IRegexMatch.Value non-explicitly.
     public sealed class RegexMatch : BaseObject, IRegexMatch
     {
-       
         private readonly Match _match;
-       
+
         private readonly Regex? _regex;
 
         /// <summary>
@@ -53,7 +46,6 @@ namespace Dynamitey.DynamicObjects
             _match = match;
             _regex = regex;
         }
-
 
         /// <summary>
         /// Gets the dynamic member names.
@@ -81,11 +73,11 @@ namespace Dynamitey.DynamicObjects
         [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Same calls as above; see the IL2026 suppression on this member.")]
         [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification =
             "Same DLR-only-caller reasoning as the CA1062 suppression on BaseDictionary.TryGetMember; see that member.")]
-       public override bool TryGetMember(GetMemberBinder binder, out object? result)
+        public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             var tGroup = _match.Groups[binder.Name];
             if (!TryTypeForName(binder.Name, out var outType))
-                outType = typeof (string);
+                outType = typeof(string);
 
             if (!tGroup.Success)
             {
@@ -99,14 +91,14 @@ namespace Dynamitey.DynamicObjects
             return true;
         }
 
-       /// <summary>
-       /// Gets the <see cref="System.String" /> with the specified value.
-       /// </summary>
-       /// <value>
-       /// The <see cref="System.String" />.
-       /// </value>
-       /// <param name="value">The value.</param>
-       /// <returns></returns>
+        /// <summary>
+        /// Gets the <see cref="System.String" /> with the specified value.
+        /// </summary>
+        /// <value>
+        /// The <see cref="System.String" />.
+        /// </value>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
         public string? this[int value]
         {
             get

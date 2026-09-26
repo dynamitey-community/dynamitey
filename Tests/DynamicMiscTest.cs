@@ -4,14 +4,14 @@
 // convenience wrapper and its argument guard, InvokeSetChain's middle-segment
 // string-indexer branch, Dynamic.Linq's non-generic-IEnumerable path, the two
 // CreateCallSite overloads' null-binder guards, and AwaitResult(null).
+using Microsoft.CSharp.RuntimeBinder;
+using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Dynamic;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Microsoft.CSharp.RuntimeBinder;
-using NUnit.Framework;
 
 namespace Dynamitey.Tests
 {

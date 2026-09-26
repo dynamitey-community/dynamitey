@@ -1,7 +1,6 @@
 // Issue #98. CacheableInvocation.SetIndex called Dynamic.InvokeSetIndex and
 // dropped constructor arg names, CallSite, and baked context. Invoke still
 // unwraps an InvokeContext to its target, but context is constructor-only.
-using System;
 using Microsoft.CSharp.RuntimeBinder;
 using NUnit.Framework;
 

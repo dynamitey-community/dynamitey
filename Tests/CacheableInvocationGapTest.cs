@@ -4,10 +4,9 @@
 // validation, the arg-count-mismatch branches in Invoke (including the
 // Convert-specific checks), the InvokeContext-target unwrap, the
 // InvokeMemberUnknown/InvokeUnknown fallbacks, and Equals/GetHashCode.
-using System;
-using System.Dynamic;
 using Dynamitey.SupportLibrary;
 using NUnit.Framework;
+using System;
 
 namespace Dynamitey.Tests
 {
