@@ -393,18 +393,12 @@
                        (.NET Core 3.0+/netstandard2.1) does not have either,
                        which would make this netstandard2.0 polyfill less
                        faithful to the shape it exists to mirror, not more.
-           CA1031 (4)  SUPPRESSED, all four: matches to the type-probe and
-                       boolean-probe patterns issue #50 already established.
-                       Dynamic.cs's two static-field probes (now
-                       ProbeComObjectType/ProbeTypeConverterAttributeSL, moved
-                       out of the old .cctor for CA1810 above) and
-                       LateType.FindType are name-based type-resolution
-                       probes where several distinct exception types all mean
-                       "treat as absent"; Dynamic.IsDBNull is a boolean probe
-                       with a symmetric safe default ("can't tell" and "not
-                       DBNull" collapse to the same false). Full reasoning on
-                       Dynamic.ProbeComObjectType; every other site points back
-                       to it or to the IsDBNull boolean-probe variant.
+           CA1031 (4)  NARROWED (#145), suppressions removed. The two
+                       static-field probes and LateType.FindType return null
+                       for a malformed name, a missing or unloadable assembly,
+                       and a bad image. IsDBNull returns false only when the
+                       binder cannot find Convert.IsDBNull. Any other exception
+                       propagates.
 
          Resolved in batch 5, the last batch except CA1851 (public API judgment
          calls, right up against the 4.0.0 freeze - removed from NoWarn below):
