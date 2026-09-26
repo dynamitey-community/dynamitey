@@ -142,7 +142,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through the DLR (directly or via InvokeHelper.TupleItem/InvokeMember), which requires runtime code generation; not supported when AOT-compiled.")]
         private static void HelperToList(List<dynamic> list, object tuple, bool safe)
         {
-            if (HelperIsTuple(tuple, out var type, out var generic, out var size, safe))
+            if (HelperIsTuple(tuple, out _, out _, out var size, safe))
             {
                 for (int i = 0; i < 7 && i < size; i++)
                 {
@@ -207,7 +207,7 @@ namespace Dynamitey
         /// </returns>
         public static bool IsTuple(object? target)
         {
-            return HelperIsTuple(target, out var type, out var genericType, out var size, false);
+            return HelperIsTuple(target, out _, out _, out _, false);
         }
 
         private static bool HelperIsTuple(object? target, [NotNullWhen(true)] out Type? type, out Type genericeType, out int size, bool safe)
@@ -240,7 +240,7 @@ namespace Dynamitey
 
         private static int HelperSize(object tuple, bool safe)
         {
-            if (HelperIsTuple(tuple, out var type, out var genericType, out var size, safe) && size == 8)
+            if (HelperIsTuple(tuple, out var type, out _, out var size, safe) && size == 8)
             {
                 var lasttype = type.GetTypeInfo().GetGenericArguments()[7];
                 size = size + HelperSize(lasttype, true) - 1;

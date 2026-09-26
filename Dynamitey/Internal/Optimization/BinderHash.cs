@@ -132,8 +132,6 @@ namespace Dynamitey.Internal.Optimization
 
                 int result = (tArgNames == null ? 0 : tArgNames.Length * 397);
                 result = (result  ^ StaticContext.GetHashCode());
-                //result = (result * 397) ^ DelegateType.GetHashCode();
-                //result = (result * 397) ^ Context.GetHashCode();
                 // Name.GetHashCode(StringComparison.Ordinal) rather than the parameterless overload
                 // (CA1307): CoreEquals compares Name via object.Equals(string, string), which is
                 // ordinal, so the Ordinal overload is not merely consistent but documented to

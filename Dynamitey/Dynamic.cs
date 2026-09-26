@@ -599,10 +599,17 @@ namespace Dynamitey
                     return -arg;
 
                 case ExpressionType.Decrement:
+                    // Prefix decrement is the operator being invoked. The write back to the
+                    // parameter is how C# spells it, and the updated value is what we return.
+                    // Addition would call a different operator.
+#pragma warning disable S1854
                     return --arg;
+#pragma warning restore S1854
 
                 case ExpressionType.Increment:
+#pragma warning disable S1854
                     return ++arg;
+#pragma warning restore S1854
 
                 default:
                     throw new ArgumentException("Unsupported Operator", nameof(op));
@@ -997,7 +1004,7 @@ namespace Dynamitey
         [RequiresDynamicCode("Binds through Microsoft.CSharp.RuntimeBinder, which requires the DLR's runtime code generation; not supported when AOT-compiled.")]
         public static dynamic? InvokeConvert(object target, Type type, bool @explicit = false)
         {
-            target = target.GetTargetContext(out var tContext, out var tDummy);
+            target = target.GetTargetContext(out var tContext, out _);
 
             CallSite? tCallSite = null;
             return InvokeHelper.InvokeConvertCallSite(target, @explicit, type, tContext, ref tCallSite);
@@ -1232,12 +1239,11 @@ namespace Dynamitey
                                     }
                                 }
 
-                                // target is still the non-null value the outer `if (target != null
-                                // && ...)` proved: the try block's only reassignment
-                                // (`target = tResult;`, above) never ran, or this catch wouldn't
-                                // have been reached - it's the last statement in that try.
-                                // Flow narrowing from `converter != null` doesn't carry into
-                                // dynamic-typed member access, hence the `!`s below.
+                                // target is still the non-null value proved by the outer null check.
+                                // The only reassignment in the try sits above this catch, so
+                                // reaching here means it never ran. A non-null converter does
+                                // not narrow the dynamic member access below, so the
+                                // null-forgiving operators stay.
                                 if (converter != null && converter!.CanConvertFrom(target!.GetType()))
                                 {
                                     target = converter!.ConvertFrom(target!);

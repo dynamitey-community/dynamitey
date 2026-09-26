@@ -332,9 +332,9 @@ namespace Dynamitey.DynamicObjects
             // (cs/reference-equality-with-object).
             if (!_dictionary.TryGetValue(key, out var tOldValue) || !Equals(value, tOldValue))
             {
-                // _dictionary's value type is non-null to match Dictionary's public
-                // IDictionary<string, object>, but the DLR can hand TrySetMember a null value;
-                // this stores it anyway, exactly as the untyped original code did.
+                // The stored value is declared non-null so Dictionary's public map
+                // stays non-null, but the DLR can pass null into a set. Store it
+                // anyway, which is what the original untyped code did.
                 _dictionary[key] = value!;
                 OnPropertyChanged(key);
             }

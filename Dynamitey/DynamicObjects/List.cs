@@ -148,14 +148,12 @@ namespace Dynamitey.DynamicObjects
         /// <value>The count.</value>
         public int Count => _list.Count;
 
-        // This type implements IList<object> over _list AND IDictionary<string, object> over
-        // the inherited _dictionary, and a single public member cannot mean the right thing to
-        // both. Count above is the element count, which is what list-shaped callers expect;
-        // the dictionary side is implemented explicitly here so it reports the property count.
-        //
-        // Getting this wrong was not only a wrong number: LINQ special-cases ICollection<T>, so
-        // Count() and ToList() over the properties read this value rather than enumerating, and
-        // disagreed with the enumerator (issue #69).
+        // This type is both a list of elements and a dictionary of dynamic properties.
+        // One public count cannot serve both. The property above is the element count.
+        // The dictionary side is explicit so it reports how many properties are set.
+        // LINQ treats a collection specially, so counting or copying the properties
+        // read this value instead of enumerating, and they used to disagree with the
+        // enumerator. That was issue 69.
         int ICollection<KeyValuePair<string, object>>.Count => _dictionary.Count;
 
         /// <summary>
@@ -531,9 +529,8 @@ namespace Dynamitey.DynamicObjects
 
         int IList.Add(object? value)
         {
-            // Add(dynamic item) only implements ICollection<object>.Add(object item) (non-null);
-            // IList.Add itself accepts null, and forwarding it unchecked is the pre-existing
-            // behavior (whatever Add(dynamic) then does with a null item is unaffected by this).
+            // The public Add implements the non-null object-collection add.
+            // This explicit list add allows null. Forwarding null keeps the old behavior.
             Add(value!);
             return Count - 1;
         }

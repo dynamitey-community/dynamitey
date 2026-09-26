@@ -216,9 +216,10 @@ namespace Dynamitey.Internal.Optimization {
                     {
                         callsite = CreateCallSite(tDelegateType, binderType!, knownType, binder!, name, context, argNames, staticContext);
                     }
-                    // target/the return value are TTarget/TReturn - unconstrained generics are
-                    // nullable-oblivious, but InvokeCallSite's own object/dynamic? signature isn't;
-                    // the `!`s bridge that without asserting anything actually new.
+                    // The target and the return value are unconstrained generics, so the
+                    // compiler treats them as oblivious to null. InvokeCallSite's own
+                    // signature is not. The null-forgiving operators bridge that gap
+                    // without making a new runtime claim.
                     return (TReturn)Dynamic.InvokeCallSite(callsite, target!, args)!;
 
             }
