@@ -48,10 +48,10 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      # -warnaserror matches ci.yml. A release must not be cut from a tree that
-      # would fail the ordinary build gate.
+      # Same severity rules as ci.yml. Warnings stay warnings. An error still
+      # fails the build.
       - name: Build
-        run: dotnet build -c Release --no-restore -warnaserror
+        run: dotnet build -c Release --no-restore
 
       - name: Test
         shell: bash

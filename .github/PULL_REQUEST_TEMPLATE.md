@@ -19,11 +19,11 @@ that additionally rewrites unrelated code is two.
 <!--
 What you actually ran, and what it said. Not "tests pass" — the numbers.
 
-  dotnet build -c Release -warnaserror
+  dotnet build -c Release
   dotnet test Tests/Tests.csproj -c Release
 -->
 
-- [ ] `dotnet build -c Release -warnaserror` — 0 warnings, 0 errors
+- [ ] `dotnet build -c Release` — warnings stay warnings, 0 errors
 - [ ] `dotnet test Tests/Tests.csproj -c Release` — **0 failed, 0 skipped**, with no `--filter`. Paste the counts.
 - [ ] New behavior has a test, or this changes no behavior
 

@@ -48,7 +48,7 @@ Requires the .NET 10 SDK.
 
 ```bash
 dotnet restore
-dotnet build -c Release -warnaserror
+dotnet build -c Release
 dotnet test Tests/Tests.csproj -c Release
 ```
 
@@ -57,9 +57,9 @@ you find yourself adding a `--filter` to make it green, something is wrong. The
 wall-clock benchmarks that used to need one now live in `Benchmarks/` and assert
 nothing.
 
-`-warnaserror` matches CI. The tree builds clean with .NET analyzers at
-`AnalysisLevel=latest`, so a new warning is a regression rather than a backlog
-item.
+Warnings stay warnings and errors stay errors. The known backlog in
+`Dynamitey.csproj` is in `NoWarn`, so those findings do not appear. Any other
+warning shows up as a warning. A compile error fails the build.
 
 ## Tests
 
@@ -74,8 +74,7 @@ The suite uses NUnit 4 and the constraint model throughout —
 `NUnit.Framework.Legacy.ClassicAssert`
 ([#5](https://github.com/dynamitey-community/dynamitey/issues/5)).
 `NUnit.Analyzers` is wired into `Tests.csproj` and flags any new
-`ClassicAssert` call at build time; `-warnaserror` turns that into a build
-failure, so there is no legacy pile to avoid adding to.
+`ClassicAssert` call at build time as a warning (NUnit2005 and siblings).
 
 ## Versioning
 

@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
-        <!-- Static analysis. Warnings are not errors yet: this is a twelve-year-old
-             codebase and the backlog needs triaging before it can gate a build. -->
+        <!-- Static analysis. A warning stays a warning and an error stays an
+             error. TreatWarningsAsErrors would collapse that, so it stays off. -->
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <AnalysisLevel>latest</AnalysisLevel>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>

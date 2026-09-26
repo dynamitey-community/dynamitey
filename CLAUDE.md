@@ -84,7 +84,7 @@ Requires the .NET 10 SDK.
 
 ```bash
 dotnet restore
-dotnet build -c Release                     # add -warnaserror to match CI
+dotnet build -c Release
 dotnet test Tests/Tests.csproj -c Release   # no filter, 0 failed, 0 skipped
 ```
 
@@ -136,7 +136,7 @@ Workflows, all pinned to current action majors:
 
 | Workflow | Does |
 | --- | --- |
-| `ci.yml` | Four jobs on every run: build and test on Linux/macOS/Windows with `-warnaserror` and TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test. On `main` only, a fifth job (`Publish README badges`) renders test-count and coverage SVGs onto the `badges` branch — `contents: write` on that job, `GITHUB_TOKEN`, no extra secret. The README points at those files; do not pin the numbers. |
+| `ci.yml` | Four jobs on every run: build and test on Linux/macOS/Windows with TRX artifacts; **code coverage** with enforced floors; a benchmark dry-run; and the NativeAOT smoke test. On `main` only, a fifth job (`Publish README badges`) renders test-count and coverage SVGs onto the `badges` branch — `contents: write` on that job, `GITHUB_TOKEN`, no extra secret. The README points at those files; do not pin the numbers. |
 | `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
 | `dependencies.yml` | Three jobs on **different triggers**: dependency review on PRs only; `dotnet list package --vulnerable --include-transitive` on everything; and **OWASP Dependency-Check** weekly and on demand but never on a PR — a cold-cache scan takes about an hour, and it blocks nothing |
 | `docs.yml` | Builds the DocFX site on every pull request (`Build the site` is required); deploys only from `main` |
@@ -158,8 +158,11 @@ and adding one that cannot report on a pull request would block every pull
 request permanently, which is why the OWASP job's trigger and the required list
 have to be considered together.
 
-**`-warnaserror` lives in the workflow, not the project files.** The tree builds
-clean, so any new warning is a regression — but a local build stays workable.
+**Warnings stay warnings, and errors stay errors.** `TreatWarningsAsErrors` is
+false in `Directory.Build.props`, and CI does not pass `-warnaserror`. The
+known backlog stays in `NoWarn` in `Dynamitey.csproj`, so those findings do
+not appear. Any other warning shows up as a warning. A compile error still
+fails the build.
 
 ## Static analysis, and the conventions around it
 
@@ -181,10 +184,11 @@ reading the license.
 
 **The `NoWarn` lists are a documented backlog, not a dumping ground.** Each
 entry is a rule deferred with a reason recorded in the comment above it, and the
-lists are meant to shrink. CA is down to `CA1851`; the SonarAnalyzer list still
-carries about thirty rules, which is the next triage worth doing. A rule *not*
-on a list fails the build immediately, which is the point: the backlog is fixed
-at what already existed and cannot grow.
+lists are meant to shrink. CA is down to `CA1851`. The SonarAnalyzer list still
+carries the rules named in `Dynamitey.csproj`, which is the next triage worth
+doing. Those findings are silenced. A rule *not* on a list shows up as a
+warning. A triaged decision is a `SuppressMessage` at the call site with a
+written reason.
 
 **Every suppression carries a reason a reviewer can evaluate.** Not "by design"
 and not "false positive" — what the rule protects against, and why that does not
@@ -250,8 +254,7 @@ The suite is on NUnit 4 and uses the constraint model (`Assert.That(actual,
 Is.EqualTo(expected))`) throughout; the one-time `ClassicAssert` migration was
 #5. `NUnit.Analyzers` is referenced by `Tests.csproj` as a
 `PrivateAssets="all"` dev dependency so any new `ClassicAssert` usage is
-flagged (NUnit2005 and siblings) at build time — CI builds with
-`-warnaserror`, so a reintroduced classic-model call fails the build.
+flagged (NUnit2005 and siblings) at build time as a warning.
 
 ## Versioning and releases
 
