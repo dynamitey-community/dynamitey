@@ -98,7 +98,7 @@ file. The `.snupkg` is pushed alongside it.
 
 In order:
 
-1. **Trusted Publishing is already required.** On nuget.org, the policy names
+1. **Create the Trusted Publishing policy on nuget.org before tagging.** The policy names
    repository owner `dynamitey-community`, repository `dynamitey`, workflow file
    `release.yml`, and no Actions environment. Its package scope is
    `Dynamitey.Community` only. Do not use `Dynamitey` or `Dynamitey*`: the first
