@@ -39,9 +39,10 @@ This repository publishes `Dynamitey.Community`. The `Dynamitey` package on
 nuget.org stays upstream's, at 3.0.3, and installing it does not get you this
 code.
 
-The ids are different so the two assemblies cannot be swapped at runtime. Two
-assemblies with one identity resolve by coin flip, and the failure shows up as
-a `MissingMethodException`. The namespace stays `Dynamitey`.
+The package id and the assembly name are both `Dynamitey.Community`. The
+assembly name is what the CLR binds. Two assemblies with the same name resolve
+by coin flip, and the failure shows up as a `MissingMethodException`. The
+namespace stays `Dynamitey`.
 
 4.0.0 is the first release. A message went to the original maintainer on
 2026-09-05, through the NuGet "Contact owners" form on the `Dynamitey` package.
