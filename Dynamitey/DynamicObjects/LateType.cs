@@ -1,6 +1,7 @@
 ﻿using Dynamitey.Internal.Optimization;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Dynamic;
 using System.Reflection;
 
@@ -68,17 +69,11 @@ namespace Dynamitey.DynamicObjects
         /// <param name="assembly">The assembly to search, or <c>null</c> to resolve through the
         /// normal type-resolution rules.</param>
         /// <returns>
-        /// The resolved type, or <c>null</c> if it could not be found. Every resolution failure
-        /// is reported this way, not only the "not found" case - a malformed name, a missing or
-        /// unloadable assembly, and a bad image all yield <c>null</c>.
+        /// The resolved type, or <c>null</c> if it could not be found. A malformed name, a
+        /// missing or unloadable assembly, and a bad image also yield <c>null</c>. Any other
+        /// exception propagates.
         /// </returns>
         [RequiresUnreferencedCode("Resolves typeName via Assembly.GetType/Type.GetType, both name-based type lookups the trimmer cannot see; a type this depends on can be removed. Returns null instead of throwing when the type can't be found.")]
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
-            "Same type-probe reasoning as Dynamic.ProbeComObjectType (Dynamic.cs): throwOnError:false " +
-            "only suppresses the \"not found\" case, and Assembly.GetType/Type.GetType can still throw " +
-            "ArgumentException, FileNotFoundException, FileLoadException, or BadImageFormatException " +
-            "for other resolution failures. This method's own documented contract is to return null " +
-            "for any of them, not just the one - narrowing the catch would break that contract.")]
         public static Type? FindType(string typeName, Assembly? assembly = null)
         {
             try
@@ -89,7 +84,23 @@ namespace Dynamitey.DynamicObjects
                 }
                 return Type.GetType(typeName, false);
             }
-            catch
+            catch (ArgumentException)
+            {
+                return null;
+            }
+            catch (BadImageFormatException)
+            {
+                return null;
+            }
+            catch (FileLoadException)
+            {
+                return null;
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
+            catch (TypeLoadException)
             {
                 return null;
             }

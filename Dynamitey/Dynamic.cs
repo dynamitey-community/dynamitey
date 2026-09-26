@@ -24,6 +24,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -132,40 +133,41 @@ namespace Dynamitey
             "specifically because the type may legitimately be absent. A static field initializer " +
             "has no caller to warn at and runs unconditionally regardless of whether this optional " +
             "feature is ever used.")]
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
-            "Deliberately broad (cs/catch-of-all-exceptions), and this is the first of several CA1031 " +
-            "sites in this batch with the same shape: a name-based probe for an optional type, where " +
-            "Assembly.GetType/Type.GetType can throw several different exceptions (ArgumentException, " +
-            "FileNotFoundException, BadImageFormatException, ...) for \"can't resolve this\", not just " +
-            "the \"not found\" case that throwOnError:false alone suppresses - any of them means " +
-            "\"treat as absent\", which is what issue #50 already established for probes of this " +
-            "shape. Narrowing the catch would let an unanticipated resolution failure propagate " +
-            "instead of falling back to \"absent\", which is an observable behavior change this " +
-            "batch's rules forbid making on an analyzer's say-so.")]
         private static Type? ProbeComObjectType()
-        {
-            try
-            {
-                return typeof(object).GetTypeInfo().Assembly.GetType("System.__ComObject");
-            }
-            catch
-            {
-                return null;
-            }
-        }
+            => NullOnResolutionFailure(() => typeof(object).GetTypeInfo().Assembly.GetType("System.__ComObject"));
 
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
             "Same reasoning as ProbeComObjectType above: resolves an optional type by name and is " +
             "wrapped in try/catch for the same reason.")]
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
-            "Same type-probe reasoning as ProbeComObjectType above.")]
         private static Type? ProbeTypeConverterAttributeSL()
+            => NullOnResolutionFailure(() => Type.GetType("System.ComponentModel.TypeConverter, System, Version=5.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", false));
+
+        // throwOnError: false only turns a plain "not found" into null. A malformed name,
+        // a missing or unloadable assembly, and a bad image still throw. Those are absence.
+        // Anything else propagates.
+        private static Type? NullOnResolutionFailure(Func<Type?> resolve)
         {
             try
             {
-                return Type.GetType("System.ComponentModel.TypeConverter, System, Version=5.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", false);
+                return resolve();
             }
-            catch
+            catch (ArgumentException)
+            {
+                return null;
+            }
+            catch (BadImageFormatException)
+            {
+                return null;
+            }
+            catch (FileLoadException)
+            {
+                return null;
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
+            catch (TypeLoadException)
             {
                 return null;
             }
@@ -1089,26 +1091,17 @@ namespace Dynamitey
         /// </returns>
         [RequiresUnreferencedCode("Resolves System.Convert.IsDBNull dynamically (via a late-bound Convert reference) rather than calling it directly; trimming Convert's public surface breaks this.")]
         [RequiresDynamicCode("Constructing the underlying LateType and making the late-bound call both require the DLR's runtime code generation; not supported when AOT-compiled.")]
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification =
-            "Deliberately broad (cs/catch-of-all-exceptions): the expected failure is " +
-            "RuntimeBinderException when trimming has removed Convert.IsDBNull (see the " +
-            "[RequiresUnreferencedCode] above), but this is a boolean probe with a safe default " +
-            "either way - \"can't tell\" and \"not DBNull\" collapse to the same false, the same " +
-            "symmetric-default shape issue #50 established. Narrowing the catch would let some " +
-            "other failure propagate instead of returning that default, changing observable " +
-            "behavior for no benefit.")]
         public static bool IsDBNull(object? value)
         {
             try
             {
                 return LateConvert.IsDBNull(value);
             }
-            catch
+            catch (RuntimeBinderException)
             {
-                // Deliberately broad (cs/catch-of-all-exceptions): the expected failure is
-                // RuntimeBinderException when trimming has removed Convert.IsDBNull (see the
-                // [RequiresUnreferencedCode] above), but this is a boolean probe with a safe
-                // default either way - "can't tell" and "not DBNull" collapse to the same false.
+                // The member cannot be bound, which is what happens when trimming has removed
+                // Convert.IsDBNull. "Can't tell" and "not DBNull" are both false. An exception
+                // from Convert.IsDBNull itself propagates.
                 return false;
             }
         }
