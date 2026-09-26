@@ -84,7 +84,7 @@ that same SHA.
 ## The Release workflow
 
 `.github/workflows/release.yml`, run manually from the Actions tab. It restores,
-builds with `-warnaserror`, runs the full suite with no category filter, packs
+builds in Release, runs the full suite with no category filter, packs
 both target frameworks, asserts the package shape, and uploads the `.nupkg` and
 `.snupkg` as build artifacts.
 

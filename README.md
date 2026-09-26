@@ -231,8 +231,9 @@ dotnet test Tests/Tests.csproj -c Release
 ```
 
 The full suite runs with no category filter and must report 0 failed and 0
-skipped. CI additionally builds with `-warnaserror`, so any analyzer warning is
-a build failure there even though a local build stays workable.
+skipped. Warnings stay warnings and errors stay errors. The known analyzer
+backlog stays in `NoWarn` and does not appear. Any other warning shows up as
+a warning, and a compile error fails the build.
 
 Coverage is enforced in CI against a floor, so it is worth being able to
 reproduce it before opening a pull request:

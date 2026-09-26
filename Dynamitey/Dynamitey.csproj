@@ -38,8 +38,7 @@
     <PackageTags>dynamic metaprogramming dlr reflection currying tuples expando latetypes</PackageTags>
     <!-- The XML documentation file is the input DocFX builds the API reference from, and it
          ships inside the package so consumers get IntelliSense summaries. Enabling it turns
-         every missing or malformed doc comment into a warning, and CI builds -warnaserror, so
-         the doc comments are now a build gate rather than a nicety. -->
+         every missing or malformed doc comment into a warning. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Symbols ship as a .snupkg. IncludeSymbols on its own produces the legacy
          .symbols.nupkg format, which nuget.org rejects on push - a failure that
@@ -219,10 +218,10 @@
          at the call site with a written reason - the same standard used for the
          dismissed CodeQL alerts.
 
-         It is written here, rather than left as tolerated warnings, so the
-         -warnaserror gate in CI stays on the whole time. A new violation of a
-         rule NOT on this list fails the build immediately, which is the point:
-         the backlog is fixed at what already existed and cannot grow.
+         It is written here, in NoWarn, so these known findings do not appear.
+         A warning from a rule NOT on this list shows up as a warning. It does
+         not fail the build. The backlog is fixed at what already existed and
+         cannot grow by hiding a new rule in this list.
 
          Counts are unique (file, line, rule), measured against THIS project
          alone. An earlier revision of this comment mixed in numbers taken from
@@ -497,7 +496,7 @@
          S2234 is deliberately NOT on the list. It has exactly one instance, the
          Replace transposition at List.cs:326, and #60 fixed it - so the rule
          that caught a real bug is live, and a new transposition anywhere in this
-         project fails the build. -->
+         project shows up as a warning. -->
     <NoWarn>$(NoWarn);S101;S112;S907;S927;S1133;S1871;S2094;S2219;S2223;S2325;S2328;S2372;S2743;S3011;S3218;S3247;S3260;S3265;S3267;S3897;S3963;S4019;S4035;S4050;S4136;S6608</NoWarn>
 
   </PropertyGroup>

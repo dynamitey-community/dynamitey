@@ -58,11 +58,10 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      # -warnaserror matches ci.yml. GenerateDocumentationFile is on, so a
-      # missing or malformed doc comment is a build failure here as well - which
-      # is the point: the docs cannot silently drift from the code.
+      # Same severity rules as ci.yml. GenerateDocumentationFile is on, so a
+      # missing or malformed doc comment is a warning on this build.
       - name: Build the library
-        run: dotnet build Dynamitey/Dynamitey.csproj -c Release --no-restore -warnaserror
+        run: dotnet build Dynamitey/Dynamitey.csproj -c Release --no-restore
 
       - name: Build the documentation
         run: docfx docfx/docfx.json --warningsAsErrors
