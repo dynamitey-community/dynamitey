@@ -22,10 +22,11 @@ It is history, not a task list.
 ## Hard constraints
 
 - **Never push to `ekonbenefits`** — not a branch, not a tag, not a PR. That repo
-  has issue creation restricted by its owner and an outreach message is still
-  pending a reply. The `upstream` remote's push URL is set to `DISABLED` for
-  exactly this reason; do not undo it. Fetching is fine and is how upstream work
-  gets pulled in.
+  has issue creation restricted by its owner. The NuGet "Contact owners" message
+  sent 2026-09-05 went unanswered through 2026-09-26, which is why 4.0.0
+  published from here. The `upstream` remote's push URL is set to `DISABLED`
+  for exactly this reason; do not undo it. Fetching is fine and is how upstream
+  work gets pulled in.
 - **Always pass `--repo dynamitey-community/dynamitey --base main` to
   `gh pr create`.** Because an `upstream` remote exists, `gh` treats this clone as
   a fork and picks `ekonbenefits:master` as the default base — so a bare
@@ -41,11 +42,12 @@ It is history, not a task list.
 - **Do not move or delete the `upstream-baseline` tag.** It marks commit
   `c44f5c5`, the last purely-upstream commit, which is what the Apache-2.0
   "state your changes" requirement points at.
-- **Do not publish** a NuGet package or reserve a package ID. Gated on the
-  upstream maintainer's reply to a NuGet "Contact owners" message sent
-  2026-09-05. **The gate expires 2026-09-26**: if no reply has arrived by then,
-  publishing proceeds as `Dynamitey.Community`. Until one of those two things
-  happens, nothing publishes. See issue #8 for the reasoning and the fallback.
+- **Publish only `Dynamitey.Community`.** Never the original `Dynamitey` package
+  id. A release is a version tag, and `release.yml` pushes that tag through
+  NuGet Trusted Publishing. The verify step rejects any other package id before
+  the push. Do not add a NuGet API key as a repository secret. The nuget.org
+  profile name is the repository variable `NUGET_USER`. The Trusted Publishing
+  policy scope is `Dynamitey.Community`, not `Dynamitey` and not `Dynamitey*`.
 
 ## Repo conventions
 
@@ -140,7 +142,7 @@ Workflows, all pinned to current action majors:
 | `codeql.yml` | `security-and-quality` queries, manual build mode, PRs and weekly. **Builds `Dynamitey/Dynamitey.csproj` only** — see below |
 | `dependencies.yml` | Three jobs on **different triggers**: dependency review on PRs only; `dotnet list package --vulnerable --include-transitive` on everything; and **OWASP Dependency-Check** weekly and on demand but never on a PR — a cold-cache scan takes about an hour, and it blocks nothing |
 | `docs.yml` | Builds the DocFX site on every pull request (`Build the site` is required); deploys only from `main` |
-| `release.yml` | Manual `workflow_dispatch` dry run: build, test, pack, upload artifacts. No tag trigger and no publish (gated on #8) |
+| `release.yml` | A version tag builds, tests, packs, and pushes `Dynamitey.Community` via NuGet Trusted Publishing. `workflow_dispatch` is a dry run and does not push |
 
 `push` only triggers CI on `main`; `pull_request` covers everything else, which
 is what stops every branch push producing a duplicate run. Do not add branches
@@ -199,11 +201,10 @@ alerts.
 **The public API is frozen.** `Dynamitey/PublicAPI.Shipped.txt` and
 `PublicAPI.Unshipped.txt` declare every public member. Adding or changing one
 fails the build until the change is written into those files, which makes an
-accidental breaking change impossible to merge quietly. Nothing has shipped from
-this fork yet, so `Shipped.txt` holds only its nullable directive and the whole
-surface sits in `Unshipped.txt`; at 4.0.0 the entries move across. This matters
-for #3: with the surface frozen, the rename can be *proven* to have changed
-nothing but names.
+accidental breaking change impossible to merge quietly. 4.0.0 moved the surface
+into `Shipped.txt`. New public members go in `Unshipped.txt` until the next
+release. This matters for #3: with the surface frozen, the rename can be
+*proven* to have changed nothing but names.
 
 **Null validation goes through `Internal.Guard.NotNull`**, not an inline check.
 `ArgumentNullException.ThrowIfNull` does not exist on netstandard2.0, and the
@@ -282,9 +283,11 @@ Two consequences that will bite if forgotten:
   `Directory.Build.props`. That fallback exists so a tarball build works, not as
   a version anyone should ship.
 
-**Do not tag a release yet.** Publishing is blocked on the upstream maintainer's
-reply (#8), and the `notify-on-close` obligation on the ported issues is
-deliberately held until there is something installable.
+**A release is the tag.** Pushing `4.0.0` (a leading `v` is also accepted) runs
+`release.yml`, which publishes `Dynamitey.Community` and leaves the original
+`Dynamitey` package alone. `notify-on-close` comments go out once that package
+is on nuget.org. #95 stays open: it is the 5.0.0 targeting change and is not a
+4.0.0 blocker.
 
 ## Architecture
 

@@ -10,12 +10,13 @@ Dynamitey is a .NET library that wraps the Dynamic Language Runtime to do runtim
 Jay Tuley ([@jbtule](https://github.com/jbtule)) wrote Dynamitey. This documentation covers **Dynamitey.Community**, the community continuation of `ekonbenefits/dynamitey`, which has been dormant since its 3.0.3 release in November 2023.
 
 > [!IMPORTANT]
-> **Nothing has been released yet.** There is no `Dynamitey.Community` package on NuGet. Publishing is on hold pending a reply from the original maintainer; if none arrives by 2026-09-26, 4.0.0 publishes. Until then, keep using upstream's `Dynamitey` 3.0.3. See [issue #8](https://github.com/dynamitey-community/dynamitey/issues/8).
+> The package is **`Dynamitey.Community`** 4.0.0. The original `Dynamitey` package on NuGet remains upstream's 3.0.3 and does not contain this code.
 
 ## Where to start
 
 | If you want to | Read |
 | --- | --- |
+| See what 4.0.0 contains, and which runtimes it still supports | [About 4.0.0](docs/v4.md) |
 | Call a member you cannot see at compile time | [Late binding](docs/late-binding.md) |
 | Use a type from an assembly you have no reference to | [Late types](docs/late-types.md) |
 | Move from the original `Dynamitey` package | [Migrating](docs/migrating.md) |

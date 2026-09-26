@@ -33,35 +33,25 @@ The tag [`upstream-baseline`](https://github.com/dynamitey-community/dynamitey/r
 marks commit `c44f5c5`, the last commit that is purely upstream's work.
 Everything after it belongs to this project.
 
-### Status: not published
+### Package identity
 
-> **There is no `dynamitey-community` package on NuGet, and nothing here has
-> been released.** The `Dynamitey` package on nuget.org is upstream's, at 3.0.3.
-> Installing it does not get you this code.
+This repository publishes `Dynamitey.Community`. The `Dynamitey` package on
+nuget.org stays upstream's, at 3.0.3, and installing it does not get you this
+code.
 
-Publishing is deliberately on hold. An outreach message was sent to the original
-maintainer on **2026-09-05**, through the NuGet "Contact owners" form on the
-`Dynamitey` package — upstream has issue creation restricted, so its own tracker
-was not available. Until that is answered this project will not publish a package
-or reserve a package ID.
+The package id and the assembly name are both `Dynamitey.Community`. The
+assembly name is what the CLR binds. Two assemblies with the same name resolve
+by coin flip, and the failure shows up as a `MissingMethodException`. The
+namespace stays `Dynamitey`.
 
-**If there is no reply by 2026-09-26**, the block lifts and 4.0.0 publishes as
-`Dynamitey.Community`. The reasoning behind that date, and what happens either
-way, is recorded on
-[#8](https://github.com/dynamitey-community/dynamitey/issues/8). Package and
-assembly identity are already `Dynamitey.Community`
-([#3](https://github.com/dynamitey-community/dynamitey/issues/3)); only the
-NuGet push is gated.
-
-If you depend on Dynamitey today, keep using upstream's 3.0.3. This repository
-is where the work to move it forward is happening, not yet where you get it.
+4.0.0 is the first release. A message went to the original maintainer on
+2026-09-05, through the NuGet "Contact owners" form on the `Dynamitey` package.
+No reply had arrived by 2026-09-26, the date on
+[#8](https://github.com/dynamitey-community/dynamitey/issues/8). The package id
+is the one settled in
+[#3](https://github.com/dynamitey-community/dynamitey/issues/3).
 
 ### Installing, and moving from the original package
-
-This fork is configured to pack as **`Dynamitey.Community`**, not `Dynamitey`. The assembly is
-named `Dynamitey.Community` too, so once released it cannot collide with the original package on
-nuget.org — two assemblies claiming one identity resolve to a coin flip that
-surfaces as a runtime `MissingMethodException`.
 
 **The namespace is deliberately unchanged.** Everything still lives in
 `Dynamitey`, so moving from the original package is a one-line change and a
@@ -112,14 +102,23 @@ repository's own test project does exactly that.
 | Benchmarks | The old wall-clock `SpeedTest` fixture is now a BenchmarkDotNet project |
 | Dependencies | All current; no known vulnerable or deprecated packages |
 
-`netstandard2.0` is kept deliberately. It is the only target framework that
-reaches both .NET Framework 4.6.1–4.8.1 and modern .NET from a single assembly.
+`netstandard2.0` is what a .NET Framework 4.6.1–4.8.1 project references.
+4.0.0 is the last release that includes it. Later releases target .NET LTS and
+STS only. On 6 May 2019 Microsoft said .NET Framework 4.8 was the last major
+version, and that new base class library work would go to modern .NET.
+Framework is still serviced with Windows. After this release, dropping
+`netstandard2.0` is how the library gets to call BCL APIs that .NET Standard 2.0
+does not have. A Framework application stays on 4.x.
+
+[About 4.0.0](https://dynamitey-community.github.io/dynamitey/docs/v4.html)
+has the rest: 852 tests, up from 219 in the upstream tree, 54 issues closed,
+98 unused `using` directives removed, and the Framework cutoff above.
 
 The [roadmap](https://github.com/dynamitey-community/dynamitey/issues/10) tracks
 what is planned and in what order. Six issues carried over from upstream,
 labelled [`ported-from-upstream`](https://github.com/dynamitey-community/dynamitey/labels/ported-from-upstream),
 are closed: four were fixed (#11, #12, #13, #16) and two were closed as
-unreproducible (#14, #15).
+unreproducible (#14, #15). The two oldest were filed in 2014.
 
 ---
 
@@ -130,6 +129,7 @@ unreproducible (#14, #15).
 Written for this fork and generated from its own source, so it describes 4.0.0
 rather than 3.0.3. Nothing is carried over from upstream's wiki.
 
+- What is in 4.0.0, including the last .NET Framework release — [About 4.0.0](https://dynamitey-community.github.io/dynamitey/docs/v4.html)
 - Easy fast DLR-based reflection — [Late binding](https://dynamitey-community.github.io/dynamitey/docs/late-binding.html)
 - Clean syntax for using types from late-bound libraries — [Late types](https://dynamitey-community.github.io/dynamitey/docs/late-types.html)
 - Dynamic currying — [Currying and partial application](https://dynamitey-community.github.io/dynamitey/docs/currying.html)

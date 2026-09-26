@@ -2,14 +2,15 @@
 
 ## Installing
 
-> [!IMPORTANT]
-> Nothing has been published yet. This section describes what installation will look like once 4.0.0 ships; today there is no `Dynamitey.Community` package on NuGet. See [issue #8](https://github.com/dynamitey-community/dynamitey/issues/8) for the current state.
-
 ```xml
 <PackageReference Include="Dynamitey.Community" Version="4.0.0" />
 ```
 
-The namespace is `Dynamitey`, not `Dynamitey.Community`. That split is deliberate: the package and assembly are renamed so they cannot collide with the original package, while the namespace stays put so existing code needs no source change. See [Migrating](migrating.md).
+The package id is `Dynamitey.Community`. The original `Dynamitey` package is upstream's 3.0.3 and does not contain this code.
+
+4.0.0 targets `netstandard2.0` and `net10.0`. It is the last release a .NET Framework 4.6.1 through 4.8.1 project can use. Later releases target .NET LTS and STS only. See [About 4.0.0](v4.md).
+
+The namespace is `Dynamitey`. The package and assembly names are `Dynamitey.Community`, so the assembly cannot collide with the original package, and existing source does not change. See [Migrating](migrating.md).
 
 ```csharp
 using Dynamitey;

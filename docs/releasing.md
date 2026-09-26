@@ -1,21 +1,22 @@
 # Releasing
 
-How a release is cut, and what currently prevents one.
+How a release of **`Dynamitey.Community`** is cut.
 
-## Status: releases are blocked
+## Status
 
-**Nothing publishes today.** An outreach message went to the upstream maintainer
-on 2026-09-05 through the NuGet "Contact owners" form on the `Dynamitey`
-package — upstream has issue creation restricted, so its own tracker was not
-available. Until that is answered, or until **2026-09-26** passes without a
-reply, this project publishes no package and reserves no package ID.
+The package id is `Dynamitey.Community`. The original `Dynamitey` package on
+nuget.org stays upstream's. This repository never pushes a package whose id is
+`Dynamitey`.
 
-Issue #8 records the deadline, the reasoning behind it, and what happens either
-way. It is the authority; this document describes mechanics.
+The 2026-09-05 NuGet "Contact owners" message went unanswered through
+2026-09-26. That is the deadline recorded on #8, and it is why 4.0.0 publishes
+under this id rather than upstream's. #8 is the authority for that decision;
+this document describes mechanics.
 
-The `Release` workflow reflects that block in its shape rather than in a
-comment: it is `workflow_dispatch` only, it has no tag trigger, it holds no
-credential, and it contains no push step at all.
+A version tag runs `.github/workflows/release.yml`, which builds, tests, packs,
+checks that the package id is `Dynamitey.Community`, and pushes via NuGet
+Trusted Publishing. `workflow_dispatch` does the same work and does not push.
+There is no NuGet API key in the repository secrets.
 
 ## The version comes from git, not from a file
 
@@ -83,56 +84,52 @@ that same SHA.
 
 ## The Release workflow
 
-`.github/workflows/release.yml`, run manually from the Actions tab. It restores,
-builds in Release, runs the full suite with no category filter, packs
-both target frameworks, asserts the package shape, and uploads the `.nupkg` and
-`.snupkg` as build artifacts.
+`.github/workflows/release.yml`. A version tag publishes. A manual run from the
+Actions tab does not, including a manual run started on a tag.
 
-It publishes nothing. Run it freely — it is the dry run.
+Build, test, and pack have `contents: read` only. The push is a second job,
+and that job is the only one with `id-token: write`. It runs when the event is
+a tag push. Before the push, both jobs require exactly one
+`Dynamitey.Community.*.nupkg`, reject every other nupkg, and check that the
+nuspec `<id>` is `Dynamitey.Community`. The push argument is that one resolved
+file. The `.snupkg` is pushed alongside it.
 
-## Cutting a real release, once #8 unblocks
+## Cutting a release
 
 In order:
 
-1. **Confirm the block has lifted** — a reply arrived and the path is agreed, or
-   2026-09-26 passed. Update #8, `README.md`, `CLAUDE.md` and
-   `docs/dynamitey-migration-handover.md`, all of which state the block.
-2. **Configure Trusted Publishing** on the NuGet account for this repository.
-   Not an API key in a repository secret: OIDC exchanges a short-lived GitHub
-   Actions token for a scoped, short-lived NuGet credential, so no durable
-   secret exists to leak, rotate or inherit. This repository arrived carrying
-   two inherited publish credentials — an encrypted MyGet key in
-   `.appveyor.yml` and a `GITHUB_TOKEN` publish step aimed at another
-   organization's feed — so that is not a hypothetical concern.
-3. **Add the push step** to `release.yml`, following the comment block that
-   already sits where it goes: add `id-token: write` to the workflow
-   permissions, exchange the OIDC token, then
-   `dotnet nuget push artifacts/*.nupkg`. The `.snupkg` is pushed alongside it
-   automatically.
-4. **Add the tag trigger**, so a release is cut by pushing a tag rather than by
-   a manual dispatch. Deliberately absent until step 2 exists, because a tag
-   trigger on a workflow that can publish turns `git tag` into a release.
-5. **Tag `4.0.0`** and push the tag.
-6. **Discharge the `notify-on-close` obligations.** Six ported issues carry that
-   label and their original reporters have deliberately never been contacted —
-   they get told once, when there is something installable, not when a commit
-   lands on `main`. #11 has **two** people on it, not one.
+1. **Create the Trusted Publishing policy on nuget.org before tagging.** The policy names
+   repository owner `dynamitey-community`, repository `dynamitey`, workflow file
+   `release.yml`, and no Actions environment. Its package scope is
+   `Dynamitey.Community` only. Do not use `Dynamitey` or `Dynamitey*`: the first
+   is the original package, and the second matches it. The repository variable
+   `NUGET_USER` is the nuget.org profile name that owns the policy. It is not a
+   secret and it is not an API key.
+2. **Land the commit on `main`.**
+3. **Tag it and push the tag.** `4.0.0`, or `v4.0.0`. GitVersion accepts either.
+   That runs Release. Non-version tags such as `upstream-baseline` do not match
+   the trigger.
+4. **Discharge the `notify-on-close` obligations** once `Dynamitey.Community` is
+   actually on nuget.org. Six ported issues carry that label. #11 has **two**
+   people on it, not one.
 
    ```bash
    gh issue list --label notify-on-close --state all
    ```
 
-   The messages are already drafted in `docs/release-notifications.md`.
-7. **Close #8 and #10.** #10 is the roadmap and has nowhere to go after 4.0.0
-   ships.
+   The messages are drafted in `docs/release-notifications.md`. Add the `@` when
+   sending. The drafts name `Dynamitey.Community` as the package to install.
+5. **Close #8 and #10.** #10 is the roadmap. #95 stays open; it is the 5.0.0
+   targeting change and says so in the issue.
 
 ## Standing constraints
 
-Not up for casual revision, and all of them predate this document:
-
 - **Never push to `ekonbenefits`** — not a branch, not a tag, not a pull
   request. The `upstream` remote's push URL is set to `DISABLED` deliberately.
-- **Do not publish a package or reserve a package ID** until #8 clears.
+- **Never publish a package whose id is `Dynamitey`.** The id is
+  `Dynamitey.Community`.
+- **Do not store a NuGet API key** in the repository secrets. Trusted Publishing
+  is the only publish path.
 - **Do not move or delete the `upstream-baseline` tag.** It marks the last
   purely-upstream commit, which is what the Apache-2.0 "state your changes"
   requirement points at.

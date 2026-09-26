@@ -1,9 +1,8 @@
 # Migrating from the original Dynamitey
 
-The original `Dynamitey` package on nuget.org is upstream's, at 3.0.3. This fork **will publish** as `Dynamitey.Community`. Moving between them is a one-line change.
+The original `Dynamitey` package on nuget.org is upstream's, at 3.0.3. This project publishes as `Dynamitey.Community`. Moving between them is a one-line change. Installing the original package does not get you this code.
 
-> [!IMPORTANT]
-> **Nothing has been released yet**, so there is no migration to perform today. This page describes what the move will look like once 4.0.0 ships. Until then, keep using upstream's `Dynamitey` 3.0.3 — it is a different package, and installing it does not get you this code. See [issue #8](https://github.com/dynamitey-community/dynamitey/issues/8).
+4.0.0 is the last `Dynamitey.Community` release a .NET Framework 4.6.1 through 4.8.1 project can use. It still targets `netstandard2.0`. Later releases target .NET LTS and STS only, so the library can call BCL APIs that .NET Standard 2.0 does not have. Framework applications stay on 4.x. Details are in [About 4.0.0](v4.md).
 
 ## The change
 

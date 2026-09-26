@@ -1,15 +1,17 @@
-# Release machinery for 4.0.0, deliberately inert.
+# Release machinery for Dynamitey.Community.
 #
-# This workflow builds, tests and packs the library and uploads the resulting
-# packages as build artifacts. It does NOT publish them anywhere, and it has no
-# credential of any kind. See the "Why there is no push step" comment on the
-# pack job below before adding one.
+# A version tag publishes. workflow_dispatch builds, tests and packs, and does
+# not push. The package id is Dynamitey.Community — never the original
+# Dynamitey package. The verify step below rejects any other id before a push
+# can run.
 #
-# It is also `workflow_dispatch` only - no `push`, and specifically no tag
-# trigger. Publishing is gated on issue #8: a NuGet "Contact owners" message was
-# sent to the upstream maintainer on 2026-09-05, and nothing publishes until it
-# is answered or 2026-09-26 passes, whichever comes first. A tag trigger added
-# before then would turn `git tag` into an accidental release.
+# Publishing uses NuGet Trusted Publishing (OIDC). There is no API key in the
+# repository secrets. The nuget.org profile name is the repository variable
+# NUGET_USER. The Trusted Publishing policy on nuget.org must name this
+# workflow file (release.yml), this repository (dynamitey-community/dynamitey),
+# and a package scope of Dynamitey.Community only. A scope of Dynamitey or
+# Dynamitey* would be wrong: the first is the original package, and the second
+# matches it.
 name: Release
 
 on:
@@ -19,10 +21,18 @@ on:
         description: 'Why this run was started (recorded in the run summary)'
         required: false
         default: 'Dry run of the release pipeline'
+  push:
+    tags:
+      # GitVersion's tag-prefix accepts an optional v. Non-version tags such as
+      # upstream-baseline do not match, so pushing one cannot publish.
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
 
-# The default token needs nothing beyond reading the repository. Stated
-# explicitly so that adding a publish step later is a visible, deliberate
-# permissions change rather than an inherited capability.
+# contents: read is enough to check the tree out. id-token: write lives only
+# on the publish job, which runs solely for a tag push. A dry run and the
+# build/test/pack steps cannot mint a NuGet token.
 permissions:
   contents: read
 
@@ -30,6 +40,8 @@ jobs:
   pack:
     name: Build, test and pack
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v7
@@ -101,6 +113,36 @@ jobs:
             exit 1
           fi
 
+          # The id has to be Dynamitey.Community. The original Dynamitey package
+          # on nuget.org belongs to the upstream maintainers; pushing a package
+          # whose id is Dynamitey would be a write onto their package. Match the
+          # filename and the nuspec id, and reject anything else that landed in
+          # artifacts, including a name that merely starts with Dynamitey.
+          shopt -s nullglob
+          community=(artifacts/Dynamitey.Community.*.nupkg)
+          if [ "${#community[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one Dynamitey.Community nupkg, found ${#community[@]}."
+            exit 1
+          fi
+          for pkg in artifacts/*.nupkg; do
+            base=$(basename "$pkg")
+            case "$base" in
+              Dynamitey.Community.*) ;;
+              *)
+                echo "::error::Refusing to keep $base. The only package this repository publishes is Dynamitey.Community."
+                exit 1
+                ;;
+            esac
+          done
+          rm -rf artifacts/nupkg-id
+          mkdir artifacts/nupkg-id
+          unzip -o -q "${community[0]}" -d artifacts/nupkg-id
+          id=$(grep -oE '<id>[^<]+</id>' artifacts/nupkg-id/Dynamitey.Community.nuspec | head -1)
+          if [ "$id" != "<id>Dynamitey.Community</id>" ]; then
+            echo "::error::nuspec package id is '$id', not Dynamitey.Community. Refusing to publish."
+            exit 1
+          fi
+
       - name: Upload packages
         uses: actions/upload-artifact@v7
         with:
@@ -110,29 +152,93 @@ jobs:
             artifacts/*.snupkg
           if-no-files-found: error
 
-      # Why there is no push step
-      #
-      # Publishing is blocked by #8 until the upstream maintainer replies or
-      # 2026-09-26 passes. A workflow that cannot publish cannot publish by
-      # accident, so the step is absent rather than present and disabled behind
-      # an `if:` - a condition is one edit away from being true, and an absent
-      # step is not.
-      #
-      # When this unblocks, the push arrives as NuGet Trusted Publishing over
-      # OIDC, not an API key in a repository secret. That means:
-      #
-      #   * add `id-token: write` to this workflow's permissions
-      #   * exchange the OIDC token for a short-lived NuGet credential
-      #   * `dotnet nuget push artifacts/*.nupkg` (the .snupkg goes with it)
-      #   * add the tag trigger, so a release is cut by pushing a tag
-      #
-      # The point of OIDC is that no durable secret exists to leak, rotate or
-      # inherit. This repository arrived carrying two inherited publish
-      # credentials, so that is not a hypothetical concern here.
-      - name: Publishing is blocked
+      - name: Summarize
+        env:
+          REASON: ${{ inputs.reason }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          echo "### Packages built, nothing published" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Packages built, nothing published yet" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Reason given for this run: ${{ inputs.reason }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$EVENT_NAME" = "push" ]; then
+            echo "Tag $REF_NAME passed packaging. The publish job pushes Dynamitey.Community only." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Reason given for this run: $REASON" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "workflow_dispatch does not publish, including when it is started from a tag." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # Separate job so the build, test, and pack steps cannot mint an OIDC token.
+  # workflow_dispatch is excluded even when its ref is a tag: event_name is
+  # the gate, not the ref alone. The path passed to nuget push is the one
+  # file the shell expanded, not a quoted glob.
+  publish:
+    name: Push Dynamitey.Community
+    needs: pack
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v7
+        with:
+          name: packages
+          path: artifacts
+
+      - name: Require the NuGet username
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          if [ -z "$NUGET_USER" ]; then
+            echo "::error::Repository variable NUGET_USER is empty. Set it to the nuget.org profile name that owns the Trusted Publishing policy for Dynamitey.Community. It is a username, not an API key."
+            exit 1
+          fi
+
+      - name: Confirm the package id
+        id: package
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          community=(artifacts/Dynamitey.Community.*.nupkg)
+          if [ "${#community[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one Dynamitey.Community nupkg, found ${#community[@]}."
+            exit 1
+          fi
+          for pkg in artifacts/*.nupkg; do
+            base=$(basename "$pkg")
+            case "$base" in
+              Dynamitey.Community.*) ;;
+              *)
+                echo "::error::Refusing to publish $base. The only package id is Dynamitey.Community."
+                exit 1
+                ;;
+            esac
+          done
+          rm -rf artifacts/nupkg-id
+          mkdir artifacts/nupkg-id
+          unzip -o -q "${community[0]}" -d artifacts/nupkg-id
+          id=$(grep -oE '<id>[^<]+</id>' artifacts/nupkg-id/Dynamitey.Community.nuspec | head -1)
+          if [ "$id" != "<id>Dynamitey.Community</id>" ]; then
+            echo "::error::nuspec package id is '$id', not Dynamitey.Community. Refusing to publish."
+            exit 1
+          fi
+          echo "nupkg=${community[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: NuGet login
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push Dynamitey.Community to NuGet.org
+        run: dotnet nuget push "${{ steps.package.outputs.nupkg }}" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Summarize
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          echo "### Published Dynamitey.Community $REF_NAME" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Publishing is gated on issue #8. The packages above are build artifacts only." >> "$GITHUB_STEP_SUMMARY"
+          echo "The original Dynamitey package was not touched." >> "$GITHUB_STEP_SUMMARY"

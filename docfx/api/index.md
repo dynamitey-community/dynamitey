@@ -2,7 +2,7 @@
 
 Every public type and member in `Dynamitey.Community`, generated from the XML documentation comments in the source.
 
-The `Dynamitey.Internal` namespace is deliberately excluded. Its types are public for reasons of DLR plumbing — generated call sites and cached binders must reach them across assembly boundaries — but they are not a supported surface and are not documented here. They remain tracked in `PublicAPI.Unshipped.txt`, so they cannot change silently; they are simply not part of the contract offered to consumers.
+The `Dynamitey.Internal` namespace is deliberately excluded. Its types are public for reasons of DLR plumbing — generated call sites and cached binders must reach them across assembly boundaries — but they are not a supported surface and are not documented here. They are tracked in `PublicAPI.Shipped.txt` for the 4.0.0 surface, and in `PublicAPI.Unshipped.txt` for anything added since, so they cannot change silently. They are not part of the contract offered to consumers.
 
 ## Where to look first
 
