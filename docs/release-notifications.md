@@ -4,12 +4,12 @@ Six issues were carried over from `ekonbenefits/dynamitey` when this fork was
 created. Each carries the **`notify-on-close`** label, which means the original
 reporter is owed a message when their issue is resolved.
 
-**Nothing here has been sent.** These drafts exist so the messages are written
-once, reviewed, and ready — not composed hurriedly at release time.
+**Sent on 2026-09-26**, after `Dynamitey.Community` 4.0.0 was on nuget.org.
+The comments are on #11, #12, #13, #14, #15, and #16. Do not send them again.
 
-## When these go out
+## When these went out
 
-**When `Dynamitey.Community` 4.0.0 is on nuget.org**, not before. The package id
+They waited until `Dynamitey.Community` 4.0.0 was on nuget.org. The package id
 in every message is `Dynamitey.Community`. The original `Dynamitey` package is
 upstream's and is not what these fixes ship in.
 
