@@ -30,9 +30,9 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - 'v[0-9]+.[0-9]+.[0-9]+-*'
 
-# contents: read is enough to check the tree out. id-token: write is what lets
-# the tag job exchange a GitHub OIDC token for a one-hour NuGet API key. A
-# dry run requests no token because the login step does not run.
+# contents: read is enough to check the tree out. id-token: write lives only
+# on the publish job, which runs solely for a tag push. A dry run and the
+# build/test/pack steps cannot mint a NuGet token.
 permissions:
   contents: read
 
@@ -42,7 +42,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
 
     steps:
       - uses: actions/checkout@v7
@@ -153,13 +152,42 @@ jobs:
             artifacts/*.snupkg
           if-no-files-found: error
 
-      # Tag pushes publish. workflow_dispatch does not: github.ref is the branch
-      # the dry run was started from, so these three steps are skipped.
-      # The push argument is the Dynamitey.Community nupkg only. dotnet nuget
-      # push sends the sibling .snupkg with it. --skip-duplicate makes a rerun
-      # of the same tag a no-op if that version is already on nuget.org.
+      - name: Summarize
+        env:
+          REASON: ${{ inputs.reason }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          echo "### Packages built, nothing published yet" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$EVENT_NAME" = "push" ]; then
+            echo "Tag $REF_NAME passed packaging. The publish job pushes Dynamitey.Community only." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Reason given for this run: $REASON" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "workflow_dispatch does not publish, including when it is started from a tag." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # Separate job so the build, test, and pack steps cannot mint an OIDC token.
+  # workflow_dispatch is excluded even when its ref is a tag: event_name is
+  # the gate, not the ref alone. The path passed to nuget push is the one
+  # file the shell expanded, not a quoted glob.
+  publish:
+    name: Push Dynamitey.Community
+    needs: pack
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v7
+        with:
+          name: packages
+          path: artifacts
+
       - name: Require the NuGet username
-        if: startsWith(github.ref, 'refs/tags/')
         env:
           NUGET_USER: ${{ vars.NUGET_USER }}
         run: |
@@ -168,31 +196,49 @@ jobs:
             exit 1
           fi
 
+      - name: Confirm the package id
+        id: package
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          community=(artifacts/Dynamitey.Community.*.nupkg)
+          if [ "${#community[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one Dynamitey.Community nupkg, found ${#community[@]}."
+            exit 1
+          fi
+          for pkg in artifacts/*.nupkg; do
+            base=$(basename "$pkg")
+            case "$base" in
+              Dynamitey.Community.*) ;;
+              *)
+                echo "::error::Refusing to publish $base. The only package id is Dynamitey.Community."
+                exit 1
+                ;;
+            esac
+          done
+          rm -rf artifacts/nupkg-id
+          mkdir artifacts/nupkg-id
+          unzip -o -q "${community[0]}" -d artifacts/nupkg-id
+          id=$(grep -oE '<id>[^<]+</id>' artifacts/nupkg-id/Dynamitey.Community.nuspec | head -1)
+          if [ "$id" != "<id>Dynamitey.Community</id>" ]; then
+            echo "::error::nuspec package id is '$id', not Dynamitey.Community. Refusing to publish."
+            exit 1
+          fi
+          echo "nupkg=${community[0]}" >> "$GITHUB_OUTPUT"
+
       - name: NuGet login
-        if: startsWith(github.ref, 'refs/tags/')
         id: login
         uses: NuGet/login@v1
         with:
           user: ${{ vars.NUGET_USER }}
 
       - name: Push Dynamitey.Community to NuGet.org
-        if: startsWith(github.ref, 'refs/tags/')
-        run: dotnet nuget push 'artifacts/Dynamitey.Community.*.nupkg' --api-key '${{ steps.login.outputs.NUGET_API_KEY }}' --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push "${{ steps.package.outputs.nupkg }}" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Summarize
         env:
-          REASON: ${{ inputs.reason }}
-          REF_TYPE: ${{ github.ref_type }}
           REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ "$REF_TYPE" = "tag" ]; then
-            echo "### Published Dynamitey.Community $REF_NAME" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "The original Dynamitey package was not touched." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "### Packages built, nothing published" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Reason given for this run: $REASON" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "A release is a version tag. This run only built Dynamitey.Community and uploaded the packages as artifacts." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          echo "### Published Dynamitey.Community $REF_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "The original Dynamitey package was not touched." >> "$GITHUB_STEP_SUMMARY"

@@ -85,13 +85,14 @@ that same SHA.
 ## The Release workflow
 
 `.github/workflows/release.yml`. A version tag publishes. A manual run from the
-Actions tab does not.
+Actions tab does not, including a manual run started on a tag.
 
-Before the push, the workflow requires exactly one
-`Dynamitey.Community.*.nupkg`, rejects every other nupkg in the artifact
-directory, and checks that the nuspec `<id>` is `Dynamitey.Community`. The push
-argument is that filename, not a wildcard over every nupkg. The `.snupkg` is
-pushed alongside it.
+Build, test, and pack have `contents: read` only. The push is a second job,
+and that job is the only one with `id-token: write`. It runs when the event is
+a tag push. Before the push, both jobs require exactly one
+`Dynamitey.Community.*.nupkg`, reject every other nupkg, and check that the
+nuspec `<id>` is `Dynamitey.Community`. The push argument is that one resolved
+file. The `.snupkg` is pushed alongside it.
 
 ## Cutting a release
 
