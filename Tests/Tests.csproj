@@ -24,8 +24,8 @@
          PackageReference but ignored on a transitive one. This is test-only (IsPackable is
          false), so nothing here reaches the produced package. -->
     <PackageReference Include="Dynamitey" Version="3.0.3" Aliases="upstream" />
-    <PackageReference Include="NUnit" Version="4.6.1" />
-    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="NUnit" Version="5.0.0" />
+    <PackageReference Include="Moq" Version="4.21.0" />
     <PackageReference Include="NUnit.Analyzers" Version="4.15.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
