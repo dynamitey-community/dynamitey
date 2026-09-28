@@ -19,7 +19,7 @@
          CS0433 ambiguous. Aliasing the transitive assembly takes it out of the global
          namespace, so this project's own types resolve unambiguously while the package
          stays on disk for the late-bound call to find. -->
-    <PackageReference Include="ImpromptuInterface" Version="8.0.*" />
+    <PackageReference Include="ImpromptuInterface" Version="8.1.*" />
     <!-- Declared directly, and only so the alias applies: Aliases is honored on a direct
          PackageReference but ignored on a transitive one. This is test-only (IsPackable is
          false), so nothing here reaches the produced package. -->
