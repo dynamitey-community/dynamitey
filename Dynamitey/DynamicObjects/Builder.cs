@@ -241,7 +241,9 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public dynamic ListSetup(Func<object[]> constructorArgsFactory)
         {
-            return ListSetup((object)constructorArgsFactory);
+            // Typed object, not var: var would infer Func<object[]> and recurse into this overload.
+            object tArg = constructorArgsFactory;
+            return ListSetup(tArg);
         }
 
         /// <summary>
@@ -271,7 +273,7 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public dynamic ArraySetup(Func<object[]> constructorArgsFactory)
         {
-            return ListSetup((object)constructorArgsFactory);
+            return ListSetup(constructorArgsFactory);
         }
 
         /// <summary>
@@ -312,7 +314,9 @@ namespace Dynamitey.DynamicObjects
         /// <returns></returns>
         public dynamic ObjectSetup(Func<object[]> constructorArgsFactory)
         {
-            return ObjectSetup((object) constructorArgsFactory);
+            // Same overload-selection rebind as ListSetup(Func<object[]>).
+            object tArg = constructorArgsFactory;
+            return ObjectSetup(tArg);
         }
 
         /// <summary>

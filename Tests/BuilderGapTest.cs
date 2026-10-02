@@ -94,11 +94,17 @@ namespace Dynamitey.Tests
         public void TestListSetupWithFactoryFunction()
         {
             IBuilder tBuilder = Builder.New();
-            tBuilder.ListSetup(() => Array.Empty<object>());
+            var tCalls = 0;
+            tBuilder.ListSetup(() =>
+            {
+                tCalls++;
+                return Array.Empty<object>();
+            });
 
             var tResult = tBuilder.List();
 
             Assert.That(tResult, Is.InstanceOf<DynamicObjects.List>());
+            Assert.That(tCalls, Is.EqualTo(1));
         }
 
         [Test]
@@ -117,22 +123,34 @@ namespace Dynamitey.Tests
         public void TestArraySetupWithFactoryFunction()
         {
             IBuilder tBuilder = Builder.New();
-            tBuilder.ArraySetup(() => Array.Empty<object>());
+            var tCalls = 0;
+            tBuilder.ArraySetup(() =>
+            {
+                tCalls++;
+                return Array.Empty<object>();
+            });
 
             var tResult = tBuilder.Array();
 
             Assert.That(tResult, Is.InstanceOf<DynamicObjects.List>());
+            Assert.That(tCalls, Is.EqualTo(1));
         }
 
         [Test]
         public void TestObjectSetupWithFactoryFunction()
         {
             IBuilder tBuilder = Builder.New<PropPoco>();
-            tBuilder.ObjectSetup(() => Array.Empty<object>());
+            var tCalls = 0;
+            tBuilder.ObjectSetup(() =>
+            {
+                tCalls++;
+                return Array.Empty<object>();
+            });
 
             dynamic tResult = tBuilder.Object();
 
             Assert.That((object)tResult, Is.InstanceOf<PropPoco>());
+            Assert.That(tCalls, Is.EqualTo(1));
         }
 
         [Test]
