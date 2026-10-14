@@ -144,17 +144,23 @@ jobs:
       - name: Download and verify Dependency-Check
         shell: bash
         run: |
-          curl -sSL -o dc.zip \
+          # Unpack outside the workspace. --scan . would otherwise open the
+          # zip and report the scanner's own jars as dependencies of this
+          # repository. Those CVEs are real for the tool; they are not
+          # findings about Dynamitey. The 2026-10-12 run failed on
+          # CVE-2026-78254 (ant) and CVE-2026-71290 (httpclient5) that way.
+          tZip="${RUNNER_TEMP}/dc.zip"
+          curl -sSL -o "${tZip}" \
             "https://github.com/dependency-check/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
 
-          echo "${DC_SHA256}  dc.zip" | sha256sum --check --status || {
+          echo "${DC_SHA256}  ${tZip}" | sha256sum --check --status || {
             echo "::error::Dependency-Check download did not match the pinned SHA-256. Refusing to run it."
             echo "Expected: ${DC_SHA256}"
-            echo "Actual:   $(sha256sum dc.zip | cut -d' ' -f1)"
+            echo "Actual:   $(sha256sum "${tZip}" | cut -d' ' -f1)"
             exit 1
           }
 
-          unzip -q dc.zip
+          unzip -q "${tZip}" -d "${RUNNER_TEMP}"
           echo "Verified dependency-check ${DC_VERSION}."
 
       - name: Run Dependency-Check
@@ -206,10 +212,11 @@ jobs:
           # --failOnCVSS 7 fails the job on High and Critical only. Everything
           # found is still written to the report regardless of score.
           set +e
-          ./dependency-check/bin/dependency-check.sh \
+          "${RUNNER_TEMP}/dependency-check/bin/dependency-check.sh" \
             --project "Dynamitey" \
             --scan "." \
             --exclude "**/dependency-check/**" \
+            --exclude "**/dc.zip" \
             --enableExperimental \
             --failOnCVSS 7 \
             --suppression .github/owasp-suppressions.xml \
