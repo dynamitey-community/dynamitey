@@ -32,8 +32,217 @@
     <packageUrl regex="true">^pkg:nuget/Some\.Package@.*$</packageUrl>
     <cve>CVE-YYYY-NNNNN</cve>
   </suppress>
+
+  Entries below were checked against the 2026-10-12 report (run 38254785017).
+  A <cpe> is matched by Dependency-Check against the CPE 2.2 URI
+  (cpe:/a:vendor:product:...), not the 2.3 string in the report. Each one is
+  scoped to the package or file that was misidentified, so a later advisory
+  that uses a different CPE for that package still fails the build.
 -->
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-  <!-- No suppressions yet. The scan is clean; add entries here only with a
-       reason, and only when a finding has actually been investigated. -->
+  <suppress>
+    <notes><![CDATA[
+      CVE-2021-43138 is prototype pollution in the npm package "async"
+      (cpe:2.3:a:async_project:async). AsyncFixer is a Roslyn analyzer.
+      Microsoft.Bcl.AsyncInterfaces is the .NET reference assembly for
+      IAsyncEnumerable. Neither is the npm library. The assembly version
+      (1.0.0, 2.1.0, 3.1.0, 1.1.0) was used as the npm package version.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:(generic|nuget)/(AsyncFixer|Microsoft\.Bcl\.AsyncInterfaces)@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:async_project:async:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      CVE-2006-2453 is a buffer overflow in the Dia diagram editor.
+      Dia2Lib.dll shipped in Microsoft.Diagnostics.Tracing.TraceEvent is the
+      Microsoft Debug Interface Access COM interop assembly, not Dia.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:generic/Dia2Lib@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:dia:dia:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      GitVersion.MsBuild is an MSBuild task. Dependency-Check bound the
+      PackageReference (version 6.*) to the Git binary, including a CPE whose
+      target is Ruby (cpe:2.3:a:git:git:*:*:*:*:*:ruby:*:* and
+      cpe:2.3:a:git_project:git). CVE-2024-32002 and the other hits are
+      vulnerabilities in git itself. A vulnerable git on the runner is the
+      runner image, not this package.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:nuget/GitVersion\.MsBuild@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:git:git:.*</cpe>
+    <cpe regex="true">cpe:/a:git_project:git:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      IronPython is the .NET Python implementation. The DLL was bound to
+      CPython (cpe:2.3:a:python:python:3.4.2); the representative hits
+      CVE-2020-27619 (ctypes) and CVE-2016-5636 (zipimporter) are in that
+      interpreter. The nuspec was bound to cpe:2.3:a:microsoft:python:3.4.2,
+      which is Python for Windows and the VS Code Python extension:
+      CVE-2020-17163 is the Windows installer, and CVE-2024-49050 /
+      CVE-2025-49714 are the extension (fixed in 2024.18.2 and 2025.8.1).
+      None of those products is the IronPython NuGet package.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:(generic|nuget)/IronPython@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:python:python:.*</cpe>
+    <cpe regex="true">cpe:/a:microsoft:python:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      LibGit2Sharp.dll 0.31.0 was given cpe:2.3:a:libgit2:libgit2:0.31.0.
+      That is the managed assembly version, not the native library.
+      LibGit2Sharp 0.31.0 (2024-12-03) ships libgit2 1.8.4. CVE-2024-24577
+      is fixed in libgit2 1.6.5 and 1.7.2. Re-check the bundled native
+      version when bumping LibGit2Sharp; a native binary identified as
+      libgit2 itself is not covered by this rule.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:(generic|nuget)/LibGit2Sharp@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:libgit2:libgit2:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      Microsoft.CSharp.dll in the 4.7.0 package reports assembly version
+      3.1.0, which was bound to cpe:2.3:a:microsoft:.net_core:3.1, the whole
+      .NET Core 3.1 runtime. The file is the C# runtime-binder reference
+      assembly. The attached CVEs are in other components (CVE-2020-0605
+      WCF, CVE-2021-26701 System.Text.Encodings.Web, CVE-2022-41032 NuGet).
+    ]]></notes>
+    <packageUrl regex="true">^pkg:generic/Microsoft\.CSharp@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:microsoft:\.net_core:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      CVE-2026-69805 is an NVD version-range error on a real product CPE.
+      Microsoft's advisory lists Microsoft.Diagnostics.Runtime as affected
+      at exactly 4.1.740301, plus Visual Studio 17.14.0-17.14.40 and
+      18.9.0-18.9.3. NVD encoded that as "all versions up to (excluding)
+      4.1.740301", which pulled in the 3.1.512801 assembly this repo
+      actually restores. The CPE stays live: restoring 4.1.740301 still
+      fails the build.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:(generic|nuget)/Microsoft\.Diagnostics\.Runtime@(?!4\.1\.740301([?#+]|$)).*$</packageUrl>
+    <cve>CVE-2026-69805</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      CVE-2023-4914 is path traversal in cecilapp/cecil, a PHP static site
+      generator, before 7.47.1 (cpe:2.3:a:cecil:cecil). Mono.Cecil.Mdb.dll
+      is the Mono symbol reader inside Mono.Cecil, the .NET IL library
+      bundled by coverlet and ILLink. The same files were also given
+      cpe:2.3:a:mono-project:mono_framework, which is the Mono runtime, not
+      this library.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:generic/Mono\.Cecil\.Mdb@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:cecil:cecil:.*</cpe>
+    <cpe regex="true">cpe:/a:mono-project:mono_framework:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      NUnit.Extension.TeamCityEventListener writes TeamCity service messages
+      from an NUnit test run. It is not the TeamCity server.
+      cpe:2.3:a:jetbrains:teamcity:1.0.10 attached the server's CVE list
+      (264 on the 2026-10-12 scan, including the CVE-2024-27198
+      authentication bypass) because the package version is 1.0.10.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:nuget/NUnit\.Extension\.TeamCityEventListener@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:jetbrains:teamcity:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      CVE-2024-47911 is blind SQL injection in the SonarQube Server
+      authorizations/group-memberships API, versions 10.4 up to 10.6.
+      SonarAnalyzer.CSharp.dll 10.5.0.109200 is the Roslyn analyzer NuGet.
+      The version string shares a 10.5 prefix with SonarQube Server and was
+      bound to cpe:2.3:a:sonarsource:sonarqube. The analyzer does not host
+      that API.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:(generic|nuget)/SonarAnalyzer\.CSharp@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:sonarsource:sonarqube:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      cpe:2.3:a:tasks:tasks is the Tasks.org Android app (CVE-2020-22475,
+      CVE-2022-39349). It was applied to System.Threading.Tasks,
+      System.Threading.Tasks.Extensions, ILLink.Tasks, and the
+      CommandLineParser nuspec because the file or package name contains
+      "Tasks" and the version number collided.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:(generic/System\.Threading\.Tasks(\.Extensions)?|generic/ILLink\.Tasks|nuget/Microsoft\.NET\.ILLink\.Tasks|nuget/CommandLineParser)@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:tasks:tasks:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      CVE-2015-0897 is a TLS mistake in the LINE messenger apps for Android
+      and iOS. CommandLine.dll is the CommandLineParser assembly; its
+      product name was bound to cpe:2.3:a:line:line.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:generic/CommandLine@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:line:line:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      Nuspec package URLs were bound to cpe:2.3:a:microsoft:nuget at the
+      package's own version (CVE-2022-41064, a .NET Framework information
+      disclosure, and CVE-2022-30184). These packages are not the NuGet
+      client. NETStandard.Library was also bound to
+      cpe:2.3:a:microsoft:project_standard, which is Microsoft Project
+      Standard, not the .NET targeting pack. A package whose id is NuGet
+      is not covered here.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:nuget/(Microsoft\.CSharp|Microsoft\.CodeAnalysis\.Analyzers|Microsoft\.NETCore\.Platforms|NETStandard\.Library)@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:microsoft:nuget:.*</cpe>
+    <cpe regex="true">cpe:/a:microsoft:project_standard:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      CVE-2001-0152 is the password file written by Compressed Folders in
+      Microsoft Plus! for Windows 98 and Windows Me
+      (cpe:2.3:a:microsoft:plus). System.Private.Windows.GdiPlus.dll is the
+      GDI+ wrapper inside System.Drawing.Common. The product name "Plus"
+      was taken from "GdiPlus".
+    ]]></notes>
+    <packageUrl regex="true">^pkg:generic/System\.Private\.Windows\.GdiPlus@.*$</packageUrl>
+    <cpe regex="true">cpe:/a:microsoft:plus:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      CodeCoverage.exe, covrun*.dll, and MicrosoftInstrumentationEngine_*.dll
+      ship inside the Microsoft.CodeCoverage test package. Their file
+      versions were read as Visual Studio and Visual Studio Code versions
+      (cpe:2.3:a:microsoft:visual_studio and :visual_studio_code). They are
+      not a Visual Studio install. msdia140.dll is handled on its own,
+      below, because that file really is a DIA redistributable.
+    ]]></notes>
+    <filePath regex="true">.*[/\\](CodeCoverage\.exe|CodeCoverageMessages\.dll|covrun(32|64|arm64)\.dll|MicrosoftInstrumentationEngine_(arm64|x64|x86)\.dll)</filePath>
+    <cpe regex="true">cpe:/a:microsoft:visual_studio:.*</cpe>
+    <cpe regex="true">cpe:/a:microsoft:visual_studio_code:.*</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+      CVE-2014-3802 is an unchecked variable in msdia.dll as shipped in
+      Visual Studio before 2013. The copies here are msdia140.dll (DIA 14)
+      with file versions 14.36 and 14.51, redistributed by TraceEvent,
+      Microsoft.TestPlatform.TestHost, and Microsoft.CodeCoverage. The CPE
+      is not suppressed: a later advisory that names this file can still
+      match visual_studio.
+    ]]></notes>
+    <filePath regex="true">.*[/\\]msdia140\.dll</filePath>
+    <cve>CVE-2014-3802</cve>
+  </suppress>
 </suppressions>

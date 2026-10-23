@@ -32,7 +32,7 @@
     </PackageReference>
     <PackageReference Include="NUnit.Console" Version="3.22.0" />
     <PackageReference Include="IronPython" Version="3.4.2" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.12" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.13" />
     <!-- Runtime-compiles a throwaway assembly in TestRoslynLateTypeBind, the
          Roslyn replacement for the CodeDom-based late-bind coverage removed
          under #23 item 3. -->
@@ -42,8 +42,8 @@
 
  
   <ItemGroup>
-    <PackageReference Include="NUnit3TestAdapter" Version="6.3.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
   </ItemGroup>
 
   <ItemGroup>

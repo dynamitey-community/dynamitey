@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <!-- The two frameworks are separate MSBuild nodes, and each one starts
+         gitversion.dll. That process takes a named mutex,
+         Global\gitversion plus the .git path. On the GitHub-hosted Linux
+         runners the second constructor fails instead of waiting:
+         "The system cannot open the device or file specified".
+         One framework at a time means one gitversion process. -->
+    <BuildInParallel>false</BuildInParallel>
 
     <!-- Identity, set explicitly rather than defaulted from the project name (#3).
          PackageId and AssemblyName move so this fork cannot collide with the
