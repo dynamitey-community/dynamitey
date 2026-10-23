@@ -278,6 +278,11 @@ Two consequences that will bite if forgotten:
 - **CI checkouts need `fetch-depth: 0`.** GitVersion reads history and tags; the
   default shallow clone has neither and it fails rather than guessing. `ci.yml`
   and `codeql.yml` set it.
+- **`Dynamitey.csproj` sets `BuildInParallel` to false.** The two target
+  frameworks each start `gitversion.dll`, which takes a named mutex. On the
+  GitHub Linux runners the second constructor fails
+  (`The system cannot open the device or file specified`) instead of waiting.
+  Leave the frameworks serial.
 - **Building without a `.git` directory** — from a source archive rather than a
   clone — disables the task and falls back to `4.0.0-nogit` via
   `Directory.Build.props`. That fallback exists so a tarball build works, not as
