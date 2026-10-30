@@ -144,10 +144,10 @@ namespace Dynamitey
         /// <param name="args">The args.</param>
         public Activate(Type type, params object[] args)
         {
-            Type = type;
+            _type = type;
 
             var tArg = args.OfType<Func<object[]>>().SingleOrDefault();
-            Arguments = tArg != null ? tArg : () => args;
+            _arguments = tArg != null ? tArg : () => args;
         }
 
         /// <summary>
@@ -157,24 +157,24 @@ namespace Dynamitey
         /// <param name="args">The args.</param>
         public Activate(Type type, Func<object[]> args)
         {
-            Type = type;
-            Arguments = args;
+            _type = type;
+            _arguments = args;
         }
+
+        private readonly Type _type;
+        private readonly Func<object[]> _arguments;
 
         /// <summary>
         /// Gets or sets the constructor type.
         /// </summary>
         /// <value>The type.</value>
-        public virtual Type Type { get; private set; }
+        public virtual Type Type => _type;
 
         /// <summary>
         /// Gets or sets the constructor arguments.
         /// </summary>
         /// <value>The arguments.</value>
-        public virtual Func<object[]> Arguments
-        {
-            get; private set;
-        }
+        public virtual Func<object[]> Arguments => _arguments;
 
         /// <summary>
         /// Creates this instance.
