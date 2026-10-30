@@ -6,8 +6,12 @@ using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Binder = Microsoft.CSharp.RuntimeBinder.Binder;
 
 namespace Dynamitey.Tests
@@ -97,6 +101,43 @@ namespace Dynamitey.Tests
             {
                 var tKey = tEntry.GetType().GetProperty("Key")!.GetValue(tEntry)!;
                 yield return (Type)tKey.GetType().GetProperty("Context")!.GetValue(tKey)!;
+            }
+        }
+
+        // Upstream #17 and #21: some type names make Type.GetType throw FileLoadException even
+        // with throwOnError: false. LateType resolves the optional ImpromptuInterface by name,
+        // so a throw there escaped from Dynamic's type initializer and broke every call.
+        [TestCase("Foo, =")]
+        [TestCase("Foo, Bad Assembly Name,,,")]
+        public void TestLateTypeReportsUnloadableNameAsUnavailable(string typeName)
+        {
+            Assert.That(DynamicObjects.LateType.FindType(typeName), Is.Null);
+            Assert.That(new DynamicObjects.LateType(typeName).IsAvailable, Is.False);
+        }
+
+        // Upstream PR #11: concurrent first use of the binder cache threw
+        // NullReferenceException from an unsynchronized Dictionary.Insert.
+        [Test]
+        public void TestConcurrentFirstUseOfBinderCacheDoesNotThrow()
+        {
+            IDictionary<string, object> tExpando = new ExpandoObject();
+            var tNames = Enumerable.Range(0, 200).Select(i => "P" + i).ToArray();
+            foreach (var tName in tNames)
+                tExpando[tName] = tName;
+            var tThreads = Math.Max(4, Environment.ProcessorCount);
+
+            for (var tRound = 0; tRound < 20; tRound++)
+            {
+                Dynamic.ClearCaches();
+                using var tStart = new Barrier(tThreads);
+                var tWorkers = Enumerable.Range(0, tThreads).Select(t => Task.Factory.StartNew(() =>
+                {
+                    tStart.SignalAndWait();
+                    foreach (var tName in tNames.Skip(t * 7).Concat(tNames.Take(t * 7)))
+                        Assert.That(Dynamic.InvokeGet(tExpando, tName), Is.EqualTo(tName));
+                }, TaskCreationOptions.LongRunning)).ToArray();
+
+                Assert.That(() => Task.WaitAll(tWorkers), Throws.Nothing);
             }
         }
     }

@@ -166,6 +166,15 @@ namespace Dynamitey.Internal.Optimization
             }
         }
 
+        internal static void ClearEmittedDelegateTypes()
+        {
+            lock (_emitLock)
+            {
+                _emittedDelegateTypes.Clear();
+                _emittedModule = null;
+            }
+        }
+
         // Only ever called from inside the _emitLock in EmitCallSiteFuncType.
         [RequiresUnreferencedCode("Defines the emitted delegate type's constructor and Invoke method via Reflection.Emit, which the trimmer cannot see into.")]
         [RequiresDynamicCode("Builds the emitted delegate type via AssemblyBuilder/TypeBuilder; Reflection.Emit requires runtime code generation and is not supported when AOT-compiled.")]
@@ -175,8 +184,11 @@ namespace Dynamitey.Internal.Optimization
             {
                 if (_emittedModule == null)
                 {
+                    // RunAndCollect, not Run: a value-type constructor's delegate returns the
+                    // constructed type, and a non-collectible assembly may not reference a
+                    // collectible one. ClearEmittedDelegateTypes drops this module so it can go.
                     _emittedModule = AssemblyBuilder
-                        .DefineDynamicAssembly(new AssemblyName("Dynamitey.CallSiteDelegates"), AssemblyBuilderAccess.Run)
+                        .DefineDynamicAssembly(new AssemblyName("Dynamitey.CallSiteDelegates"), AssemblyBuilderAccess.RunAndCollect)
                         .DefineDynamicModule("Dynamitey.CallSiteDelegates");
                 }
             }
@@ -253,6 +265,8 @@ namespace Dynamitey.Internal.Optimization
                 _dynamicInvokeWrapFunc.Clear();
                 Dynamic.CompiledExpressions.Clear();
             }
+
+            ClearEmittedDelegateTypes();
         }
 
         private static void SetDynamicCachedCallSite<T>(BinderHash<T> hash, int knownBinderType, CallSite<T> callSite) where T : class

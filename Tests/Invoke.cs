@@ -225,11 +225,13 @@ namespace Dynamitey.Tests
         // which the fix must not do), so this observes the delegate type from
         // the outside instead: Dynamitey.Internal.Optimization.
         // InvokeHelper-Regular.cs emits every >14-argument call site delegate
-        // into a dynamic, run-only assembly literally named
+        // into a dynamic, collectible assembly literally named
         // "Dynamitey.CallSiteDelegates" (AssemblyBuilder.DefineDynamicAssembly,
-        // AssemblyBuilderAccess.Run). That assembly appears in
-        // AppDomain.CurrentDomain.GetAssemblies() once created and holds one
-        // baked "CallSiteFuncN" type per distinct (argument count, return type)
+        // AssemblyBuilderAccess.RunAndCollect). Dynamic.ClearCaches drops that
+        // module and the next call starts a new one, so an old one can linger in
+        // AppDomain.CurrentDomain.GetAssemblies() until it is collected; this reads
+        // the live module from InvokeHelper's private _emittedModule field instead.
+        // It holds one baked "CallSiteFuncN" type per distinct (argument count, return type)
         // signature - nothing ImpromptuInterface does can produce a type in an
         // assembly with that name, so finding one there is direct evidence that
         // Dynamitey's own emit path ran, not ImpromptuInterface's.
@@ -249,9 +251,12 @@ namespace Dynamitey.Tests
 
             int CountEmittedTypes()
             {
-                System.Reflection.Assembly tAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                    .SingleOrDefault(a => a.GetName().Name == tEmittedAssemblyName);
-                return tAssembly?.GetTypes().Length ?? 0;
+                var tModule = (System.Reflection.Module)typeof(Dynamic).Assembly
+                    .GetType("Dynamitey.Internal.Optimization.InvokeHelper", throwOnError: true)
+                    .GetField("_emittedModule", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    .GetValue(null);
+                Assert.That(tModule == null || tModule.Assembly.GetName().Name == tEmittedAssemblyName, Is.True);
+                return tModule?.Assembly.GetTypes().Length ?? 0;
             }
 
             var tMethodTarget = new ParamsMethodPoco();
