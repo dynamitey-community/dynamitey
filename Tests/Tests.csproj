@@ -36,7 +36,7 @@
     <!-- Runtime-compiles a throwaway assembly in TestRoslynLateTypeBind, the
          Roslyn replacement for the CodeDom-based late-bind coverage removed
          under #23 item 3. -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.12.0" />
 
   </ItemGroup>
 
