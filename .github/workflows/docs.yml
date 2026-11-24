@@ -23,13 +23,6 @@ on:
 permissions:
   contents: read
 
-# One deployment at a time. `cancel-in-progress: false` because cancelling a
-# half-finished Pages deployment can leave the published site inconsistent;
-# queueing costs a little time and avoids that.
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
   build:
     name: Build the site
@@ -79,6 +72,19 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+
+    # One deployment at a time. `cancel-in-progress: false` because cancelling a
+    # half-finished Pages deployment can leave the published site inconsistent;
+    # queueing costs a little time and avoids that.
+    #
+    # Scoped to this job, not the workflow. A group keeps one running and one
+    # pending run, and a third arrival cancels the pending one regardless of
+    # `cancel-in-progress`. At workflow level that swept up pull request builds
+    # too, so a burst of pull requests lost the required `Build the site` check
+    # and stayed blocked (#177).
+    concurrency:
+      group: pages
+      cancel-in-progress: false
 
     permissions:
       pages: write
